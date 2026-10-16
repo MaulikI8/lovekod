@@ -5160,16 +5160,6 @@ img {
   right: 0;
 }
 
-.corner-arc-wrap.mirrored-arc {
-  transform: scaleX(-1);
-  transform-origin: top right;
-}
-
-/* Ensure bulbs inside mirrored arc do not distort */
-.corner-arc-wrap.mirrored-arc .bulb {
-  transform: translate(-50%, -2px) scaleX(-1);
-}
-
 .corner-arc-wire {
   width: 100%;
   height: 100%;
@@ -5239,12 +5229,15 @@ img {
   }
 }
 
-@media (max-width: 640px) {
-  .corner-arc-wrap {
-    width: 130px;
-    height: 60px;
+/* On mobile screens (<= 768px), keep the corner lights and diyas subtle and neat */
+@media (max-width: 768px) {
+  .tihar-corner-lights-layer {
+    display: none !important;
+  }
+  .tihar-bottom-diyas {
+    display: none !important;
   }
   .tihar-lights-guide-tooltip {
-    display: none;
+    display: none !important;
   }
 }

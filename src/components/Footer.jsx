@@ -1,11 +1,17 @@
 import { Link } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import AnimatedFooter from './ui/AnimatedFooter';
+import SocialGlassDock from './SocialGlassDock';
 
 export default function Footer() {
   return (
     <AnimatedFooter>
       <footer className="footer" style={{ borderTop: 'none' }}>
+        {/* GlassDock Social & WhatsApp Section */}
+        <div style={{ paddingBottom: '32px', display: 'flex', justifyContent: 'center' }}>
+          <SocialGlassDock />
+        </div>
+
         <div className="footer-grid">
           <div className="footer-brand">
             <div className="logo" style={{ marginBottom: '8px' }}>

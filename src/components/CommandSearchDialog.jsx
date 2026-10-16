@@ -125,10 +125,7 @@ export default function CommandSearchDialog({ isOpen, onClose }) {
           </div>
         </div>
 
-        <div className="command-footer-strip">
-          <span>Tip: Press <kbd className="command-kbd-inline">Cmd</kbd> + <kbd className="command-kbd-inline">K</kbd> anytime to search</span>
-          <span>LoveKod Boutique Concierge</span>
-        </div>
+
       </div>
     </div>
   );

@@ -203,16 +203,22 @@ export default function Header() {
                   <Search size={20} />
                 </button>
 
-                {/* Lights Toggle */}
-                <button
-                  type="button"
-                  className={`nav-icon-action-btn ${lightsEnabled ? 'lights-lit' : ''}`}
-                  onClick={toggleLights}
-                  aria-label={lightsEnabled ? "Turn off festive lights" : "Turn on festive lights"}
-                  title={lightsEnabled ? "Turn off festive lights" : "Turn on festive lights"}
-                >
-                  <Lightbulb size={20} />
-                </button>
+                {/* Lights Toggle with Guide Tooltip */}
+                <div className="tihar-lights-toggle-wrapper">
+                  <button
+                    type="button"
+                    className={`nav-icon-action-btn ${lightsEnabled ? 'lights-lit' : ''}`}
+                    onClick={toggleLights}
+                    aria-label={lightsEnabled ? "Turn off festive lights" : "Turn on festive lights"}
+                    title={lightsEnabled ? "Turn off festive lights" : "Turn on festive lights"}
+                  >
+                    <Lightbulb size={20} />
+                  </button>
+                  <div className="tihar-lights-guide-tooltip" role="note">
+                    <span className="guide-sparkle">✨</span>
+                    <span className="guide-text">Let&apos;s celebrate Tihar!</span>
+                  </div>
+                </div>
 
                 {/* Shopping Bag Button with Notification Count Dot */}
                 <button

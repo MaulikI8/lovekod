@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import GarlandDivider from '../components/GarlandDivider';
 import Spotlight from '../components/ui/Spotlight';
-import HeroHotspots from '../components/ui/HeroHotspots';
 import CountdownTimer from '../components/ui/CountdownTimer';
 import { siteConfig } from '../config/site';
 import TextGenerateEffect from '../components/ui/TextGenerateEffect';
@@ -115,8 +114,7 @@ export default function Home() {
               loading="eager"
               fetchPriority="high"
             />
-            {/* Craft Hotspots on Center Panel Only */}
-            <HeroHotspots />
+
           </div>
 
           {/* Panel 3: Olive Green / Sage Kurtha */}

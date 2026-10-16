@@ -5229,9 +5229,22 @@ img {
   }
 }
 
-/* On mobile screens (<= 768px), keep the corner lights and diyas subtle and neat */
+/* On mobile screens (<= 768px), show compact corner light arcs without blocking navigation */
 @media (max-width: 768px) {
   .tihar-corner-lights-layer {
+    display: block !important;
+    height: 50px !important;
+  }
+  .corner-arc-wrap {
+    width: 110px !important;
+    height: 50px !important;
+  }
+  .corner-arc-wrap .bulb {
+    width: 8px !important;
+    height: 12px !important;
+  }
+  /* Show first 5 bulbs on mobile to keep corner arc compact */
+  .corner-arc-wrap .bulb:nth-child(n+8) {
     display: none !important;
   }
   .tihar-bottom-diyas {

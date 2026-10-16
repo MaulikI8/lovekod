@@ -5273,3 +5273,170 @@ img {
     display: none !important;
   }
 }
+
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   DARAZ NEPAL STYLE HORIZONTAL RELATED PRODUCTS SCROLL TRACK
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+.daraz-horizontal-scroll-track {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding: 12px 4px 24px;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+
+.daraz-horizontal-scroll-track::-webkit-scrollbar {
+  height: 6px;
+}
+
+.daraz-horizontal-scroll-track::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 4px;
+}
+
+.daraz-product-card {
+  flex: 0 0 210px;
+  width: 210px;
+  scroll-snap-align: start;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.daraz-product-card:hover {
+  border-color: var(--rose-gold);
+  transform: translateY(-2px);
+}
+
+.daraz-card-img-link {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4/5;
+  background: var(--paper);
+  display: block;
+  overflow: hidden;
+}
+
+.daraz-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+  transition: transform 0.4s ease;
+}
+
+.daraz-product-card:hover .daraz-card-img {
+  transform: scale(1.03);
+}
+
+.daraz-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 2px;
+}
+
+.daraz-card-body {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.daraz-fabric-tag {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--rose-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.daraz-title-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.daraz-card-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.35;
+  margin-bottom: 8px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.daraz-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: auto;
+  margin-bottom: 10px;
+}
+
+.daraz-price {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.daraz-mrp {
+  font-size: 0.78rem;
+  color: var(--ink-light);
+  text-decoration: line-through;
+}
+
+.daraz-view-btn {
+  width: 100%;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.daraz-view-btn:hover {
+  background: var(--rose-gold);
+  border-color: var(--rose-gold);
+  color: var(--paper);
+}
+
+@media (max-width: 640px) {
+  .daraz-product-card {
+    flex: 0 0 170px;
+    width: 170px;
+  }
+  .daraz-card-body {
+    padding: 10px;
+  }
+  .daraz-card-title {
+    font-size: 0.82rem;
+  }
+}

@@ -273,7 +273,7 @@ export default function ProductDetail() {
 
       <GarlandDivider className="section-divider" />
 
-      {/* ── Related Kurthas ── */}
+      {/* ── Related Kurthas: Horizontal Daraz Nepal Style Scroll ── */}
       {related.length > 0 && (
         <section className="pd-related-section">
           <div className="section-header-editorial">
@@ -281,26 +281,26 @@ export default function ProductDetail() {
             <p className="section-main-desc">Explore alternative fabric drapes for Bhai Tika</p>
           </div>
 
-          <div className="product-editorial-grid">
+          <div className="daraz-horizontal-scroll-track" role="region" aria-label="Similar festive kurthas">
             {related.map(item => (
-              <article key={item.id} className="editorial-product-card">
-                <div className="card-media-wrapper">
-                  <img src={item.image} alt={item.name} />
-                  <Link to={`/product/${item.id}`} className="card-quick-link">
-                    <span>Inspect Kurtha</span>
-                    <ArrowRightIcon size={14} />
+              <article key={item.id} className="daraz-product-card">
+                <Link to={`/product/${item.id}`} className="daraz-card-img-link">
+                  <img src={item.image} alt={item.name} className="daraz-card-img" loading="lazy" />
+                  {item.badge && <span className="daraz-badge">{item.badge}</span>}
+                </Link>
+                <div className="daraz-card-body">
+                  <div className="daraz-fabric-tag">{item.fabricType} • {item.pieces}</div>
+                  <Link to={`/product/${item.id}`} className="daraz-title-link">
+                    <h4 className="daraz-card-title">{item.name}</h4>
                   </Link>
-                </div>
-                <div className="card-body">
-                  <div className="card-fabric-tag">{item.fabricType} • {item.pieces}</div>
-                  <Link to={`/product/${item.id}`} className="card-title-link">
-                    <h4 className="card-title">{item.name}</h4>
-                  </Link>
-                  <div className="card-clean-price-row">
-                    <span className="sale-price tabular-num">Rs. {item.price.toLocaleString()}</span>
+                  <div className="daraz-price-row">
+                    <span className="daraz-price tabular-num">Rs. {item.price.toLocaleString()}</span>
+                    {item.originalPrice && (
+                      <span className="daraz-mrp tabular-num">Rs. {item.originalPrice.toLocaleString()}</span>
+                    )}
                   </div>
-                  <Link to={`/product/${item.id}`} className="btn-select-size" style={{ marginTop: '12px' }}>
-                    Select Size
+                  <Link to={`/product/${item.id}`} className="daraz-view-btn">
+                    <span>View details</span>
                   </Link>
                 </div>
               </article>

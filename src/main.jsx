@@ -8,11 +8,11 @@ import './index.css';
 if (typeof window !== 'undefined' && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
   try {
     const lenis = new Lenis({
-      duration: 1.0,
+      duration: 0.65,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       orientation: 'vertical',
       smoothWheel: true,
-      wheelMultiplier: 0.9,
+      wheelMultiplier: 1.15,
     });
     window.__lenis = lenis;
 

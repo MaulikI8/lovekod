@@ -6,21 +6,18 @@ import { cn } from "@/lib/utils";
 
 const DEFAULT_TRANSITION = {
   type: "spring",
-  bounce: 0.14,
-  duration: 0.9,
+  stiffness: 120,
+  damping: 18,
+  mass: 0.8,
 };
-
-const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
 export function PerspectiveCarousel({
   items = [],
   activeIndex,
-  defaultActiveIndex = 0,
+  defaultActiveIndex = 2,
   onActiveIndexChange,
-  loop = false,
-  slideWidth = 200,
-  rotationStep = 50,
-  inactiveScale = 0.82,
+  loop = true,
+  slideWidth = 220,
   transition = DEFAULT_TRANSITION,
   showControls = true,
   showDots = true,
@@ -35,13 +32,12 @@ export function PerspectiveCarousel({
   ...props
 }) {
   const navigate = useNavigate();
-  const maxIndex = Math.max(0, items.length - 1);
-  const [uncontrolledIndex, setUncontrolledIndex] = React.useState(() =>
-    clamp(defaultActiveIndex, 0, maxIndex)
-  );
-  const currentIndex = clamp(activeIndex ?? uncontrolledIndex, 0, maxIndex);
+  const n = items.length;
 
-  // Responsive slide width: on phone screens (<= 640px), auto-adapt to ~180px
+  const [uncontrolledIndex, setUncontrolledIndex] = React.useState(defaultActiveIndex);
+  const currentIndex = activeIndex ?? uncontrolledIndex;
+
+  // Window resize detection
   const [windowWidth, setWindowWidth] = React.useState(() =>
     typeof window !== "undefined" ? window.innerWidth : 1200
   );
@@ -53,48 +49,36 @@ export function PerspectiveCarousel({
   }, []);
 
   const isMobile = windowWidth <= 640;
-  const responsiveSlideWidth = isMobile ? Math.min(slideWidth, 210) : slideWidth;
-  const safeSlideWidth = Math.max(96, responsiveSlideWidth);
-  const safeInactiveScale = isMobile ? 0.85 : clamp(inactiveScale, 0.5, 1);
-  const effectiveRotationStep = isMobile ? 42 : rotationStep;
+  const isTablet = windowWidth > 640 && windowWidth <= 1024;
+
+  const cardWidth = isMobile ? 185 : isTablet ? 200 : slideWidth;
+  const cardHeight = Math.round((cardWidth * 4) / 3);
+
+  // Cylindrical Ring / Circle Radius
+  // Cylinder radius chosen so cards spread nicely on the circle
+  const radius = isMobile ? 260 : isTablet ? 380 : 480;
 
   const selectSlide = React.useCallback(
-    (nextIndex) => {
-      if (!items.length) {
-        return;
-      }
-
-      const resolvedIndex = loop
-        ? (nextIndex + items.length) % items.length
-        : clamp(nextIndex, 0, maxIndex);
-
+    (targetIndex) => {
+      if (!n) return;
+      const normalized = ((targetIndex % n) + n) % n;
       if (activeIndex === undefined) {
-        setUncontrolledIndex(resolvedIndex);
+        setUncontrolledIndex(normalized);
       }
-
-      onActiveIndexChange?.(resolvedIndex);
+      onActiveIndexChange?.(normalized);
     },
-    [activeIndex, items.length, loop, maxIndex, onActiveIndexChange]
+    [activeIndex, n, onActiveIndexChange]
   );
 
-  if (!items.length) {
-    return null;
-  }
+  if (!n) return null;
 
-  const isPreviousDisabled = !loop && currentIndex === 0;
-  const isNextDisabled = !loop && currentIndex === maxIndex;
   const handleKeyDown = (event) => {
     onKeyDown?.(event);
-
-    if (event.defaultPrevented) {
-      return;
-    }
-
+    if (event.defaultPrevented) return;
     if (event.key === "ArrowLeft") {
       event.preventDefault();
       selectSlide(currentIndex - 1);
     }
-
     if (event.key === "ArrowRight") {
       event.preventDefault();
       selectSlide(currentIndex + 1);
@@ -105,48 +89,82 @@ export function PerspectiveCarousel({
     <div
       role="region"
       aria-roledescription="carousel"
-      aria-label="Perspective image carousel"
+      aria-label="3D Circular Carousel"
       tabIndex={tabIndex ?? 0}
       onKeyDown={handleKeyDown}
       className={cn("relative isolate h-full w-full overflow-hidden select-none", className)}
       {...props}
     >
+      {/* 3D Scene Stage */}
       <div
-        className={cn("absolute inset-0 overflow-hidden", viewportClassName)}
-        style={{ perspective: "1200px" }}
+        className={cn(
+          "absolute inset-0 flex items-center justify-center overflow-hidden",
+          viewportClassName
+        )}
+        style={{ perspective: isMobile ? "850px" : "1200px" }}
       >
-        <motion.div
-          className="absolute left-1/2 top-[46%] sm:top-1/2 flex w-fit -translate-y-1/2 items-center"
-          animate={{ x: -(currentIndex * safeSlideWidth + safeSlideWidth / 2) }}
-          transition={transition}
+        <div
+          className="relative flex items-center justify-center"
+          style={{
+            width: cardWidth,
+            height: cardHeight + 40,
+            transformStyle: "preserve-3d",
+          }}
         >
           {items.map((item, index) => {
-            const isActive = currentIndex === index;
+            // Shortest circular offset between item index and current active index
+            let diff = index - currentIndex;
+            while (diff > n / 2) diff -= n;
+            while (diff < -n / 2) diff += n;
+
+            const isActive = diff === 0;
+
+            // Compute angle on circle
+            const angleStep = 360 / Math.max(n, 5);
+            const angle = diff * angleStep;
+            const rad = (angle * Math.PI) / 180;
+
+            // 3D Circular coordinates:
+            // X = sin(angle) * radius
+            // Z = cos(angle) * radius - radius (active item at Z=0, others pushed backwards)
+            const x = Math.sin(rad) * radius;
+            const z = Math.cos(rad) * radius - radius;
+            const rotateY = angle * 0.9; // Dynamic look-at-center rotation
+
+            const scale = isActive ? 1 : Math.max(0.72, 1 - Math.abs(diff) * 0.12);
+            const opacity = Math.abs(diff) > 2 ? 0.35 : isActive ? 1 : 0.85;
+            const zIndex = Math.round(100 - Math.abs(diff) * 10);
 
             return (
-              <div
+              <motion.div
                 key={`${item.src}-${index}`}
-                className="shrink-0"
-                style={{ width: safeSlideWidth, perspective: "1200px" }}
+                className="absolute will-change-transform"
+                style={{
+                  width: cardWidth,
+                  zIndex,
+                  transformStyle: "preserve-3d",
+                }}
+                animate={{
+                  x,
+                  z,
+                  rotateY,
+                  scale,
+                  opacity,
+                }}
+                transition={transition}
               >
-                <motion.div
+                <div
                   className={cn(
-                    "flex w-full flex-col items-center gap-2 sm:gap-3 will-change-transform",
+                    "flex w-full flex-col items-center gap-2.5",
                     slideClassName
                   )}
-                  animate={{
-                    rotateY: (currentIndex - index) * effectiveRotationStep,
-                    scale: isActive ? 1 : safeInactiveScale,
-                  }}
-                  transition={transition}
-                  style={{ transformStyle: "preserve-3d" }}
                 >
                   <button
                     type="button"
                     aria-label={`Show ${item.title}`}
                     aria-current={isActive ? "true" : undefined}
-                    className="w-full block cursor-pointer overflow-hidden rounded-lg shadow-lg"
-                    style={{ height: (safeSlideWidth * 4) / 3 }}
+                    className="w-full block cursor-pointer overflow-hidden rounded-xl border border-[var(--line)] bg-[var(--surface)] shadow-xl transition-all duration-300"
+                    style={{ height: cardHeight }}
                     onClick={() => {
                       if (isActive && item.id) {
                         navigate(`/product/${item.id}`);
@@ -169,36 +187,36 @@ export function PerspectiveCarousel({
 
                   <motion.p
                     className={cn(
-                      "text-center text-xs sm:text-sm font-semibold max-w-[210px] sm:max-w-none px-1 text-[var(--ink)] line-clamp-1",
+                      "text-center text-xs sm:text-sm font-semibold max-w-[210px] sm:max-w-none px-2 text-[var(--ink)] line-clamp-1",
                       labelClassName
                     )}
                     animate={{
-                      filter: isActive ? "blur(0px)" : "blur(2px)",
+                      filter: isActive ? "blur(0px)" : "blur(1.5px)",
                       opacity: isActive ? 1 : 0,
                     }}
                     transition={transition}
                   >
                     {item.title}
                   </motion.p>
-                </motion.div>
-              </div>
+                </div>
+              </motion.div>
             );
           })}
-        </motion.div>
+        </div>
       </div>
 
+      {/* Navigation Pill Controls */}
       {showControls && (
         <div
           className={cn(
-            "absolute inset-x-2 sm:inset-x-4 bottom-3 sm:bottom-5 z-10 mx-auto flex w-fit items-center justify-center gap-2 sm:gap-3 rounded-full border border-[var(--line)] bg-[var(--surface)]/95 px-3 py-1 text-[var(--ink)] shadow-md backdrop-blur-md",
+            "absolute inset-x-2 sm:inset-x-4 bottom-3 sm:bottom-5 z-20 mx-auto flex w-fit items-center justify-center gap-2 sm:gap-3 rounded-full border border-[var(--line)] bg-[var(--surface)]/95 px-3 py-1.5 text-[var(--ink)] shadow-md backdrop-blur-md",
             controlsClassName
           )}
         >
           <button
             type="button"
-            aria-label="Show previous slide"
-            disabled={isPreviousDisabled}
-            className="inline-flex size-8 sm:size-9 items-center justify-center rounded-full transition-colors hover:bg-[var(--blush)] disabled:cursor-not-allowed disabled:opacity-35"
+            aria-label="Previous Outfit"
+            className="inline-flex size-8 sm:size-9 items-center justify-center rounded-full transition-colors hover:bg-[var(--blush)] cursor-pointer"
             onClick={() => selectSlide(currentIndex - 1)}
           >
             <ChevronLeft className="size-4 sm:size-5" />
@@ -210,13 +228,13 @@ export function PerspectiveCarousel({
                 <button
                   key={`${item.title}-${index}`}
                   type="button"
-                  aria-label={`Show slide ${index + 1}: ${item.title}`}
+                  aria-label={`Go to ${item.title}`}
                   aria-current={currentIndex === index ? "true" : undefined}
                   className={cn(
-                    "h-1.5 sm:h-2 rounded-full transition-[width,opacity] duration-300",
+                    "h-1.5 sm:h-2 rounded-full transition-[width,opacity] duration-300 cursor-pointer",
                     currentIndex === index
                       ? "w-5 sm:w-7 bg-[var(--rose-gold)] opacity-100"
-                      : "w-1.5 sm:w-2 bg-[var(--ink)] opacity-30"
+                      : "w-1.5 sm:w-2 bg-[var(--ink)] opacity-30 hover:opacity-60"
                   )}
                   onClick={() => selectSlide(index)}
                 />
@@ -226,9 +244,8 @@ export function PerspectiveCarousel({
 
           <button
             type="button"
-            aria-label="Show next slide"
-            disabled={isNextDisabled}
-            className="inline-flex size-8 sm:size-9 items-center justify-center rounded-full transition-colors hover:bg-[var(--blush)] disabled:cursor-not-allowed disabled:opacity-35"
+            aria-label="Next Outfit"
+            className="inline-flex size-8 sm:size-9 items-center justify-center rounded-full transition-colors hover:bg-[var(--blush)] cursor-pointer"
             onClick={() => selectSlide(currentIndex + 1)}
           >
             <ChevronRight className="size-4 sm:size-5" />

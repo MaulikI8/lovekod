@@ -41,8 +41,7 @@ export default function CommandSearchDialog({ isOpen, onClose }) {
   const quickLinks = [
     { label: "Bhai Tika Signature Look", path: "/#collection" },
     { label: "3-Piece Georgette Sets", path: "/#collection" },
-    { label: "Size Chart & Fit Guide", path: "/#story" },
-    { label: "Free Nepal Delivery Details", path: "/#story" }
+    { label: "Customer Reviews", path: "/#reviews" }
   ];
 
   return (

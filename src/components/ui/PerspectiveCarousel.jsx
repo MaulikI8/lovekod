@@ -50,12 +50,12 @@ export default function PerspectiveCarousel({
                 onClick={() => setActiveIndex(idx)}
               >
                 <div className="slide-card">
-                  <div className="slide-media">
+                  <Link to={`/product/${item.id}`} className="slide-media">
                     <img src={item.image} alt={item.name} />
                     {item.badge && (
                       <span className="slide-badge">{item.badge}</span>
                     )}
-                  </div>
+                  </Link>
                   <div className="slide-info">
                     <span className="slide-fabric">{item.fabricType} • {item.pieces}</span>
                     <h3 className="slide-title">{item.name}</h3>

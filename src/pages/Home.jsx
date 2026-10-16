@@ -42,48 +42,6 @@ export default function Home() {
   const heroTrust2 = siteSettings?.heroTrustItem2 || 'Pure Georgette & Silk';
   const heroTrust3 = siteSettings?.heroTrustItem3 || 'Ready for Bhai Tika';
 
-  // Story Settings
-  const storyTag = siteSettings?.storyTag || 'Our Story • The LoveKod Ethos';
-  const storyTitle = siteSettings?.storyTitle || 'Rooted in the Valley, Lit for the Nation';
-  const storyP1 = siteSettings?.storyP1 || 'LoveKod was born out of a simple observation: Nepali women deserve festive attire that looks regal under the evening lights of Tihar without sacrificing comfort during day-long Bhai Tika ceremonies.';
-  const storyP2 = siteSettings?.storyP2 || 'We work exclusively with small batches of pure georgette, tissue chanderi, and silk blends. Each garment is measured against Nepali standard fits with generous seam allowances, so you can celebrate without worries.';
-  const storyQuote = siteSettings?.storyQuote || 'When you welcome Laxmi into your home, let your attire celebrate both tradition and modern ease.';
-  const storyQuoteAuthor = siteSettings?.storyQuoteAuthor || 'The LoveKod Studio, Kathmandu';
-
-  // Base Diya Count
-  const baseDiyas = siteSettings?.diyasLitCount || 108;
-
-  // "Light a Diya" signature interaction
-  const [diyasCount, setDiyasCount] = useState(() => {
-    try {
-      const saved = localStorage.getItem('lovekod_diyas_lit');
-      return saved ? parseInt(saved, 10) : baseDiyas;
-    } catch {
-      return baseDiyas;
-    }
-  });
-  const [userDiyaLit, setUserDiyaLit] = useState(() => {
-    try {
-      return localStorage.getItem('lovekod_user_diya_lit') === 'true';
-    } catch {
-      return false;
-    }
-  });
-  const [diyaJustLit, setDiyaJustLit] = useState(false);
-
-  const handleLightDiya = () => {
-    if (userDiyaLit) return;
-    const newCount = diyasCount + 1;
-    setDiyasCount(newCount);
-    setUserDiyaLit(true);
-    setDiyaJustLit(true);
-    try {
-      localStorage.setItem('lovekod_diyas_lit', newCount.toString());
-      localStorage.setItem('lovekod_user_diya_lit', 'true');
-    } catch { /* ignore */ }
-    setTimeout(() => setDiyaJustLit(false), 2000);
-  };
-
   // Filter Products by Category Slug
   const filteredProducts = products.filter(p => {
     if (activeCategorySlug === 'all') return true;
@@ -355,14 +313,14 @@ export default function Home() {
                 )}
 
                 {/* Media Image Crop (4:5) */}
-                <div className="card-media-wrapper">
+                <Link to={`/product/${product.id}`} className="card-media-wrapper" tabIndex={-1} aria-hidden="true">
                   <img
                     src={product.image}
                     alt={product.name}
                     loading="lazy"
                     className="card-product-img"
                   />
-                </div>
+                </Link>
 
                 {/* Product Meta */}
                 <div className="card-body">
@@ -458,9 +416,9 @@ export default function Home() {
             <div className="product-editorial-grid">
               {products.filter(p => !filteredProducts.find(fp => fp.id === p.id)).slice(0, 3).map(rec => (
                 <article key={rec.id} className="editorial-product-card">
-                  <div className="card-media-wrapper">
+                  <Link to={`/product/${product.id}`} className="card-media-wrapper" tabIndex={-1} aria-hidden="true">
                     <img src={rec.image} alt={rec.name} className="card-product-img" />
-                  </div>
+                  </Link>
                   <div className="card-body">
                     <div className="card-fabric-tag">{rec.fabricType}</div>
                     <Link to={`/product/${rec.id}`}>
@@ -486,66 +444,6 @@ export default function Home() {
         title="Festive Lookbook Showcase"
         subtitle="Curated 3D Collection Showcase"
       />
-
-      {/* ── 8. OUR STORY (DYNAMIC) & SIGNATURE "LIGHT A DIYA" INTERACTION ── */}
-      <section className="story-section" id="story">
-        <div className="story-card-grid">
-          <div className="story-content">
-            <div className="story-tag">
-              <DiyaIcon size={16} active={true} />
-              <span>OUR STORY</span>
-            </div>
-            <h2 className="story-title">
-              The LoveKod ethos <span className="story-title-devanagari">लभकोण</span>
-            </h2>
-            <p className="story-paragraph">
-              {storyP1}
-            </p>
-            <p className="story-paragraph">
-              {storyP2}
-            </p>
-
-            {/* ── SIGNATURE INTERACTION: LIGHT A DIYA ── */}
-            <div className="light-a-diya-widget">
-              <div className="diya-widget-header">
-                <div className="widget-diya-flame-box">
-                  <DiyaIcon size={28} active={userDiyaLit} />
-                </div>
-                <div>
-                  <div className="widget-count-number tabular-num">
-                    {diyasCount.toLocaleString()} <span>diyas lit</span>
-                  </div>
-                  <div className="widget-count-sub">
-                    {userDiyaLit ? 'Your prayer for prosperity has been added!' : 'Join our festive celebration across Nepal'}
-                  </div>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                className={`btn-light-diya ${userDiyaLit ? 'already-lit' : ''}`}
-                onClick={handleLightDiya}
-                disabled={userDiyaLit}
-              >
-                <DiyaIcon size={18} active={userDiyaLit} />
-                <span>{userDiyaLit ? 'Your diya is shining' : 'Light a diya'}</span>
-              </button>
-            </div>
-          </div>
-
-          <div className="story-visual-mosaic">
-            <div className="mosaic-card-top">
-              <img src="/images/kurtha-red-gold.png" alt="LoveKod festive red and gold kurtha set" />
-            </div>
-            <div className="mosaic-quote-box">
-              <div className="quote-serif">
-                "{storyQuote}"
-              </div>
-              <div className="quote-author">THE LOVEKOD STUDIO, KATHMANDU</div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* ── 9. DYNAMIC REVIEWS SECTION FROM DJANGO ── */}
       {testimonials && testimonials.length > 0 && (

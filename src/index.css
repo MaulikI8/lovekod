@@ -356,7 +356,7 @@ img {
 .announcement-nepali {
   font-family: var(--font-devanagari);
   font-weight: 600;
-  color: #fff;
+  color: var(--ink);
 }
 
 .announcement-divider {
@@ -499,7 +499,7 @@ img {
   top: -4px;
   right: -4px;
   background: var(--newari-red);
-  color: #fff;
+  color: var(--ink);
   font-size: 0.72rem;
   font-weight: 700;
   min-width: 18px;
@@ -761,7 +761,7 @@ img {
 
 .btn-secondary-outline:hover {
   background: rgba(255, 255, 255, 0.1);
-  border-color: #fff;
+  border-color: var(--ink);
   transform: translateY(-2px);
 }
 
@@ -840,7 +840,7 @@ img {
 .badge-name {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #fff;
+  color: var(--ink);
 }
 
 /* Inset Overlapping Card */
@@ -874,7 +874,7 @@ img {
 .inset-title {
   font-size: 0.88rem;
   font-weight: 600;
-  color: #fff;
+  color: var(--ink);
 }
 
 .inset-desc {
@@ -1032,7 +1032,7 @@ img {
 .price-bold {
   font-size: 1.6rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--ink);
 }
 
 .price-mrp {
@@ -1072,7 +1072,7 @@ img {
 
 .btn-whatsapp-square:hover {
   background: #25d366;
-  color: #fff;
+  color: var(--ink);
   transform: translateY(-2px);
 }
 
@@ -1142,7 +1142,7 @@ img {
 
 .filter-btn:hover {
   border-color: var(--marigold);
-  color: #fff;
+  color: var(--ink);
 }
 
 .filter-btn.active {
@@ -1206,6 +1206,7 @@ img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: top center;
   transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -1227,7 +1228,7 @@ img {
   transform: translateX(-50%) translateY(14px);
   background: rgba(16, 10, 11, 0.94);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #fff;
+  color: var(--ink);
   padding: 8px 18px;
   border-radius: var(--radius-sm);
   font-size: 0.78rem;
@@ -1375,7 +1376,7 @@ img {
 .btn-select-size {
   background: rgba(232, 119, 23, 0.08);
   border: 1px solid rgba(232, 119, 23, 0.25);
-  color: #fff;
+  color: var(--ink);
   padding: 10px;
   border-radius: var(--radius-sm);
   font-size: 0.85rem;
@@ -1408,7 +1409,7 @@ img {
 
 .btn-card-wa:hover {
   background: #25d366;
-  color: #fff;
+  color: var(--ink);
   transform: scale(1.05);
 }
 
@@ -1584,7 +1585,7 @@ img {
 .quote-serif {
   font-family: var(--font-serif);
   font-size: 1.15rem;
-  color: #fff;
+  color: var(--ink);
   font-style: italic;
   line-height: 1.45;
   margin-bottom: 8px;
@@ -1672,7 +1673,7 @@ img {
 
 .person-name {
   font-weight: 600;
-  color: #fff;
+  color: var(--ink);
   font-size: 0.9rem;
 }
 
@@ -1770,7 +1771,7 @@ img {
 .pd-title {
   font-family: var(--font-serif);
   font-size: clamp(2rem, 3vw, 2.5rem);
-  color: #fff;
+  color: var(--ink);
   line-height: 1.15;
   margin-bottom: 4px;
 }
@@ -1793,7 +1794,7 @@ img {
 .pd-price-now {
   font-size: 1.9rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--ink);
 }
 
 .pd-price-mrp {
@@ -1926,7 +1927,7 @@ img {
 .size-choice-btn.is-low-stock {
   background: var(--kaalo-card);
   border: 1px solid rgba(232, 119, 23, 0.35);
-  color: #fff;
+  color: var(--ink);
 }
 
 .size-choice-btn.is-low-stock .choice-status {
@@ -2065,7 +2066,7 @@ img {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #fff;
+  color: var(--ink);
 }
 
 .cart-head-title h3 {
@@ -2087,7 +2088,7 @@ img {
 }
 
 .close-btn:hover {
-  color: #fff;
+  color: var(--ink);
   background: rgba(255, 255, 255, 0.08);
 }
 
@@ -2151,7 +2152,7 @@ img {
 .cart-empty h4 {
   font-family: var(--font-serif);
   font-size: 1.3rem;
-  color: #fff;
+  color: var(--ink);
   margin-bottom: 8px;
 }
 
@@ -2185,7 +2186,7 @@ img {
 .cart-item-name {
   font-weight: 600;
   font-size: 0.92rem;
-  color: #fff;
+  color: var(--ink);
   line-height: 1.25;
   margin-bottom: 4px;
 }
@@ -2223,7 +2224,7 @@ img {
 .qty-btn {
   background: none;
   border: none;
-  color: #fff;
+  color: var(--ink);
   width: 26px;
   height: 26px;
   font-weight: 700;
@@ -2235,7 +2236,7 @@ img {
   text-align: center;
   font-size: 0.82rem;
   font-weight: 600;
-  color: #fff;
+  color: var(--ink);
 }
 
 .remove-btn {
@@ -2271,7 +2272,7 @@ img {
   justify-content: space-between;
   font-size: 1.2rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--ink);
   padding-top: 12px;
   margin: 10px 0 16px;
   border-top: 1px dashed rgba(255, 255, 255, 0.1);
@@ -2318,7 +2319,7 @@ img {
 .checkout-header-title h2 {
   font-family: var(--font-serif);
   font-size: 2.2rem;
-  color: #fff;
+  color: var(--ink);
 }
 
 .order-summary-box {
@@ -2332,7 +2333,7 @@ img {
 .order-summary-box h3 {
   font-family: var(--font-serif);
   font-size: 1.25rem;
-  color: #fff;
+  color: var(--ink);
   margin-bottom: 16px;
 }
 
@@ -2363,7 +2364,7 @@ img {
 .summary-item-name {
   font-size: 0.9rem;
   font-weight: 600;
-  color: #fff;
+  color: var(--ink);
 }
 
 .summary-item-meta {
@@ -2398,7 +2399,7 @@ img {
 .calc-total-row {
   display: flex;
   justify-content: space-between;
-  color: #fff;
+  color: var(--ink);
   font-weight: 700;
   font-size: 1.15rem;
   margin-top: 6px;
@@ -2421,7 +2422,7 @@ img {
 .form-card-title {
   font-family: var(--font-serif);
   font-size: 1.35rem;
-  color: #fff;
+  color: var(--ink);
   margin-bottom: 22px;
 }
 
@@ -2443,7 +2444,7 @@ img {
   width: 100%;
   background: var(--kaalo-surface);
   border: 1px solid var(--kaalo-border);
-  color: #fff;
+  color: var(--ink);
   padding: 12px 14px;
   border-radius: var(--radius-sm);
   font-size: 0.92rem;
@@ -2486,7 +2487,7 @@ img {
 .payment-select-label {
   font-size: 0.92rem !important;
   font-weight: 600 !important;
-  color: #fff !important;
+  color: var(--ink) !important;
 }
 
 .payment-grid {
@@ -2521,7 +2522,7 @@ img {
 .pay-opt-title {
   font-weight: 600;
   font-size: 0.88rem;
-  color: #fff;
+  color: var(--ink);
 }
 
 .pay-option.selected .pay-opt-title {
@@ -2575,7 +2576,7 @@ img {
 .success-page h2 {
   font-family: var(--font-serif);
   font-size: 2.3rem;
-  color: #fff;
+  color: var(--ink);
   margin-bottom: 8px;
 }
 
@@ -2635,7 +2636,7 @@ img {
 .receipt-header h4 {
   font-family: var(--font-serif);
   font-size: 1.15rem;
-  color: #fff;
+  color: var(--ink);
 }
 
 .receipt-status-pill {
@@ -2680,7 +2681,7 @@ img {
   display: flex;
   justify-content: space-between;
   font-size: 0.88rem;
-  color: #fff;
+  color: var(--ink);
   margin-bottom: 6px;
 }
 
@@ -2696,7 +2697,7 @@ img {
   justify-content: space-between;
   font-weight: 700;
   font-size: 1.1rem;
-  color: #fff;
+  color: var(--ink);
 }
 
 .receipt-total-num {
@@ -2796,7 +2797,7 @@ img {
 .footer h4 {
   font-family: var(--font-serif);
   font-size: 1.15rem;
-  color: #fff;
+  color: var(--ink);
   margin-bottom: 18px;
   font-weight: 600;
 }
@@ -2884,7 +2885,7 @@ img {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 16px var(--marigold-glow);
   padding: 14px 20px;
   border-radius: var(--radius-sm);
-  color: #fff;
+  color: var(--ink);
   font-size: 0.9rem;
   display: flex;
   align-items: center;
@@ -2975,7 +2976,7 @@ img {
 .admin-header h2 {
   font-family: var(--font-serif);
   font-size: 1.85rem;
-  color: #fff;
+  color: var(--ink);
 }
 
 .stat-grid {
@@ -2995,7 +2996,7 @@ img {
 .stat-card .num {
   font-size: 2rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--ink);
   font-family: var(--font-serif);
 }
 
@@ -3120,7 +3121,7 @@ img {
 
 .admin-btn:hover {
   border-color: var(--marigold);
-  color: #fff;
+  color: var(--ink);
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════
@@ -3335,7 +3336,7 @@ img {
   font-family: var(--font-sans);
   font-size: 0.92rem;
   font-weight: 600;
-  color: #fff;
+  color: var(--ink);
   letter-spacing: 0.3px;
 }
 
@@ -3490,6 +3491,7 @@ img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: top center;
   transition: transform 0.6s ease;
 }
 
@@ -3527,7 +3529,7 @@ img {
 .slide-title {
   font-size: 0.95rem;
   font-weight: 600;
-  color: #fff;
+  color: var(--ink);
   margin: 3px 0 6px;
   white-space: nowrap;
   overflow: hidden;
@@ -3575,7 +3577,7 @@ img {
   border-radius: 50%;
   background: var(--kaalo-card);
   border: 1px solid var(--kaalo-border);
-  color: #fff;
+  color: var(--ink);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -4003,7 +4005,7 @@ img {
   height: 17px;
   border-radius: 50%;
   background-color: var(--rose-gold);
-  color: #fff;
+  color: var(--ink);
   font-size: 0.65rem;
   font-weight: 700;
   display: flex;
@@ -4991,7 +4993,7 @@ img {
 
 .countdown-cta-btn:hover {
   transform: translateY(-2px);
-  color: #fff;
+  color: var(--ink);
 }
 
 .countdown-delivery-reassurance {

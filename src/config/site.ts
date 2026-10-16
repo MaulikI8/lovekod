@@ -77,7 +77,6 @@ export const siteConfig = {
   navLinks: [
     { label: "Collection", href: "/#collection" },
     { label: "Occasions", href: "/#occasions" },
-    { label: "Our Story", href: "/#story" },
     { label: "Reviews", href: "/#reviews" }
   ]
 };

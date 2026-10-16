@@ -59,7 +59,7 @@ export default function Footer() {
                 <li><a href="/#collection">Bhai Tika Collection</a></li>
                 <li><a href="/#collection">3-Piece Georgette Sets</a></li>
                 <li><a href="/#collection">Silk Blend Specials</a></li>
-                <li><a href="/#story">Our Craftsmanship</a></li>
+                <li><a href="/#reviews">Customer Reviews</a></li>
               </ul>
             </div>
 

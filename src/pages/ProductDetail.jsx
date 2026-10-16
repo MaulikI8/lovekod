@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import GarlandDivider from '../components/GarlandDivider';
@@ -23,6 +23,10 @@ export default function ProductDetail() {
   const [selectedSize, setSelectedSize] = useState('');
   const [showSizeGuide, setShowSizeGuide] = useState(false);
   const [sizeError, setSizeError] = useState(false);
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [id]);
+
 
   if (!product) {
     return (

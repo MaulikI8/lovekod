@@ -177,16 +177,10 @@ export default function Header() {
               </div>
             </Link>
 
-            {/* RIGHT GROUP: Our Story, Reviews + Icon Buttons */}
+            {/* RIGHT GROUP: Reviews + Icon Buttons */}
             <div className="nav-right-group">
               <nav className="nav-right-links" aria-label="Store Information">
-                <a
-                  href="/#story"
-                  className={`nav-text-link ${activeTab === 'story' ? 'is-active' : ''}`}
-                  onClick={() => setActiveTab('story')}
-                >
-                  <span>Our Story</span>
-                </a>
+
                 <a
                   href="/#reviews"
                   className={`nav-text-link ${activeTab === 'reviews' ? 'is-active' : ''}`}
@@ -364,9 +358,7 @@ export default function Header() {
               <a href="/#collection" onClick={() => setMobileDrawerOpen(false)}>
                 Bhai Tika Specials
               </a>
-              <a href="/#story" onClick={() => setMobileDrawerOpen(false)}>
-                Our Story (The LoveKod Ethos)
-              </a>
+
               <a href="/#reviews" onClick={() => setMobileDrawerOpen(false)}>
                 Customer Reviews
               </a>

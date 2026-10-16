@@ -41,7 +41,7 @@ export function StaggeredGrid({
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, margin: "-50px" }}
-      className={cn("grid gap-5 w-full", columns, className)}
+      className={cn("staggered-grid-container grid gap-5 w-full", columns, className)}
       {...props}
     >
       {items.map((item, index) => {
@@ -52,7 +52,7 @@ export function StaggeredGrid({
             variants={itemVariants}
             whileHover={{ y: -4, transition: { duration: 0.2 } }}
             className={cn(
-              "group relative flex flex-col justify-between overflow-hidden p-6 rounded-lg border border-[var(--line)] bg-[var(--surface)] text-[var(--ink)] shadow-sm transition-colors hover:border-[var(--rose-gold)]",
+              "staggered-card group relative flex flex-col justify-between overflow-hidden p-6 rounded-lg border border-[var(--line)] bg-[var(--surface)] text-[var(--ink)] shadow-sm transition-colors hover:border-[var(--rose-gold)]",
               cardClassName,
               item.className
             )}
@@ -70,7 +70,7 @@ export function StaggeredGrid({
                     <Icon size={18} />
                   </div>
                 )}
-                <h3 className="font-serif text-xl font-semibold leading-tight text-[var(--ink)]">
+                <h3 className="staggered-card-title font-serif text-xl font-semibold leading-tight text-[var(--ink)]">
                   {item.title}
                 </h3>
               </div>
@@ -81,7 +81,7 @@ export function StaggeredGrid({
                 </p>
               )}
 
-              <p className="text-sm leading-relaxed text-[var(--ink)] opacity-90">
+              <p className="staggered-card-desc text-sm leading-relaxed text-[var(--ink)] opacity-90">
                 {item.description}
               </p>
             </div>

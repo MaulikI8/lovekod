@@ -461,7 +461,7 @@ export default function Home() {
             }))}
             defaultActiveIndex={2}
             slideWidth={220}
-            className="h-[520px] rounded-2xl border border-[var(--line)] bg-[var(--surface)] text-[var(--ink)] shadow-sm"
+            className="perspective-carousel-shell h-[520px] rounded-2xl border border-[var(--line)] bg-[var(--surface)] text-[var(--ink)] shadow-sm"
           />
         </div>
       </section>

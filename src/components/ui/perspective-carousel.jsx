@@ -130,7 +130,7 @@ export function PerspectiveCarousel({
                     type="button"
                     aria-label={`Show ${item.title}`}
                     aria-current={isActive ? "true" : undefined}
-                    className="aspect-[3/4] w-full cursor-pointer"
+                    className="aspect-[3/4] w-full block cursor-pointer overflow-hidden rounded-lg" style={{ height: (safeSlideWidth * 4) / 3 }}
                     onClick={() => {
                       if (isActive && item.id) {
                         navigate(`/product/${item.id}`);

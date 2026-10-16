@@ -1056,6 +1056,63 @@ body, html {
    ══════════════════════════════════════════════════════════════════════════════ */
 
 @media (max-width: 640px) {
+  /* Featured Spotlight Mobile Polish */
+  .featured-spotlight-section {
+    padding: 0 16px !important;
+    margin: 16px auto 40px !important;
+  }
+
+  .featured-spotlight-card {
+    padding: 16px !important;
+    gap: 20px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .spotlight-price-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 16px !important;
+    padding-top: 16px !important;
+  }
+
+  .spotlight-prices {
+    justify-content: flex-start !important;
+    align-items: baseline !important;
+    width: 100% !important;
+  }
+
+  .spotlight-actions {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 10px !important;
+    align-items: stretch !important;
+  }
+
+  .spotlight-actions .btn-primary-marigold {
+    width: 100% !important;
+    height: 44px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .spotlight-actions .btn-whatsapp-square {
+    width: 100% !important;
+    height: 44px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+  }
+
   /* Product Detail Page Mobile Polish */
   .pd-page {
     padding: 16px 16px 60px !important;

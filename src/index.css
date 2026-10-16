@@ -5018,3 +5018,104 @@ img {
     margin-top: -10px;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   HIGH PRIORITY OVERRIDES: ELIMINATE DARK CARDS & LOW CONTRAST
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* Featured Spotlight Card: Flat --surface, NO dark gradient, NO dark background */
+.featured-spotlight-card {
+  background: var(--surface) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: none !important;
+}
+
+.featured-spotlight-card::before {
+  display: none !important;
+}
+
+.spotlight-visual {
+  background: var(--paper) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: var(--radius) !important;
+  padding: 10px !important;
+}
+
+.spotlight-img {
+  border-radius: var(--radius) !important;
+}
+
+.spotlight-tag-cut {
+  background: var(--paper) !important;
+  color: var(--ink) !important;
+  border: 1px solid var(--line) !important;
+  border-bottom: none !important;
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  box-shadow: none !important;
+  clip-path: none !important;
+  border-radius: var(--radius) var(--radius) 0 0 !important;
+}
+
+.spotlight-label {
+  color: var(--rose-gold) !important;
+  font-weight: 700 !important;
+}
+
+.spotlight-title {
+  color: var(--ink) !important;
+  font-family: var(--font-serif) !important;
+}
+
+.spotlight-desc {
+  color: var(--ink) !important;
+  font-size: 1rem !important;
+  line-height: 1.6 !important;
+  opacity: 0.9 !important;
+}
+
+.highlight-item {
+  color: var(--ink) !important;
+}
+
+.highlight-item svg {
+  color: var(--rose-gold) !important;
+}
+
+.spotlight-prices .price-bold {
+  color: var(--ink) !important;
+}
+
+.spotlight-prices .price-mrp {
+  color: var(--ink) !important;
+  opacity: 0.6 !important;
+}
+
+.discount-tag {
+  background: var(--blush) !important;
+  color: var(--wine) !important;
+  border: 1px solid rgba(122, 46, 58, 0.2) !important;
+  border-radius: var(--radius) !important;
+}
+
+.btn-primary-marigold {
+  background: linear-gradient(135deg, var(--rose-gold) 0%, var(--rose-light) 100%) !important;
+  color: var(--paper) !important;
+  border: 1px solid #734539 !important;
+  border-radius: var(--radius) !important;
+  box-shadow: none !important;
+}
+
+.btn-whatsapp-square {
+  background: var(--surface) !important;
+  border: 1px solid var(--rose-gold) !important;
+  color: var(--rose-gold) !important;
+  border-radius: var(--radius) !important;
+}
+
+.btn-whatsapp-square:hover {
+  background: var(--blush) !important;
+}

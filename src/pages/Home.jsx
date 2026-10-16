@@ -446,9 +446,7 @@ export default function Home() {
             <span>Curated 3D Collection Showcase</span>
           </div>
           <h2 className="section-main-title">Festive Lookbook Showcase</h2>
-          <p className="section-main-desc">
-            Spring-physics 3D perspective gallery featuring handcrafted festive silhouettes
-          </p>
+
         </div>
 
         <div className="relative w-full max-w-6xl mx-auto px-4 mt-6">

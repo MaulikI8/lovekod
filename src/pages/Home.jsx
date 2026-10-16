@@ -99,7 +99,7 @@ export default function Home() {
               src="/images/kurtha-red-gold.png"
               alt="Royal Red Embroidered Festive Kurtha Set"
               className="strip-panel-photo"
-              style={{ objectPosition: 'center 18%' }}
+              style={{ objectPosition: 'center top' }}
               loading="eager"
               fetchPriority="high"
             />
@@ -111,7 +111,7 @@ export default function Home() {
               src="/images/kurtha-rani-pink.png"
               alt="Rani Pink Hand-Embroidered Festive Kurtha Set"
               className="strip-panel-photo"
-              style={{ objectPosition: 'center 15%' }}
+              style={{ objectPosition: 'center top' }}
               loading="eager"
               fetchPriority="high"
             />
@@ -125,7 +125,7 @@ export default function Home() {
               src="/images/kurtha-olive-green.png"
               alt="Olive Green Zari Festive Kurtha Set"
               className="strip-panel-photo"
-              style={{ objectPosition: 'center 18%' }}
+              style={{ objectPosition: 'center top' }}
               loading="eager"
             />
           </div>

@@ -28,6 +28,7 @@ export default function Home() {
   const { products, categories, siteSettings, testimonials } = useStore();
   const [activeCategorySlug, setActiveCategorySlug] = useState('all');
   const [mobilePanelIndex, setMobilePanelIndex] = useState(1);
+  const [selectedSizes, setSelectedSizes] = useState({}); // { [productId]: 'M' }
 
   // Dynamic Content with fallbacks
   const watermark = siteSettings?.heroWatermark || 'LOVEKOD';
@@ -106,6 +107,16 @@ export default function Home() {
   // Spotlight featured product
   const spotlightPid = siteSettings?.spotlightProductId || 'lk-001';
   const featuredProduct = products.find(p => p.id === spotlightPid) || products[0];
+
+    const handleSelectSize = (productId, size) => {
+    setSelectedSizes(prev => ({ ...prev, [productId]: size }));
+  };
+
+  const handleCardAddToBag = (product) => {
+    const chosenSize = selectedSizes[product.id];
+    if (!chosenSize) return;
+    addToCart(product, chosenSize, 1);
+  };
 
   const getWaLink = (product) => {
     const phone = siteSettings?.contactWhatsapp || '9779800000000';
@@ -221,20 +232,19 @@ export default function Home() {
                 className="spotlight-img"
               />
               <div className="spotlight-tag-cut">
-                <span>The Centerpiece of Tihar</span>
+                <span>Featured this week</span>
               </div>
             </div>
 
             <div className="spotlight-story">
               <div className="spotlight-label">
                 <MarigoldIcon size={16} />
-                <span>{siteSettings?.spotlightBadge || 'Signature Tihar Set'}</span>
+                <span>{siteSettings?.spotlightBadge || 'SIGNATURE TIHAR SET'}</span>
               </div>
               <h2 className="spotlight-title">{siteSettings?.spotlightTitle || featuredProduct.name}</h2>
-              
 
               <p className="spotlight-desc">
-                {siteSettings?.spotlightDesc || featuredProduct.description}
+                Pure georgette with silver needlework across the collar and cuffs. Complete three-piece set with a matching lightweight lower and scalloped dupatta.
               </p>
 
               <div className="spotlight-highlights">
@@ -244,11 +254,11 @@ export default function Home() {
                 </div>
                 <div className="highlight-item">
                   <CheckIcon size={16} />
-                  <span>Breathable featherlight drape suitable for long puja rituals</span>
+                  <span>Handcrafted silver zari split-collar embroidery</span>
                 </div>
                 <div className="highlight-item">
                   <CheckIcon size={16} />
-                  <span>Pre-inspected seams with tailored ease for movement</span>
+                  <span>Measured against standard fits with generous seam allowances</span>
                 </div>
               </div>
 
@@ -267,7 +277,7 @@ export default function Home() {
 
                 <div className="spotlight-actions">
                   <Link to={`/product/${featuredProduct.id}`} className="btn-primary-marigold">
-                    <span>Inspect Details &amp; Sizes</span>
+                    <span>View details</span>
                     <ArrowRightIcon size={16} />
                   </Link>
                   <a
@@ -275,8 +285,8 @@ export default function Home() {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="btn-whatsapp-square"
-                    title="Inquire via WhatsApp"
-                    aria-label="Inquire on WhatsApp"
+                    title="Order on WhatsApp"
+                    aria-label="Order on WhatsApp"
                   >
                     <WhatsAppIcon size={20} />
                   </a>
@@ -295,27 +305,30 @@ export default function Home() {
         <div className="section-header-editorial">
           <div className="section-eyebrow">
             <DiyaIcon size={16} active={true} />
-            <span>Seasonal Edit</span>
+            <span>SEASONAL EDIT</span>
           </div>
           <h2 className="section-main-title">Handcrafted Kurtha Sets</h2>
           <p className="section-main-desc">
-            Each silhouette is tailored for celebration. No generic colorways — every kurtha is its own
-            dedicated festive creation.
+            Festive kurtha sets in georgette, silk blend and cotton silk. Each style is made in small batches.
           </p>
 
-          {/* Dynamic Category Filter Pills from Django */}
-          <div className="filter-pill-bar">
+          {/* Rectangular Tab Row (NO pills) */}
+          <div className="filter-pill-bar" role="tablist">
             {categories.map(cat => (
               <button
                 key={cat.id || cat.slug}
                 type="button"
+                role="tab"
+                aria-selected={activeCategorySlug === cat.slug}
                 className={`filter-btn ${activeCategorySlug === cat.slug ? 'active' : ''}`}
                 onClick={() => setActiveCategorySlug(cat.slug)}
               >
                 <span>{cat.name}</span>
-
               </button>
             ))}
+          </div>
+          <div className="filter-result-count">
+            {filteredProducts.length} {filteredProducts.length === 1 ? 'set' : 'sets'}
           </div>
         </div>
 
@@ -326,6 +339,11 @@ export default function Home() {
               ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
               : 0;
 
+            const selectedSize = selectedSizes[product.id];
+            const fewSizes = Object.entries(product.sizes || {})
+              .filter(([_, count]) => count > 0 && count <= 2)
+              .map(([sz]) => sz);
+
             return (
               <article key={product.id} className="editorial-product-card">
                 {/* Badge Tag */}
@@ -335,7 +353,7 @@ export default function Home() {
                   </div>
                 )}
 
-                {/* Taller Image Crop */}
+                {/* Media Image Crop (4:5) */}
                 <div className="card-media-wrapper">
                   <img
                     src={product.image}
@@ -343,15 +361,6 @@ export default function Home() {
                     loading="lazy"
                     className="card-product-img"
                   />
-                  <div className="card-media-overlay" />
-                  <Link
-                    to={`/product/${product.id}`}
-                    className="card-quick-link"
-                    aria-label={`View ${product.name}`}
-                  >
-                    <span>View Specifications</span>
-                    <ArrowRightIcon size={14} />
-                  </Link>
                 </div>
 
                 {/* Product Meta */}
@@ -363,8 +372,6 @@ export default function Home() {
                   <Link to={`/product/${product.id}`} className="card-title-link">
                     <h3 className="card-title">{product.name}</h3>
                   </Link>
-
-                  
 
                   {/* Clean Non-Wrapping Tabular Price Row */}
                   <div className="card-clean-price-row">
@@ -383,39 +390,56 @@ export default function Home() {
                     )}
                   </div>
 
-                  {/* Size Chips with Distinct States */}
-                  <div className="size-chips-strip">
+                  {/* Size Chips: 40x40 Rectangular Buttons */}
+                  <div className="size-chips-strip" role="group" aria-label="Available Sizes">
                     {Object.entries(product.sizes || {}).map(([size, count]) => {
                       const isOutOfStock = count === 0;
                       const isFew = count > 0 && count <= 2;
+                      const isSelected = selectedSize === size;
 
                       return (
-                        <div
+                        <button
                           key={size}
-                          className={`size-mini-chip ${isOutOfStock ? 'chip-oos' : isFew ? 'chip-few' : 'chip-ok'}`}
-                          title={isOutOfStock ? `${size}: Out of Stock` : isFew ? `${size}: Only ${count} left!` : `${size}: ${count} available`}
+                          type="button"
+                          disabled={isOutOfStock}
+                          aria-pressed={isSelected}
+                          aria-disabled={isOutOfStock}
+                          onClick={() => handleSelectSize(product.id, size)}
+                          className={`size-select-btn ${isSelected ? 'is-selected' : ''} ${isFew ? 'is-few' : ''} ${isOutOfStock ? 'is-oos' : ''}`}
+                          title={isOutOfStock ? `${size}: Out of Stock` : isFew ? `${size}: Only ${count} left!` : `${size}: In stock`}
                         >
-                          <span className="chip-label">{size}</span>
-                          {isFew && <span className="chip-alert">1 left</span>}
-                        </div>
+                          <span>{size}</span>
+                        </button>
                       );
                     })}
                   </div>
 
-                  {/* Actions */}
+                  {/* Data-driven low stock warning */}
+                  {fewSizes.length > 0 && (
+                    <div className="size-low-stock-note">
+                      Only 1 left in {fewSizes.join(', ')}
+                    </div>
+                  )}
+
+                  {/* Actions: Add to bag + WhatsApp */}
                   <div className="card-footer-actions">
-                    <Link to={`/product/${product.id}`} className="btn-select-size">
-                      <span>Select Size &amp; Bag</span>
-                    </Link>
+                    <button
+                      type="button"
+                      disabled={!selectedSize}
+                      onClick={() => handleCardAddToBag(product)}
+                      className="btn-card-add-bag"
+                    >
+                      <span>{selectedSize ? `Add to bag (${selectedSize})` : 'Select a size'}</span>
+                    </button>
                     <a
                       href={getWaLink(product)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="btn-card-wa"
-                      title="Direct WhatsApp Order"
-                      aria-label="Direct WhatsApp Order"
+                      className="btn-card-wa-icon"
+                      title="Order on WhatsApp"
+                      aria-label="Order on WhatsApp"
                     >
-                      <WhatsAppIcon size={18} />
+                      <WhatsAppIcon size={20} />
                     </a>
                   </div>
                 </div>
@@ -423,6 +447,36 @@ export default function Home() {
             );
           })}
         </div>
+
+        {/* You May Also Like Row if filter returns fewer than 3 */}
+        {filteredProducts.length > 0 && filteredProducts.length < 3 && (
+          <div style={{ marginTop: '48px', borderTop: '1px solid var(--line)', paddingTop: '32px' }}>
+            <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', color: 'var(--ink)', marginBottom: '18px' }}>
+              You may also like
+            </h4>
+            <div className="product-editorial-grid">
+              {products.filter(p => !filteredProducts.find(fp => fp.id === p.id)).slice(0, 3).map(rec => (
+                <article key={rec.id} className="editorial-product-card">
+                  <div className="card-media-wrapper">
+                    <img src={rec.image} alt={rec.name} className="card-product-img" />
+                  </div>
+                  <div className="card-body">
+                    <div className="card-fabric-tag">{rec.fabricType}</div>
+                    <Link to={`/product/${rec.id}`}>
+                      <h3 className="card-title">{rec.name}</h3>
+                    </Link>
+                    <div className="card-clean-price-row">
+                      <span className="sale-price tabular-num">Rs. {rec.price.toLocaleString()}</span>
+                    </div>
+                    <Link to={`/product/${rec.id}`} className="btn-primary-marigold" style={{ height: '40px', fontSize: '0.85rem', justifyContent: 'center' }}>
+                      <span>View details</span>
+                    </Link>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        )}
       </section>
 
       {/* ── 6b. VENGEANCE PERSPECTIVE CAROUSEL ── */}
@@ -432,22 +486,16 @@ export default function Home() {
         subtitle="Curated 3D Collection Showcase"
       />
 
-      {/* ── 7. GARLAND DIVIDER ── */}
-      <GarlandDivider className="section-divider" />
-
       {/* ── 8. OUR STORY (DYNAMIC) & SIGNATURE "LIGHT A DIYA" INTERACTION ── */}
-      <section className="story-section" id="story" style={{ position: 'relative' }}>
-        {/* Magic UI Warm Particles / Diya Embers */}
-        <Particles quantity={35} color="#ff9f1c" className="story-diya-particles" />
-
-        <div className="story-card-grid" style={{ position: 'relative', zIndex: 3 }}>
+      <section className="story-section" id="story">
+        <div className="story-card-grid">
           <div className="story-content">
             <div className="story-tag">
               <DiyaIcon size={16} active={true} />
-              <span>{storyTag}</span>
+              <span>OUR STORY</span>
             </div>
             <h2 className="story-title">
-              {storyTitle}
+              The LoveKod ethos <span className="story-title-devanagari">लभकोण</span>
             </h2>
             <p className="story-paragraph">
               {storyP1}
@@ -459,12 +507,12 @@ export default function Home() {
             {/* ── SIGNATURE INTERACTION: LIGHT A DIYA ── */}
             <div className="light-a-diya-widget">
               <div className="diya-widget-header">
-                <div className={`widget-diya-flame-box ${userDiyaLit ? 'is-lit' : ''} ${diyaJustLit ? 'flare' : ''}`}>
-                  <DiyaIcon size={34} active={userDiyaLit} />
+                <div className="widget-diya-flame-box">
+                  <DiyaIcon size={28} active={userDiyaLit} />
                 </div>
                 <div>
                   <div className="widget-count-number tabular-num">
-                    {diyasCount.toLocaleString()} Diyas Lit
+                    {diyasCount.toLocaleString()} <span>diyas lit</span>
                   </div>
                   <div className="widget-count-sub">
                     {userDiyaLit ? 'Your prayer for prosperity has been added!' : 'Join our festive celebration across Nepal'}
@@ -479,20 +527,20 @@ export default function Home() {
                 disabled={userDiyaLit}
               >
                 <DiyaIcon size={18} active={userDiyaLit} />
-                <span>{userDiyaLit ? 'Your Diya is Shining' : 'Light a Diya for Prosperity'}</span>
+                <span>{userDiyaLit ? 'Your diya is shining' : 'Light a diya'}</span>
               </button>
             </div>
           </div>
 
           <div className="story-visual-mosaic">
             <div className="mosaic-card-top">
-              <img src="/images/kurtha-red-gold.png" alt="LoveKod festive red and gold kurtha" />
+              <img src="/images/kurtha-red-gold.png" alt="LoveKod festive red and gold kurtha set" />
             </div>
             <div className="mosaic-quote-box">
               <div className="quote-serif">
                 "{storyQuote}"
               </div>
-              <div className="quote-author">— {storyQuoteAuthor}</div>
+              <div className="quote-author">THE LOVEKOD STUDIO, KATHMANDU</div>
             </div>
           </div>
         </div>

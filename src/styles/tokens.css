@@ -1,0 +1,54 @@
+/* ══════════════════════════════════════════════════════════════════════════════
+   LOVEKOD DESIGN TOKENS (Sampled from Logo File public/images/logo.jpg)
+   Lyra Shape Language: Crisp hairline borders, radius 2px, quiet luxury
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Brand Core Palette */
+  --paper: #EEE6DA;           /* Page background, warm cream linen */
+  --surface: #F6F0E7;         /* Cards, popovers, elevated surfaces */
+  --line: #D9CCBC;            /* Hairline borders, dividers */
+  --rose-gold: #8A5A4D;       /* Brand: Headings 24px+, buttons, icons */
+  --rose-light: #C0817A;      /* Highlights, hover, foil gradient end */
+  --blush: #E9D3CB;           /* Soft fills, selected states, tags */
+  --ink: #3B2621;             /* All body text, product titles (deep cocoa) */
+  --night: #2A1B17;           /* Announcement band and footer ONLY */
+  --wine: #7A2E3A;            /* Sale/discount and low-stock text only */
+  --flame: #E0A030;           /* ONLY inside Tihar lights, garlands & diyas */
+
+  /* Shape & Lyra Tokens */
+  --radius: 2px;
+  --radius-sm: 2px;
+  --radius-md: 2px;
+  --radius-lg: 2px;
+
+  /* Typography */
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-devanagari: 'Tiro Devanagari Hindi', 'Noto Sans Devanagari', serif;
+
+  /* Container */
+  --container: 1280px;
+}
+
+/* Expose to Tailwind v4 @theme */
+@theme {
+  --color-paper: #EEE6DA;
+  --color-surface: #F6F0E7;
+  --color-line: #D9CCBC;
+  --color-rose-gold: #8A5A4D;
+  --color-rose-light: #C0817A;
+  --color-blush: #E9D3CB;
+  --color-ink: #3B2621;
+  --color-night: #2A1B17;
+  --color-wine: #7A2E3A;
+  --color-flame: #E0A030;
+
+  --radius-sm: 2px;
+  --radius-md: 2px;
+  --radius-lg: 2px;
+
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-devanagari: 'Tiro Devanagari Hindi', 'Noto Sans Devanagari', serif;
+}

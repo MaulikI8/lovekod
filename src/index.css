@@ -1,3 +1,5 @@
+@import "./styles/tokens.css";
+@import "./styles/base.css";
 /* ══════════════════════════════════════════════════════════════════════════════
    LoveKod (लभकोण) — Tihar 2083 Festive Design System
    Culturally rooted in Nepal: Deep kaalo, marigold (sayapatri), amber diya flame,
@@ -971,7 +973,7 @@ img {
   font-family: var(--font-serif);
   font-size: clamp(2rem, 3.2vw, 2.7rem);
   font-weight: 600;
-  color: #fff;
+  color: var(--ink);
   line-height: 1.15;
   margin-bottom: 6px;
 }
@@ -1107,7 +1109,7 @@ img {
   font-family: var(--font-serif);
   font-size: clamp(2rem, 3.8vw, 2.8rem);
   font-weight: 600;
-  color: #fff;
+  color: var(--ink);
   margin-bottom: 10px;
 }
 
@@ -1275,7 +1277,7 @@ img {
   font-family: var(--font-serif);
   font-size: 1.25rem;
   font-weight: 600;
-  color: #fff;
+  color: var(--ink);
   line-height: 1.25;
 }
 
@@ -1448,7 +1450,7 @@ img {
   font-family: var(--font-serif);
   font-size: clamp(2rem, 3.4vw, 2.8rem);
   font-weight: 600;
-  color: #fff;
+  color: var(--ink);
   line-height: 1.18;
   margin-bottom: 20px;
 }
@@ -1508,7 +1510,7 @@ img {
 .widget-count-number {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--rose-gold);
 }
 
 .widget-count-sub {
@@ -3733,7 +3735,7 @@ img {
   --line: rgba(92, 61, 52, 0.12);
   --ink: #3D251E;
   --ink-light: #5A4038;
-  --rose-gold: #BD8383;
+  --rose-gold: #8A5A4D;
   --rose-gold-logo: #C48B8B;
   --cream: #FAF6F0;
 }

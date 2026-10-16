@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import { DiyaIcon, WhatsAppIcon, CheckIcon, ArrowRightIcon } from '../components/Icons';
+import { formatPrice } from '../utils/format';
 
 export default function OrderSuccess() {
   const { orderId } = useParams();
@@ -12,7 +13,7 @@ export default function OrderSuccess() {
     if (!order) return 'https://wa.me/9779800000000';
     const itemsText = order.items.map(i => `${i.name} (Size: ${i.size}, Qty: ${i.quantity})`).join(', ');
     const text = encodeURIComponent(
-      `Namaste LoveKod!\n\nI just placed an order!\n\nOrder ID: ${order.id}\nCustomer: ${order.customer?.fullName}\nPhone: ${order.customer?.phone}\nAddress: ${order.customer?.address}, ${order.customer?.city}, ${order.customer?.district}\nPayment: ${order.customer?.paymentMethod}\nTotal: Rs. ${order.total.toLocaleString()}\n\nItems:\n${itemsText}\n\nPlease confirm my Tihar delivery!`
+      `Namaste LoveKod!\n\nI just placed an order!\n\nOrder ID: ${order.id}\nCustomer: ${order.customer?.fullName}\nPhone: ${order.customer?.phone}\nAddress: ${order.customer?.address}, ${order.customer?.city}, ${order.customer?.district}\nPayment: ${order.customer?.paymentMethod}\nTotal: ${formatPrice(order.total)}\n\nItems:\n${itemsText}\n\nPlease confirm my Tihar delivery!`
     );
     return `https://wa.me/9779800000000?text=${text}`;
   };
@@ -66,7 +67,7 @@ export default function OrderSuccess() {
               <div key={idx} className="receipt-item-line">
                 <span>{it.name} (Size: {it.size}) × {it.quantity}</span>
                 <span className="receipt-item-price tabular-num">
-                  Rs. {(it.price * it.quantity).toLocaleString()}
+                  {formatPrice(it.price * it.quantity)}
                 </span>
               </div>
             ))}
@@ -74,7 +75,7 @@ export default function OrderSuccess() {
 
           <div className="receipt-total-row">
             <span>Total Payable Amount</span>
-            <span className="receipt-total-num tabular-num">Rs. {order.total.toLocaleString()}</span>
+            <span className="receipt-total-num tabular-num">{formatPrice(order.total)}</span>
           </div>
         </div>
       )}

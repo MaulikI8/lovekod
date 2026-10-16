@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import NumberFlow from '@number-flow/react';
 import { useStore } from '../../context/StoreContext';
-import { Clock, ArrowRight, Zap } from 'lucide-react';
+import { ArrowRight, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function CountdownTimer() {

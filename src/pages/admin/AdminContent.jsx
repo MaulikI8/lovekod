@@ -44,6 +44,7 @@ export default function AdminContent() {
           { id: 'spotlight', label: 'Spotlight Feature' },
           { id: 'story', label: 'Our Story & Diya Counter' },
           { id: 'contact', label: 'Concierge Contacts' },
+          { id: 'countdown', label: 'Festive Countdown' },
         ].map(tab => (
           <button
             key={tab.id}
@@ -374,6 +375,81 @@ export default function AdminContent() {
                   onChange={e => setForm({ ...form, contactAddress: e.target.value })}
                 />
               </div>
+            </div>
+          </div>
+        )}
+
+                {/* ── 6. FESTIVE COUNTDOWN TAB (NumberFlow / Skiper37) ── */}
+        {activeTab === 'countdown' && (
+          <div>
+            <h3 style={{ fontFamily: 'var(--font-serif)', color: '#fff', fontSize: '1.25rem', marginBottom: '18px' }}>
+              Bhai Tika / Festive Countdown Settings
+            </h3>
+            
+            <div className="form-group" style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={form.countdownEnabled !== false}
+                  onChange={e => setForm({ ...form, countdownEnabled: e.target.checked })}
+                  style={{ width: '18px', height: '18px', accentColor: 'var(--marigold)' }}
+                />
+                <span style={{ color: '#fff', fontWeight: 600 }}>Enable Festive Countdown Banner on Home Page</span>
+              </label>
+              <small style={{ color: 'var(--text-muted)' }}>
+                Displays smooth animated NumberFlow digits (Days : Hours : Mins : Secs) styled in the LoveKod warm cream &amp; rose-gold palette.
+              </small>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label>Target Deadline (YYYY-MM-DDTHH:MM:SS)</label>
+                <input
+                  type="datetime-local"
+                  value={form.countdownTargetDate ? form.countdownTargetDate.slice(0, 16) : '2026-11-10T12:00'}
+                  onChange={e => setForm({ ...form, countdownTargetDate: e.target.value })}
+                />
+                <small style={{ color: 'var(--text-muted)' }}>
+                  The cutoff deadline after which the countdown timer expires.
+                </small>
+              </div>
+
+              <div className="form-group">
+                <label>CTA Button Text</label>
+                <input
+                  type="text"
+                  value={form.countdownCtaText || 'Shop the Bhai Tika Edit'}
+                  onChange={e => setForm({ ...form, countdownCtaText: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>Countdown Section Headline</label>
+              <input
+                type="text"
+                value={form.countdownTitle || 'Order by Kartik 15 for Guaranteed Bhai Tika Delivery'}
+                onChange={e => setForm({ ...form, countdownTitle: e.target.value })}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Supporting Craft &amp; Dispatch Note</label>
+              <textarea
+                rows="3"
+                value={form.countdownSubtitle || 'Consciously handcrafted in small batches. Ensure guaranteed delivery across all 77 districts of Nepal before the auspicious tika hour.'}
+                onChange={e => setForm({ ...form, countdownSubtitle: e.target.value })}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>CTA Link Destination</label>
+              <input
+                type="text"
+                value={form.countdownCtaLink || '#collection'}
+                onChange={e => setForm({ ...form, countdownCtaLink: e.target.value })}
+                placeholder="#collection or /occasions"
+              />
             </div>
           </div>
         )}

@@ -128,3 +128,204 @@
     @apply font-mono;
     }
 }
+/* ══════════════════════════════════════════════════════════════════════════════
+   FESTIVE COUNTDOWN TIMER (Skiper-UI / NumberFlow Integration)
+   Warm cream surface, rose-gold accents, tabular numerals, editorial typography
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+.tihar-countdown-section {
+  position: relative;
+  background-color: var(--surface);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 56px 24px;
+  overflow: hidden;
+}
+
+.tihar-countdown-container {
+  max-width: 980px;
+  margin: 0 auto;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+/* Subtle Devanagari background watermark */
+.countdown-devanagari-watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-devanagari);
+  font-size: clamp(6rem, 16vw, 13rem);
+  font-weight: 700;
+  color: var(--rose-light);
+  opacity: 0.12;
+  user-select: none;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.countdown-content-wrap {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+}
+
+.countdown-header-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  max-width: 680px;
+}
+
+.countdown-tag-cut {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  background-color: var(--blush);
+  border: 1px solid rgba(138, 90, 77, 0.25);
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--rose-gold);
+}
+
+.countdown-tag-icon {
+  color: var(--rose-gold);
+}
+
+.countdown-main-heading {
+  font-family: var(--font-serif);
+  font-size: clamp(1.8rem, 3.2vw, 2.6rem);
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.2;
+  margin: 0;
+}
+
+.countdown-description {
+  font-family: var(--font-sans);
+  font-size: 0.96rem;
+  color: var(--ink);
+  opacity: 0.85;
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* Digits Grid */
+.countdown-digits-grid {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background-color: var(--paper);
+  border: 1px solid var(--line);
+  padding: 24px 36px;
+  box-shadow: 0 10px 32px rgba(59, 38, 33, 0.06);
+}
+
+.countdown-unit-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 68px;
+}
+
+.countdown-number-flow {
+  font-family: var(--font-serif);
+  font-size: clamp(2.4rem, 4.8vw, 3.8rem);
+  font-weight: 700;
+  color: var(--rose-gold);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.countdown-number-flow.highlight-seconds {
+  color: var(--rose-light);
+}
+
+.countdown-unit-label {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--ink);
+  opacity: 0.65;
+}
+
+.countdown-colon-separator {
+  font-family: var(--font-serif);
+  font-size: clamp(1.8rem, 3.6vw, 2.8rem);
+  font-weight: 600;
+  color: var(--rose-light);
+  opacity: 0.7;
+  margin-top: -16px;
+  user-select: none;
+}
+
+/* CTA */
+.countdown-cta-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.countdown-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 30px;
+  background: linear-gradient(135deg, var(--rose-gold) 0%, var(--rose-light) 100%);
+  color: var(--paper);
+  border: 1px solid #734539;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.25s ease;
+}
+
+.countdown-cta-btn:hover {
+  transform: translateY(-2px);
+  color: #fff;
+}
+
+.countdown-delivery-reassurance {
+  font-size: 0.8rem;
+  color: var(--ink);
+  opacity: 0.72;
+}
+
+@media (max-width: 640px) {
+  .tihar-countdown-section {
+    padding: 40px 16px;
+  }
+
+  .countdown-digits-grid {
+    padding: 16px 14px;
+    gap: 6px;
+  }
+
+  .countdown-unit-card {
+    min-width: 48px;
+  }
+
+  .countdown-colon-separator {
+    margin-top: -10px;
+  }
+}

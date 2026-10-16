@@ -4,6 +4,7 @@ import { useStore } from '../context/StoreContext';
 import GarlandDivider from '../components/GarlandDivider';
 import Spotlight from '../components/ui/Spotlight';
 import HeroHotspots from '../components/ui/HeroHotspots';
+import CountdownTimer from '../components/ui/CountdownTimer';
 import { siteConfig } from '../config/site';
 import TextGenerateEffect from '../components/ui/TextGenerateEffect';
 import ShimmerButton from '../components/ui/ShimmerButton';
@@ -202,6 +203,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* ── 2. FESTIVE BHAI TIKA COUNTDOWN (Skiper-UI / NumberFlow) ── */}
+      <CountdownTimer />
 
       {/* ── 3. GARLAND DIVIDER ── */}
       <GarlandDivider className="section-divider" />

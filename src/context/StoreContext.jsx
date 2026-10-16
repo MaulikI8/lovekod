@@ -47,6 +47,12 @@ const DEFAULT_SETTINGS = {
   storyQuote: 'When you welcome Laxmi into your home, let your attire celebrate both tradition and modern ease.',
   storyQuoteAuthor: 'The LoveKod Studio, Kathmandu',
   diyasLitCount: 108,
+  countdownEnabled: true,
+  countdownTargetDate: '2026-11-10T12:00:00',
+  countdownTitle: 'Order by Kartik 15 for Guaranteed Bhai Tika Delivery',
+  countdownSubtitle: 'Consciously handcrafted in small batches. Ensure guaranteed delivery across all 77 districts of Nepal before the auspicious tika hour.',
+  countdownCtaText: 'Shop the Bhai Tika Edit',
+  countdownCtaLink: '#collection',
 };
 
 const DEFAULT_CATEGORIES = [

@@ -224,7 +224,7 @@ export default function Header() {
                 {/* Lights Toggle with One-Time Guide Tooltip */}
                 <div className="tihar-lights-toggle-wrapper">
                   <ThemeToggleButton4
-                    className={`nav-icon-action-btn w-9 h-9 p-1.5 ${lightsEnabled ? 'lights-lit' : ''}`}
+                    className={`nav-icon-action-btn ${lightsEnabled ? 'lights-lit' : ''}`}
                     checked={lightsEnabled}
                     onChange={handleToggleLightsWithDismiss}
                     aria-label={lightsEnabled ? "Turn off festive lights" : "Turn on festive lights"}

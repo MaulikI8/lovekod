@@ -324,13 +324,13 @@ export const ThemeToggleButton4 = ({
   "aria-label"?: string;
   title?: string;
 }) => {
-  const [internalDark, setInternalDark] = useState(false);
-  const isDark = checked !== undefined ? checked : internalDark;
+  const [internalActive, setInternalActive] = useState(false);
+  const isActive = checked !== undefined ? checked : internalActive;
   const handleToggle = () => {
     if (onChange) {
       onChange();
     } else {
-      setInternalDark(!internalDark);
+      setInternalActive(!internalActive);
     }
   };
 
@@ -340,8 +340,8 @@ export const ThemeToggleButton4 = ({
       aria-label={ariaLabel}
       title={title}
       className={cn(
-        "rounded-full transition-all duration-300 active:scale-95 flex items-center justify-center",
-        isDark ? "bg-[var(--gold)] text-[var(--night)]" : "bg-[var(--surface)] text-[var(--ink)] border border-[var(--line)]",
+        "transition-all duration-300 active:scale-95 inline-flex items-center justify-center p-0",
+        isActive ? "text-[var(--gold)]" : "text-[var(--ink)] hover:text-[var(--gold)]",
         className,
       )}
       onClick={handleToggle}
@@ -354,6 +354,7 @@ export const ThemeToggleButton4 = ({
         fill="currentColor"
         strokeLinecap="round"
         viewBox="0 0 32 32"
+        className="w-[20px] h-[20px] max-w-[20px] max-h-[20px]"
       >
         <path
           strokeWidth="0"
@@ -362,20 +363,23 @@ export const ThemeToggleButton4 = ({
         <path d="M19.8 28.3h-7.6" />
         <path d="M19.8 29.5h-7.6" />
         <path d="M19.8 30.7h-7.6" />
+        {/* Filament glows and lights up when active */}
         <motion.path
           animate={{
-            pathLength: isDark ? 0 : 1,
-            opacity: isDark ? 0 : 1,
+            pathLength: isActive ? 1 : 0,
+            opacity: isActive ? 1 : 0.25,
           }}
           transition={{ ease: "easeInOut", duration: 0.35 }}
           pathLength="1"
           fill="none"
+          strokeWidth="1.2"
           d="M14.6 27.1c0-3.4 0-6.8-.1-10.2-.2-1-1.1-1.7-2-1.7-1.2-.1-2.3 1-2.2 2.3.1 1 .9 1.9 2.1 2h7.2c1.1-.1 2-1 2.1-2 .1-1.2-1-2.3-2.2-2.3-.9 0-1.7.7-2 1.7 0 3.4 0 6.8-.1 10.2"
         />
+        {/* Light rays radiate outward when festive lights are enabled */}
         <motion.g
           animate={{
-            scale: isDark ? 0.5 : 1,
-            opacity: isDark ? 0 : 1,
+            scale: isActive ? 1 : 0.4,
+            opacity: isActive ? 1 : 0,
           }}
           transition={{ ease: "easeInOut", duration: 0.35 }}
         >

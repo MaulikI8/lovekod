@@ -1049,3 +1049,120 @@ body, html {
 .carousel-dot.active {
   background: var(--rose-gold) !important;
 }
+
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   6. MOBILE OPTIMIZATIONS (iPhone SE, Android & small touchscreens <= 640px)
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 640px) {
+  /* Product Detail Page Mobile Polish */
+  .pd-page {
+    padding: 16px 16px 60px !important;
+  }
+
+  .pd-grid {
+    gap: 20px !important;
+  }
+
+  .pd-title {
+    font-size: 1.65rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .pd-price-row {
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .pd-price-now {
+    font-size: 1.5rem !important;
+  }
+
+  .pd-actions-row {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    margin-bottom: 24px !important;
+  }
+
+  .btn-add-bag,
+  .btn-buy-now {
+    width: 100% !important;
+    padding: 14px 16px !important;
+    font-size: 0.95rem !important;
+    justify-content: center !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+  }
+
+  .btn-whatsapp-square {
+    width: 100% !important;
+    height: 44px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+  }
+
+  .btn-whatsapp-square::after {
+    content: "Order / Inquire via WhatsApp";
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  /* Size Choice Buttons on Mobile */
+  .size-buttons-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 6px !important;
+  }
+
+  .size-choice-btn {
+    min-width: 0 !important;
+    height: 48px !important;
+    padding: 4px 6px !important;
+  }
+
+  .choice-size-name {
+    font-size: 0.9rem !important;
+  }
+
+  .choice-status {
+    font-size: 0.65rem !important;
+  }
+
+  /* Guarantees List */
+  .pd-guarantee-list {
+    padding-top: 16px !important;
+    gap: 12px !important;
+  }
+
+  .guarantee-item {
+    font-size: 0.8rem !important;
+    line-height: 1.4 !important;
+  }
+
+  /* Breadcrumb Wrap */
+  .pd-breadcrumb {
+    font-size: 0.78rem !important;
+    margin-bottom: 16px !important;
+    flex-wrap: wrap !important;
+  }
+
+  /* Checkout Form Mobile Spacing */
+  .checkout-page {
+    padding: 20px 14px 60px !important;
+  }
+
+  .checkout-form-card,
+  .order-summary-box {
+    padding: 18px 14px !important;
+  }
+
+  .payment-grid {
+    grid-template-columns: 1fr !important;
+  }
+}

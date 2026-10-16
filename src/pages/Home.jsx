@@ -9,7 +9,7 @@ import { siteConfig } from '../config/site';
 import TextGenerateEffect from '../components/ui/TextGenerateEffect';
 import ShimmerButton from '../components/ui/ShimmerButton';
 import ThreeDCard from '../components/ui/ThreeDCard';
-import PerspectiveCarousel from '../components/ui/PerspectiveCarousel';
+import { PerspectiveCarousel } from "@/components/ui/perspective-carousel";
 import InfiniteMovingCards from '../components/ui/InfiniteMovingCards';
 import Particles from '../components/ui/Particles';
 import {
@@ -439,11 +439,31 @@ export default function Home() {
       </section>
 
       {/* ── 6b. VENGEANCE PERSPECTIVE CAROUSEL ── */}
-      <PerspectiveCarousel
-        items={products}
-        title="Festive Lookbook Showcase"
-        subtitle="Curated 3D Collection Showcase"
-      />
+      <section className="perspective-carousel-section" id="lookbook" style={{ padding: '48px 0 64px' }}>
+        <div className="section-header-editorial">
+          <div className="section-eyebrow">
+            <span>Curated 3D Collection Showcase</span>
+          </div>
+          <h2 className="section-main-title">Festive Lookbook Showcase</h2>
+          <p className="section-main-desc">
+            Spring-physics 3D perspective gallery featuring handcrafted festive silhouettes
+          </p>
+        </div>
+
+        <div className="relative w-full max-w-6xl mx-auto px-4 mt-6">
+          <PerspectiveCarousel
+            items={products.map(p => ({
+              src: p.image,
+              title: `${p.name} • Rs. ${p.price.toLocaleString()}`,
+              alt: p.name,
+              id: p.id
+            }))}
+            defaultActiveIndex={2}
+            slideWidth={220}
+            className="h-[520px] rounded-2xl border border-[var(--line)] bg-[var(--surface)] text-[var(--ink)] shadow-sm"
+          />
+        </div>
+      </section>
 
       {/* ── 9. DYNAMIC REVIEWS SECTION FROM DJANGO ── */}
       {testimonials && testimonials.length > 0 && (

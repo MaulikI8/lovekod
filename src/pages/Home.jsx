@@ -466,38 +466,6 @@ export default function Home() {
       </section>
 
 
-      {/* ── 8. ARTISANAL CRAFTSMANSHIP & ATELIER PROMISES (STAGGERED GRID) ── */}
-      <section className="atelier-craft-section max-w-6xl mx-auto px-4 py-16" id="craft">
-        <div className="section-header-editorial mb-10">
-          <div className="section-eyebrow">
-            <SparklesIcon size={14} />
-            <span>The LoveKod Atelier</span>
-          </div>
-          <h2 className="section-main-title">Festive Craftsmanship &amp; Promises</h2>
-          <p className="section-main-desc">
-            Engineered specifically for Tihar ceremonies and Bhai Tika gatherings with zero compromise on comfort
-          </p>
-        </div>
-
-        <StaggeredGrid
-          columns="grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
-          items={[
-            {
-              title: "Pure Georgette & Silks",
-              description: "Lightweight, breathable weaves hand-picked for effortless movement from morning Laxmi Puja to evening Bhai Tika ceremonies."
-            },
-            {
-              title: "Nepali Standard Sizing",
-              description: "Tailored to Nepali feminine proportions with generous seam margins for comfortable day-long festive wear."
-            },
-            {
-              title: "Priority 77-District Dispatch",
-              description: "Fast express dispatch across Nepal to ensure your celebratory attire arrives well in time for Tihar."
-            }
-          ]}
-        />
-      </section>
-
       {/* ── 9. DYNAMIC REVIEWS SECTION FROM DJANGO ── */}
       {testimonials && testimonials.length > 0 && (
         <section className="reviews-staggered-section" id="reviews">

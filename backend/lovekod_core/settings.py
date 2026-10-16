@@ -110,3 +110,87 @@ CSRF_USE_SESSIONS = False
 # Media files configuration (File uploads)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR.parent / 'public' / 'images'
+
+# Modern Unfold Admin Customization & Navigation
+from django.urls import reverse_lazy
+
+UNFOLD = {
+    "SITE_TITLE": "LoveKod Storefront Admin",
+    "SITE_HEADER": "LoveKod (लभकोण) Boutique Admin",
+    "SITE_URL": "http://localhost:5173",
+    "DASHBOARD_CALLBACK": None,
+    "COLORS": {
+        "primary": {
+            "50": "249 243 238",
+            "100": "246 240 231",
+            "200": "233 211 203",
+            "300": "192 129 122",
+            "400": "164 103 91",
+            "500": "138 90 77",   # Brand Rose-Gold
+            "600": "115 69 57",
+            "700": "92 51 43",
+            "800": "59 38 33",    # Brand Ink
+            "900": "42 27 23",    # Brand Night
+            "950": "25 15 13",
+        },
+    },
+    "SIDEBAR": {
+        "show_search": True,
+        "show_all_applications": True,
+        "navigation": [
+            {
+                "title": "Store Operations",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Products & Stock",
+                        "icon": "shopping_bag",
+                        "link": reverse_lazy("admin:store_product_changelist"),
+                    },
+                    {
+                        "title": "Customer Orders",
+                        "icon": "receipt_long",
+                        "link": reverse_lazy("admin:store_order_changelist"),
+                    },
+                    {
+                        "title": "Categories",
+                        "icon": "category",
+                        "link": reverse_lazy("admin:store_category_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": "Storefront Content",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Global Site Settings & Flash Sale Timer",
+                        "icon": "tune",
+                        "link": reverse_lazy("admin:store_sitesettings_changelist"),
+                    },
+                    {
+                        "title": "Customer Reviews",
+                        "icon": "rate_review",
+                        "link": reverse_lazy("admin:store_testimonial_changelist"),
+                    },
+                    {
+                        "title": "Tihar Festival Moments",
+                        "icon": "celebration",
+                        "link": reverse_lazy("admin:store_festivalmoment_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": "Quick Links",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "View Live Storefront",
+                        "icon": "open_in_new",
+                        "link": "http://localhost:5173",
+                    },
+                ],
+            },
+        ],
+    },
+}

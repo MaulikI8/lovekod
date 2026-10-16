@@ -13,28 +13,6 @@ export default function Footer() {
 
   return (
     <>
-      {/* Payment & Trust Strip */}
-      <section className="payment-section" aria-label="Accepted Payment Methods">
-        <p className="payment-title">Payment Methods in Nepal</p>
-        <div className="payment-badges">
-          <div className="pay-badge esewa-badge">
-            <span className="pay-dot esewa-dot" />
-            <span>eSewa Pay</span>
-          </div>
-          <div className="pay-badge khalti-badge">
-            <span className="pay-dot khalti-dot" />
-            <span>Khalti Digital Wallet</span>
-          </div>
-          <div className="pay-badge bank-badge">
-            <ShieldCheckIcon size={16} />
-            <span>Direct Bank Transfer</span>
-          </div>
-          <div className="pay-badge cod-badge">
-            <span>Cash on Delivery (COD)</span>
-          </div>
-        </div>
-      </section>
-
       {/* Main Footer with Vengeance UI Animated Ambient Wave */}
       <AnimatedFooter>
         <footer className="footer" style={{ borderTop: 'none' }}>

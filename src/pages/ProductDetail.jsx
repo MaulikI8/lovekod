@@ -258,7 +258,7 @@ export default function ProductDetail() {
             <div className="guarantee-item">
               <ShieldCheckIcon size={18} />
               <div>
-                <strong>Flexible Payment:</strong> Cash on Delivery (COD), eSewa, Khalti, or Bank Transfer.
+                <strong>Flexible Payment:</strong> Instant Dynamic QR Pay & Cash on Delivery.
               </div>
             </div>
             <div className="guarantee-item">

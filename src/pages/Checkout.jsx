@@ -17,7 +17,7 @@ export default function Checkout() {
     city: '',
     address: '',
     note: '',
-    paymentMethod: 'COD',
+    paymentMethod: 'DynamicQR',
   });
 
   const [submitting, setSubmitting] = useState(false);
@@ -202,8 +202,20 @@ export default function Checkout() {
 
         {/* Payment Method Selection */}
         <div className="form-group payment-method-group">
-          <label className="payment-select-label">Select Payment Method *</label>
-          <div className="payment-grid">
+          <label className="payment-select-label">Payment Method *</label>
+          <div className="payment-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
+            <label className={`pay-option ${formData.paymentMethod === 'DynamicQR' ? 'selected' : ''}`}>
+              <input
+                type="radio"
+                name="payment"
+                value="DynamicQR"
+                checked={formData.paymentMethod === 'DynamicQR'}
+                onChange={() => setFormData({ ...formData, paymentMethod: 'DynamicQR' })}
+              />
+              <span className="pay-opt-title">Dynamic QR Pay</span>
+              <span className="pay-opt-desc">Instant scan &amp; auto-capture</span>
+            </label>
+
             <label className={`pay-option ${formData.paymentMethod === 'COD' ? 'selected' : ''}`}>
               <input
                 type="radio"
@@ -215,37 +227,13 @@ export default function Checkout() {
               <span className="pay-opt-title">Cash on Delivery</span>
               <span className="pay-opt-desc">Pay upon receiving</span>
             </label>
-
-            <label className={`pay-option ${formData.paymentMethod === 'eSewa' ? 'selected' : ''}`}>
-              <input
-                type="radio"
-                name="payment"
-                value="eSewa"
-                checked={formData.paymentMethod === 'eSewa'}
-                onChange={() => setFormData({ ...formData, paymentMethod: 'eSewa' })}
-              />
-              <span className="pay-opt-title">eSewa Pay</span>
-              <span className="pay-opt-desc">Verified merchant</span>
-            </label>
-
-            <label className={`pay-option ${formData.paymentMethod === 'Khalti' ? 'selected' : ''}`}>
-              <input
-                type="radio"
-                name="payment"
-                value="Khalti"
-                checked={formData.paymentMethod === 'Khalti'}
-                onChange={() => setFormData({ ...formData, paymentMethod: 'Khalti' })}
-              />
-              <span className="pay-opt-title">Khalti / Bank</span>
-              <span className="pay-opt-desc">Direct QR transfer</span>
-            </label>
           </div>
 
-          {formData.paymentMethod !== 'COD' && (
+          {formData.paymentMethod === 'DynamicQR' && (
             <div className="payment-notice-banner">
               <ShieldCheckIcon size={16} />
               <span>
-                For {formData.paymentMethod}, our team will share the verified merchant QR code via WhatsApp once your order is confirmed.
+                Dynamic QR code with instant automated payment acceptance will be presented upon order placement.
               </span>
             </div>
           )}

@@ -1280,3 +1280,42 @@ body, html {
     height: 36px !important;
   }
 }
+
+
+/* Fix mobile navbar light overlapping and icon collisions */
+@media (max-width: 768px) {
+  /* Keep Tihar lights behind interactive navbar action buttons */
+  .tihar-lights-layer {
+    z-index: 5 !important;
+    height: 38px !important;
+  }
+
+  .main-navbar-bar {
+    z-index: 30 !important;
+    height: 60px !important;
+  }
+
+  .main-navbar-inner {
+    padding: 0 14px !important;
+  }
+
+  .nav-action-icons {
+    position: relative;
+    z-index: 40;
+    gap: 2px !important;
+  }
+
+  .nav-icon-action-btn {
+    width: 38px !important;
+    height: 38px !important;
+  }
+
+  /* Make sure center brand logo does not collide with hamburger/icons */
+  .center-brand-logo .brand-wordmark {
+    font-size: 1.35rem !important;
+  }
+
+  .center-brand-logo .brand-devanagari {
+    font-size: 0.95rem !important;
+  }
+}

@@ -1,4 +1,5 @@
 import { useStore } from "../context/StoreContext";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ShoppingBagIcon, CloseIcon, TruckIcon, ArrowRightIcon } from "./Icons";
 
@@ -8,6 +9,17 @@ export default function CartDrawer() {
 
   const getProduct = (id) => products.find(p => p.id === id);
   const deliveryFee = 150;
+
+  // Lock background body scroll when cart drawer is open
+  useEffect(() => {
+    if (cartOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [cartOpen]);
 
   return (
     <div

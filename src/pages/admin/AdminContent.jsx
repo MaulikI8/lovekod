@@ -44,7 +44,7 @@ export default function AdminContent() {
           { id: 'spotlight', label: 'Spotlight Feature' },
           { id: 'story', label: 'Our Story & Diya Counter' },
           { id: 'contact', label: 'Concierge Contacts' },
-          { id: 'countdown', label: 'Festive Countdown' },
+          { id: 'countdown', label: 'Flash Sale Timer' },
         ].map(tab => (
           <button
             key={tab.id}
@@ -379,76 +379,79 @@ export default function AdminContent() {
           </div>
         )}
 
-                {/* ── 6. FESTIVE COUNTDOWN TAB (NumberFlow / Skiper37) ── */}
+                {/* ── 6. FLASH SALE COUNTDOWN TAB (Default: Invisible) ── */}
         {activeTab === 'countdown' && (
           <div>
             <h3 style={{ fontFamily: 'var(--font-serif)', color: '#fff', fontSize: '1.25rem', marginBottom: '18px' }}>
-              Bhai Tika / Festive Countdown Settings
+              Flash Sale Countdown Timer (Default: Invisible)
             </h3>
             
-            <div className="form-group" style={{ marginBottom: '20px' }}>
+            <div className="form-group" style={{ marginBottom: '20px', background: 'rgba(238, 230, 218, 0.05)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
                 <input
                   type="checkbox"
-                  checked={form.countdownEnabled !== false}
-                  onChange={e => setForm({ ...form, countdownEnabled: e.target.checked })}
-                  style={{ width: '18px', height: '18px', accentColor: 'var(--marigold)' }}
+                  checked={form.saleCountdownEnabled === true}
+                  onChange={e => setForm({ ...form, saleCountdownEnabled: e.target.checked })}
+                  style={{ width: '20px', height: '20px', accentColor: 'var(--marigold)' }}
                 />
-                <span style={{ color: '#fff', fontWeight: 600 }}>Enable Festive Countdown Banner on Home Page</span>
+                <span style={{ color: '#fff', fontWeight: 600, fontSize: '1rem' }}>
+                  Make Sale Countdown Visible on Home Page
+                </span>
               </label>
-              <small style={{ color: 'var(--text-muted)' }}>
-                Displays smooth animated NumberFlow digits (Days : Hours : Mins : Secs) styled in the LoveKod warm cream &amp; rose-gold palette.
-              </small>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', marginTop: '6px', margin: 0 }}>
+                When unchecked (default), the sale banner is completely hidden from the storefront. Check this box when launching a festive flash sale or limited-time drop.
+              </p>
             </div>
 
             <div className="form-row">
               <div className="form-group">
-                <label>Target Deadline (YYYY-MM-DDTHH:MM:SS)</label>
+                <label>Sale Expiry Date &amp; Time (YYYY-MM-DDTHH:MM)</label>
                 <input
                   type="datetime-local"
-                  value={form.countdownTargetDate ? form.countdownTargetDate.slice(0, 16) : '2026-11-10T12:00'}
-                  onChange={e => setForm({ ...form, countdownTargetDate: e.target.value })}
+                  value={form.saleCountdownTargetDate ? form.saleCountdownTargetDate.slice(0, 16) : '2026-11-10T23:59'}
+                  onChange={e => setForm({ ...form, saleCountdownTargetDate: e.target.value })}
                 />
                 <small style={{ color: 'var(--text-muted)' }}>
-                  The cutoff deadline after which the countdown timer expires.
+                  NumberFlow dynamically computes and displays remaining Days, Hours, Minutes, and Seconds until this exact cutoff.
                 </small>
               </div>
 
               <div className="form-group">
-                <label>CTA Button Text</label>
+                <label>Call-To-Action (CTA) Button Text</label>
                 <input
                   type="text"
-                  value={form.countdownCtaText || 'Shop the Bhai Tika Edit'}
-                  onChange={e => setForm({ ...form, countdownCtaText: e.target.value })}
+                  value={form.saleCountdownCtaText || 'Shop the Flash Sale'}
+                  onChange={e => setForm({ ...form, saleCountdownCtaText: e.target.value })}
                 />
               </div>
             </div>
 
             <div className="form-group">
-              <label>Countdown Section Headline</label>
+              <label>Sale Banner Headline (What is the timer for?)</label>
               <input
                 type="text"
-                value={form.countdownTitle || 'Order by Kartik 15 for Guaranteed Bhai Tika Delivery'}
-                onChange={e => setForm({ ...form, countdownTitle: e.target.value })}
+                value={form.saleCountdownTitle || 'Flash Sale • Tihar Festive Drop'}
+                onChange={e => setForm({ ...form, saleCountdownTitle: e.target.value })}
+                placeholder="e.g. Bhai Tika Midnight Drop — 20% Off All Georgettes"
               />
             </div>
 
             <div className="form-group">
-              <label>Supporting Craft &amp; Dispatch Note</label>
+              <label>Sale Terms &amp; Description Note</label>
               <textarea
                 rows="3"
-                value={form.countdownSubtitle || 'Consciously handcrafted in small batches. Ensure guaranteed delivery across all 77 districts of Nepal before the auspicious tika hour.'}
-                onChange={e => setForm({ ...form, countdownSubtitle: e.target.value })}
+                value={form.saleCountdownSubtitle || 'Limited batch festive kurtha sets with hand zari needlework. Offer valid while stocks last.'}
+                onChange={e => setForm({ ...form, saleCountdownSubtitle: e.target.value })}
               />
             </div>
 
             <div className="form-group">
-              <label>CTA Link Destination</label>
+              <label>CTA Button Destination</label>
               <input
                 type="text"
-                value={form.countdownCtaLink || '#collection'}
-                onChange={e => setForm({ ...form, countdownCtaLink: e.target.value })}
-                placeholder="#collection or /occasions"
+                value={form.saleCountdownCtaLink || '#collection'}
+                onChange={e => setForm({ ...form, saleCountdownCtaLink: e.target.value })}
+                placeholder="#collection, /collection, or /occasions"
               />
             </div>
           </div>

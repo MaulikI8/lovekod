@@ -1,0 +1,19 @@
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('health/', views.health_check, name='health_check'),
+    path('site-settings/', views.site_settings_detail_update, name='site_settings_detail_update'),
+    path('categories/', views.category_list_create, name='category_list_create'),
+    path('categories/<int:category_id>/', views.category_detail_update_delete, name='category_detail_update_delete'),
+    path('festival-moments/', views.festival_moment_list_create, name='festival_moment_list_create'),
+    path('festival-moments/<int:moment_id>/', views.festival_moment_detail_update_delete, name='festival_moment_detail_update_delete'),
+    path('testimonials/', views.testimonial_list_create, name='testimonial_list_create'),
+    path('testimonials/<int:testimonial_id>/', views.testimonial_detail_update_delete, name='testimonial_detail_update_delete'),
+    path('products/', views.product_list_create, name='product_list_create'),
+    path('products/reset/', views.reset_products_inventory, name='reset_products_inventory'),
+    path('products/<str:product_id>/', views.product_detail_update_delete, name='product_detail_update_delete'),
+    path('orders/', views.order_list_create, name='order_list_create'),
+    path('orders/<str:order_id>/', views.order_detail_update, name='order_detail_update'),
+    path('admin/login/', views.admin_login_api, name='admin_login_api'),
+]

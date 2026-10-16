@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Skiper104ScrollCard from '../components/ui/skiper-ui/skiper104';
 import { Link } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import GarlandDivider from '../components/GarlandDivider';
@@ -292,18 +293,21 @@ export default function Home() {
 
         {/* Product Grid */}
         <div className="product-editorial-grid">
-          {filteredProducts.map(product => {
+          {filteredProducts.map((product, pIdx) => {
             const discount = product.originalPrice
               ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
               : 0;
 
             const selectedSize = selectedSizes[product.id];
-            const fewSizes = Object.entries(product.sizes || {})
-              .filter(([_, count]) => count > 0 && count <= 2)
-              .map(([sz]) => sz);
+            const lowStockEntries = Object.entries(product.sizes || {})
+              .filter(([_, count]) => count > 0 && count <= 2);
+            const lowStockNote = lowStockEntries
+              .map(([sz, count]) => `${count} left in ${sz}`)
+              .join(' · ');
 
             return (
-              <article key={product.id} className="editorial-product-card">
+              <Skiper104ScrollCard key={product.id} index={pIdx}>
+                <article className="editorial-product-card h-full">
                 {/* Badge Tag */}
                 {product.badge && (
                   <div className="cut-corner-badge">
@@ -373,9 +377,9 @@ export default function Home() {
                   </div>
 
                   {/* Data-driven low stock warning */}
-                  {fewSizes.length > 0 && (
+                  {lowStockNote && (
                     <div className="size-low-stock-note">
-                      Only 1 left in {fewSizes.join(', ')}
+                      {lowStockNote}
                     </div>
                   )}
 
@@ -401,7 +405,8 @@ export default function Home() {
                     </a>
                   </div>
                 </div>
-              </article>
+                </article>
+              </Skiper104ScrollCard>
             );
           })}
         </div>

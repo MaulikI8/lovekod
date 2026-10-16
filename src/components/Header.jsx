@@ -5,6 +5,7 @@ import { siteConfig } from '../data/site';
 import CommandSearchDialog from './CommandSearchDialog';
 import TiharLights from './TiharLights';
 import { Search, Lightbulb, ShoppingBag, Menu, X, ArrowRight, ChevronDown } from 'lucide-react';
+import { ThemeToggleButton4 } from './ui/skiper-ui/skiper4';
 
 export default function Header() {
   const { cartCount, setCartOpen, lightsEnabled, toggleLights, siteSettings } = useStore();
@@ -222,15 +223,13 @@ export default function Header() {
 
                 {/* Lights Toggle with One-Time Guide Tooltip */}
                 <div className="tihar-lights-toggle-wrapper">
-                  <button
-                    type="button"
-                    className={`nav-icon-action-btn ${lightsEnabled ? 'lights-lit' : ''}`}
-                    onClick={handleToggleLightsWithDismiss}
+                  <ThemeToggleButton4
+                    className={`nav-icon-action-btn w-9 h-9 p-1.5 ${lightsEnabled ? 'lights-lit' : ''}`}
+                    checked={lightsEnabled}
+                    onChange={handleToggleLightsWithDismiss}
                     aria-label={lightsEnabled ? "Turn off festive lights" : "Turn on festive lights"}
                     title={lightsEnabled ? "Turn off festive lights" : "Turn on festive lights"}
-                  >
-                    <Lightbulb size={20} />
-                  </button>
+                  />
                   {!guideDismissed && (
                     <div 
                       className="tihar-lights-guide-tooltip" 

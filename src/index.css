@@ -5440,3 +5440,11 @@ img {
     font-size: 0.82rem;
   }
 }
+
+/* Skiper6 Luxury Micro-Hover Polish */
+.editorial-product-card {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s ease, box-shadow 0.4s ease;
+}
+.editorial-product-card:hover {
+  border-color: rgba(197, 160, 89, 0.45);
+}

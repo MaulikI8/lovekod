@@ -313,19 +313,38 @@ export const ThemeToggleButton3 = ({
 //..................................................... //
 export const ThemeToggleButton4 = ({
   className = "",
+  checked,
+  onChange,
+  "aria-label": ariaLabel,
+  title,
 }: {
   className?: string;
+  checked?: boolean;
+  onChange?: () => void;
+  "aria-label"?: string;
+  title?: string;
 }) => {
-  const [isDark, setIsDark] = useState(false);
+  const [internalDark, setInternalDark] = useState(false);
+  const isDark = checked !== undefined ? checked : internalDark;
+  const handleToggle = () => {
+    if (onChange) {
+      onChange();
+    } else {
+      setInternalDark(!internalDark);
+    }
+  };
+
   return (
     <button
       type="button"
+      aria-label={ariaLabel}
+      title={title}
       className={cn(
-        "rounded-full transition-all duration-300 active:scale-95",
-        isDark ? "bg-[var(--night)] text-[var(--paper)]" : "bg-[var(--surface)] text-[var(--ink)]",
+        "rounded-full transition-all duration-300 active:scale-95 flex items-center justify-center",
+        isDark ? "bg-[var(--gold)] text-[var(--night)]" : "bg-[var(--surface)] text-[var(--ink)] border border-[var(--line)]",
         className,
       )}
-      onClick={() => setIsDark(!isDark)}
+      onClick={handleToggle}
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"

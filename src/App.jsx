@@ -1,7 +1,9 @@
+import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { StoreProvider } from './context/StoreContext';
 import Layout from './components/Layout';
 import ScrollToTop from './components/ScrollToTop';
+import Skiper8Preloader from './components/ui/skiper-ui/skiper8';
 import Home from './pages/Home';
 import ProductDetail from './pages/ProductDetail';
 import Checkout from './pages/Checkout';
@@ -9,8 +11,24 @@ import OrderSuccess from './pages/OrderSuccess';
 import './index.css';
 
 export default function App() {
+  const [showPreloader, setShowPreloader] = useState(() => {
+    try {
+      return !sessionStorage.getItem('lovekod_preloader_seen');
+    } catch {
+      return false;
+    }
+  });
+
+  const handlePreloaderComplete = () => {
+    setShowPreloader(false);
+    try {
+      sessionStorage.setItem('lovekod_preloader_seen', 'true');
+    } catch {}
+  };
+
   return (
     <StoreProvider>
+      {showPreloader && <Skiper8Preloader onComplete={handlePreloaderComplete} />}
       <BrowserRouter>
         <ScrollToTop />
         <Routes>

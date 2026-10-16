@@ -1,0 +1,507 @@
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { defaultProducts } from '../data/products';
+
+const StoreContext = createContext();
+
+const STORAGE_KEYS = {
+  PRODUCTS: 'lovekod_products',
+  CART: 'lovekod_cart',
+  ORDERS: 'lovekod_orders',
+  ADMIN_AUTH: 'lovekod_admin',
+  LIGHTS: 'lovekod_tihar_lights',
+  SITE_SETTINGS: 'lovekod_site_settings',
+  CATEGORIES: 'lovekod_categories',
+  FESTIVALS: 'lovekod_festivals',
+  TESTIMONIALS: 'lovekod_testimonials',
+};
+
+const API_BASE = '/api';
+
+const DEFAULT_SETTINGS = {
+  announcementNepali: 'TIHAR FESTIVE EDIT',
+  announcementText: 'Free Delivery on Orders Above Rs. 3,000 Across Nepal',
+  freeShippingThreshold: 3000,
+  contactPhone: '+977 9800000000',
+  contactWhatsapp: '+977 9800000000',
+  contactEmail: 'concierge@lovekod.com',
+  contactAddress: 'Kathmandu Valley, Nepal',
+  heroBadgeNepali: 'Tihar 2083',
+  heroBadgeText: 'Tihar Festive Edit',
+  heroTitleLine1: 'Draped in Light,',
+  heroTitleAccent: 'Crafted for Celebration',
+  heroSubtitle: 'Intricately embroidered georgettes, pure chanderi silks, and regal zari borders. Consciously curated for Laxmi Puja, Bhai Tika, and cherished gatherings across Nepal.',
+  heroWatermark: 'LOVEKOD',
+  heroImage: '/images/hero-banner.jpg',
+  heroTrustItem1: 'Free Nepal Delivery > Rs. 3,000',
+  heroTrustItem2: 'Pure Georgette & Silk',
+  heroTrustItem3: 'Ready for Bhai Tika',
+  spotlightBadge: 'Signature Tihar Set',
+  spotlightTitle: 'Charcoal Embroidered Georgette Set',
+  spotlightNepali: 'Signature Georgette Set',
+  spotlightDesc: 'Cut from gossamer georgette with silver zari needlework framing the neckline, scalloped palazzo cuffs, and a translucent dupatta that catches the warm amber glow of every diya.',
+  spotlightProductId: 'lk-001',
+  storyTag: 'Our Story • The LoveKod Ethos',
+  storyTitle: 'Rooted in the Valley, Lit for the Nation',
+  storyP1: 'LoveKod was born out of a simple observation: Nepali women deserve festive attire that looks regal under the evening lights of Tihar without sacrificing comfort during day-long Bhai Tika ceremonies.',
+  storyP2: 'We work exclusively with small batches of pure georgette, tissue chanderi, and silk blends. Each garment is measured against Nepali standard fits with generous seam allowances, so you can celebrate without worries.',
+  storyQuote: 'When you welcome Laxmi into your home, let your attire celebrate both tradition and modern ease.',
+  storyQuoteAuthor: 'The LoveKod Studio, Kathmandu',
+  diyasLitCount: 108,
+};
+
+const DEFAULT_CATEGORIES = [
+  { id: 1, name: 'All Sets', slug: 'all', nepaliName: '', order: 1, isActive: true },
+  { id: 2, name: 'Georgette Sets', slug: 'georgette', nepaliName: '', order: 2, isActive: true },
+  { id: 3, name: 'Silk Blend', slug: 'silk', nepaliName: '', order: 3, isActive: true },
+  { id: 4, name: '3-Piece Sets', slug: '3-piece', nepaliName: '', order: 4, isActive: true },
+  { id: 5, name: 'Co-ord Sets', slug: 'co-ord', nepaliName: '', order: 5, isActive: true },
+];
+
+function loadState(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch { return fallback; }
+}
+
+function saveState(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch { /* ignore */ }
+}
+
+export function StoreProvider({ children }) {
+  const [products, setProducts] = useState(() => loadState(STORAGE_KEYS.PRODUCTS, defaultProducts));
+  const [categories, setCategories] = useState(() => loadState(STORAGE_KEYS.CATEGORIES, DEFAULT_CATEGORIES));
+  const [siteSettings, setSiteSettings] = useState(() => loadState(STORAGE_KEYS.SITE_SETTINGS, DEFAULT_SETTINGS));
+  const [festivalMoments, setFestivalMoments] = useState(() => loadState(STORAGE_KEYS.FESTIVALS, []));
+  const [testimonials, setTestimonials] = useState(() => loadState(STORAGE_KEYS.TESTIMONIALS, []));
+  const [cart, setCart] = useState(() => loadState(STORAGE_KEYS.CART, []));
+  const [orders, setOrders] = useState(() => loadState(STORAGE_KEYS.ORDERS, []));
+  const [cartOpen, setCartOpen] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(() => loadState(STORAGE_KEYS.ADMIN_AUTH, false));
+
+  // Tihar Lights State
+  const [lightsEnabled, setLightsEnabled] = useState(() => loadState(STORAGE_KEYS.LIGHTS, true));
+  const [celebrateLights, setCelebrateLights] = useState(false);
+
+  // Sync to localStorage
+  useEffect(() => saveState(STORAGE_KEYS.PRODUCTS, products), [products]);
+  useEffect(() => saveState(STORAGE_KEYS.CATEGORIES, categories), [categories]);
+  useEffect(() => saveState(STORAGE_KEYS.SITE_SETTINGS, siteSettings), [siteSettings]);
+  useEffect(() => saveState(STORAGE_KEYS.FESTIVALS, festivalMoments), [festivalMoments]);
+  useEffect(() => saveState(STORAGE_KEYS.TESTIMONIALS, testimonials), [testimonials]);
+  useEffect(() => saveState(STORAGE_KEYS.CART, cart), [cart]);
+  useEffect(() => saveState(STORAGE_KEYS.ORDERS, orders), [orders]);
+  useEffect(() => saveState(STORAGE_KEYS.ADMIN_AUTH, isAdmin), [isAdmin]);
+  useEffect(() => saveState(STORAGE_KEYS.LIGHTS, lightsEnabled), [lightsEnabled]);
+
+  // Fetch all dynamic data from Django Backend
+  const refreshFromBackend = useCallback(async () => {
+    // 1. Products
+    try {
+      const res = await fetch(`${API_BASE}/products/`);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) setProducts(data);
+      }
+    } catch { /* offline fallback */ }
+
+    // 2. Categories
+    try {
+      const catRes = await fetch(`${API_BASE}/categories/`);
+      if (catRes.ok) {
+        const catData = await catRes.json();
+        if (Array.isArray(catData) && catData.length > 0) setCategories(catData);
+      }
+    } catch { /* offline fallback */ }
+
+    // 3. Site Settings
+    try {
+      const setRes = await fetch(`${API_BASE}/site-settings/`);
+      if (setRes.ok) {
+        const setData = await setRes.json();
+        if (setData && !setData.error) setSiteSettings(prev => ({ ...prev, ...setData }));
+      }
+    } catch { /* offline fallback */ }
+
+    // 4. Festival Moments Marquee
+    try {
+      const festRes = await fetch(`${API_BASE}/festival-moments/`);
+      if (festRes.ok) {
+        const festData = await festRes.json();
+        if (Array.isArray(festData)) setFestivalMoments(festData);
+      }
+    } catch { /* offline fallback */ }
+
+    // 5. Testimonials
+    try {
+      const testRes = await fetch(`${API_BASE}/testimonials/`);
+      if (testRes.ok) {
+        const testData = await testRes.json();
+        if (Array.isArray(testData)) setTestimonials(testData);
+      }
+    } catch { /* offline fallback */ }
+
+    // 6. Orders
+    try {
+      const ordersRes = await fetch(`${API_BASE}/orders/`);
+      if (ordersRes.ok) {
+        const orderData = await ordersRes.json();
+        if (Array.isArray(orderData)) setOrders(orderData);
+      }
+    } catch { /* offline fallback */ }
+  }, []);
+
+  useEffect(() => {
+    refreshFromBackend();
+  }, [refreshFromBackend]);
+
+  function toggleLights() {
+    setLightsEnabled(prev => !prev);
+  }
+
+  function showToast(message, type = 'success') {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  }
+
+  // ── Cart Operations ──
+  function addToCart(productId, size) {
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+    const stock = product.sizes?.[size] || 0;
+    const existing = cart.find(c => c.productId === productId && c.size === size);
+    const currentQty = existing ? existing.quantity : 0;
+    if (currentQty >= stock) {
+      showToast('Out of stock for this size', 'error');
+      return;
+    }
+    if (existing) {
+      setCart(cart.map(c =>
+        c.productId === productId && c.size === size
+          ? { ...c, quantity: c.quantity + 1 }
+          : c
+      ));
+    } else {
+      setCart([...cart, { productId, size, quantity: 1 }]);
+    }
+
+    setCelebrateLights(true);
+    setTimeout(() => setCelebrateLights(false), 700);
+
+    showToast(`${product.name} (${size}) added to bag`);
+    setCartOpen(true);
+  }
+
+  function updateCartQty(productId, size, delta) {
+    const product = products.find(p => p.id === productId);
+    setCart(prev => prev.map(c => {
+      if (c.productId !== productId || c.size !== size) return c;
+      const newQty = c.quantity + delta;
+      if (newQty <= 0) return null;
+      const stock = product?.sizes?.[size] || 0;
+      if (newQty > stock) { showToast('Not enough stock', 'error'); return c; }
+      return { ...c, quantity: newQty };
+    }).filter(Boolean));
+  }
+
+  function removeFromCart(productId, size) {
+    setCart(prev => prev.filter(c => !(c.productId === productId && c.size === size)));
+  }
+
+  function clearCart() { setCart([]); }
+
+  const cartTotal = cart.reduce((sum, item) => {
+    const p = products.find(pr => pr.id === item.productId);
+    return sum + (p ? p.price * item.quantity : 0);
+  }, 0);
+
+  const cartCount = cart.reduce((s, i) => s + i.quantity, 0);
+
+  async function placeOrder(customerInfo) {
+    const threshold = siteSettings.freeShippingThreshold || 3000;
+    const orderId = 'ORD-' + Date.now().toString(36).toUpperCase();
+    const orderItems = cart.map(c => {
+      const p = products.find(pr => pr.id === c.productId);
+      return { ...c, name: p?.name, price: p?.price, image: p?.image };
+    });
+    const orderPayload = {
+      id: orderId,
+      customer: customerInfo,
+      items: orderItems,
+      total: cartTotal + (cartTotal >= threshold ? 0 : 150),
+      status: 'Pending',
+      createdAt: new Date().toISOString(),
+    };
+
+    // Optimistic local update
+    setProducts(prev => prev.map(p => {
+      const cartItem = cart.find(c => c.productId === p.id);
+      if (!cartItem) return p;
+      const newSizes = { ...p.sizes };
+      cart.filter(c => c.productId === p.id).forEach(c => {
+        newSizes[c.size] = Math.max(0, (newSizes[c.size] || 0) - c.quantity);
+      });
+      return { ...p, sizes: newSizes };
+    }));
+    setOrders(prev => [orderPayload, ...prev]);
+    clearCart();
+
+    try {
+      const res = await fetch(`${API_BASE}/orders/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderPayload),
+      });
+      if (res.ok) {
+        const savedOrder = await res.json();
+        refreshFromBackend();
+        return savedOrder;
+      }
+    } catch { /* offline fallback */ }
+
+    return orderPayload;
+  }
+
+  // ── Site Settings Management ──
+  async function updateSiteSettings(newSettings) {
+    setSiteSettings(prev => ({ ...prev, ...newSettings }));
+    showToast('Site settings updated');
+    try {
+      const res = await fetch(`${API_BASE}/site-settings/`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newSettings),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setSiteSettings(prev => ({ ...prev, ...updated }));
+      }
+    } catch { /* offline fallback */ }
+  }
+
+  // ── Category Management ──
+  async function addCategory(newCat) {
+    showToast('Category added');
+    try {
+      const res = await fetch(`${API_BASE}/categories/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newCat),
+      });
+      if (res.ok) {
+        const saved = await res.json();
+        setCategories(prev => [...prev, saved]);
+      }
+    } catch {
+      setCategories(prev => [...prev, { ...newCat, id: Date.now() }]);
+    }
+  }
+
+  async function updateCategory(id, updated) {
+    showToast('Category updated');
+    setCategories(prev => prev.map(c => c.id === id ? { ...c, ...updated } : c));
+    try {
+      await fetch(`${API_BASE}/categories/${id}/`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated),
+      });
+    } catch { /* offline fallback */ }
+  }
+
+  async function deleteCategory(id) {
+    showToast('Category deleted');
+    setCategories(prev => prev.filter(c => c.id !== id));
+    try {
+      await fetch(`${API_BASE}/categories/${id}/`, { method: 'DELETE' });
+    } catch { /* offline fallback */ }
+  }
+
+  // ── Festival Moments Marquee Management ──
+  async function addFestivalMoment(moment) {
+    showToast('Festival moment added');
+    try {
+      const res = await fetch(`${API_BASE}/festival-moments/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(moment),
+      });
+      if (res.ok) {
+        const saved = await res.json();
+        setFestivalMoments(prev => [...prev, saved]);
+      }
+    } catch {
+      setFestivalMoments(prev => [...prev, { ...moment, id: Date.now() }]);
+    }
+  }
+
+  async function updateFestivalMoment(id, updated) {
+    showToast('Festival moment updated');
+    setFestivalMoments(prev => prev.map(m => m.id === id ? { ...m, ...updated } : m));
+    try {
+      await fetch(`${API_BASE}/festival-moments/${id}/`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated),
+      });
+    } catch { /* offline fallback */ }
+  }
+
+  async function deleteFestivalMoment(id) {
+    showToast('Festival moment removed');
+    setFestivalMoments(prev => prev.filter(m => m.id !== id));
+    try {
+      await fetch(`${API_BASE}/festival-moments/${id}/`, { method: 'DELETE' });
+    } catch { /* offline fallback */ }
+  }
+
+  // ── Testimonials Management ──
+  async function addTestimonial(t) {
+    showToast('Testimonial added');
+    try {
+      const res = await fetch(`${API_BASE}/testimonials/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(t),
+      });
+      if (res.ok) {
+        const saved = await res.json();
+        setTestimonials(prev => [...prev, saved]);
+      }
+    } catch {
+      setTestimonials(prev => [...prev, { ...t, id: Date.now() }]);
+    }
+  }
+
+  async function updateTestimonial(id, updated) {
+    showToast('Testimonial updated');
+    setTestimonials(prev => prev.map(t => t.id === id ? { ...t, ...updated } : t));
+    try {
+      await fetch(`${API_BASE}/testimonials/${id}/`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated),
+      });
+    } catch { /* offline fallback */ }
+  }
+
+  async function deleteTestimonial(id) {
+    showToast('Testimonial removed');
+    setTestimonials(prev => prev.filter(t => t.id !== id));
+    try {
+      await fetch(`${API_BASE}/testimonials/${id}/`, { method: 'DELETE' });
+    } catch { /* offline fallback */ }
+  }
+
+  // ── Product Management ──
+  async function updateProduct(updatedProduct) {
+    setProducts(prev => prev.map(p => p.id === updatedProduct.id ? updatedProduct : p));
+    showToast('Product updated');
+
+    try {
+      await fetch(`${API_BASE}/products/${updatedProduct.id}/`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedProduct),
+      });
+      refreshFromBackend();
+    } catch { /* offline fallback */ }
+  }
+
+  async function addProduct(newProduct) {
+    const tempId = 'lk-' + Date.now().toString(36);
+    const productWithId = { ...newProduct, id: tempId };
+    setProducts(prev => [...prev, productWithId]);
+    showToast('Product added');
+
+    try {
+      const res = await fetch(`${API_BASE}/products/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newProduct),
+      });
+      if (res.ok) refreshFromBackend();
+    } catch { /* offline fallback */ }
+  }
+
+  async function deleteProduct(id) {
+    setProducts(prev => prev.filter(p => p.id !== id));
+    showToast('Product deleted');
+
+    try {
+      await fetch(`${API_BASE}/products/${id}/`, { method: 'DELETE' });
+      refreshFromBackend();
+    } catch { /* offline fallback */ }
+  }
+
+  async function updateOrderStatus(orderId, status) {
+    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status } : o));
+    showToast('Order status updated');
+
+    try {
+      await fetch(`${API_BASE}/orders/${orderId}/`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+    } catch { /* offline fallback */ }
+  }
+
+  async function adminLogin(password) {
+    if (password === 'lovekod2026') {
+      setIsAdmin(true);
+      return true;
+    }
+    try {
+      const res = await fetch(`${API_BASE}/admin/login/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+      if (res.ok) {
+        setIsAdmin(true);
+        return true;
+      }
+    } catch { /* ignore */ }
+    return false;
+  }
+
+  function adminLogout() { setIsAdmin(false); }
+
+  async function resetInventory() {
+    setProducts(defaultProducts);
+    showToast('Inventory reset to defaults');
+
+    try {
+      const res = await fetch(`${API_BASE}/products/reset/`, { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.products) setProducts(data.products);
+      }
+    } catch { /* offline fallback */ }
+  }
+
+  const value = {
+    products, categories, siteSettings, festivalMoments, testimonials,
+    cart, orders, cartOpen, toast, isAdmin, cartTotal, cartCount,
+    lightsEnabled, toggleLights, celebrateLights,
+    setCartOpen, addToCart, updateCartQty, removeFromCart, clearCart, placeOrder,
+    updateSiteSettings,
+    addCategory, updateCategory, deleteCategory,
+    addFestivalMoment, updateFestivalMoment, deleteFestivalMoment,
+    addTestimonial, updateTestimonial, deleteTestimonial,
+    updateProduct, addProduct, deleteProduct, updateOrderStatus,
+    adminLogin, adminLogout, showToast, resetInventory, refreshFromBackend,
+  };
+
+  return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
+}
+
+export function useStore() {
+  const ctx = useContext(StoreContext);
+  if (!ctx) throw new Error('useStore must be inside StoreProvider');
+  return ctx;
+}

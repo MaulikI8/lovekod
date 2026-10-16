@@ -3754,7 +3754,7 @@ img {
 }
 
 .luxury-header-wrapper.nav-hidden {
-  transform: translateY(-100%);
+  transform: translateY(0);
 }
 
 /* ── ROW 1: Announcement Band (36px, --night) ── */

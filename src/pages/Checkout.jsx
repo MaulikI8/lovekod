@@ -32,8 +32,7 @@ export default function Checkout() {
     );
   }
 
-  const freeThreshold = siteSettings?.freeShippingThreshold || 3000;
-  const deliveryFee = cartTotal >= freeThreshold ? 0 : 150;
+  const deliveryFee = 150;
   const grandTotal = cartTotal + deliveryFee;
 
   const handleSubmit = (e) => {
@@ -91,14 +90,8 @@ export default function Checkout() {
             <span className="tabular-num">Rs. {cartTotal.toLocaleString()}</span>
           </div>
           <div className="calc-row">
-            <span>Delivery</span>
-            <span>
-              {deliveryFee === 0 ? (
-                <span className="free-tag-text">FREE (Tihar Festive Offer)</span>
-              ) : (
-                <span className="tabular-num">Rs. {deliveryFee}</span>
-              )}
-            </span>
+            <span>Standard Delivery</span>
+            <span className="tabular-num">Rs. {deliveryFee}</span>
           </div>
           <div className="calc-total-row">
             <span>Grand Total</span>

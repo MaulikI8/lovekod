@@ -1,19 +1,17 @@
-import { useStore } from '../context/StoreContext';
-import { useNavigate } from 'react-router-dom';
-import { ShoppingBagIcon, CloseIcon, TruckIcon, ArrowRightIcon } from './Icons';
+import { useStore } from "../context/StoreContext";
+import { useNavigate } from "react-router-dom";
+import { ShoppingBagIcon, CloseIcon, TruckIcon, ArrowRightIcon } from "./Icons";
 
 export default function CartDrawer() {
-  const { cart, products, cartOpen, setCartOpen, cartTotal, cartCount, updateCartQty, removeFromCart, siteSettings } = useStore();
+  const { cart, products, cartOpen, setCartOpen, cartTotal, cartCount, updateCartQty, removeFromCart } = useStore();
   const navigate = useNavigate();
 
   const getProduct = (id) => products.find(p => p.id === id);
-  const freeShippingThreshold = siteSettings?.freeShippingThreshold || 3000;
-  const amountNeeded = freeShippingThreshold - cartTotal;
-  const progressPct = Math.min(100, (cartTotal / freeShippingThreshold) * 100);
+  const deliveryFee = 150;
 
   return (
     <div
-      className={`cart-backdrop ${cartOpen ? 'open' : ''}`}
+      className={`cart-backdrop ${cartOpen ? "open" : ""}`}
       onClick={(e) => { if (e.target === e.currentTarget) setCartOpen(false); }}
       aria-hidden={!cartOpen}
     >
@@ -33,22 +31,12 @@ export default function CartDrawer() {
           </button>
         </div>
 
-        {/* Free Shipping Meter */}
+        {/* Dispatch note banner */}
         {cartCount > 0 && (
           <div className="cart-meter-wrap">
             <div className="cart-meter-text">
               <TruckIcon size={16} />
-              {amountNeeded > 0 ? (
-                <span>Add <strong>Rs. {amountNeeded.toLocaleString()}</strong> more for free nationwide delivery!</span>
-              ) : (
-                <span className="free-unlocked">Tihar Gift: You unlocked FREE delivery across Nepal!</span>
-              )}
-            </div>
-            <div className="cart-meter-track">
-              <div
-                className="cart-meter-fill"
-                style={{ width: `${progressPct}%` }}
-              />
+              <span>Priority express dispatch within 24 hours across all 77 districts</span>
             </div>
           </div>
         )}
@@ -66,7 +54,7 @@ export default function CartDrawer() {
                 className="btn-primary-marigold"
                 onClick={() => {
                   setCartOpen(false);
-                  navigate('/#collection');
+                  navigate("/#collection");
                 }}
               >
                 <span>View Kurtha Collection</span>
@@ -132,19 +120,19 @@ export default function CartDrawer() {
               <span className="tabular-num">Rs. {cartTotal.toLocaleString()}</span>
             </div>
             <div className="cart-row">
-              <span>Delivery</span>
-              <span>{cartTotal >= freeShippingThreshold ? <strong className="free-text">FREE</strong> : 'Rs. 150'}</span>
+              <span>Standard Delivery</span>
+              <span className="tabular-num">Rs. {deliveryFee}</span>
             </div>
             <div className="cart-total">
               <span>Estimated Total</span>
-              <span className="tabular-num">Rs. {(cartTotal + (cartTotal >= freeShippingThreshold ? 0 : 150)).toLocaleString()}</span>
+              <span className="tabular-num">Rs. {(cartTotal + deliveryFee).toLocaleString()}</span>
             </div>
             <button
               type="button"
               className="btn-checkout"
               onClick={() => {
                 setCartOpen(false);
-                navigate('/checkout');
+                navigate("/checkout");
               }}
             >
               <span>Proceed to Checkout</span>

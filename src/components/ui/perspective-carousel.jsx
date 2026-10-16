@@ -53,10 +53,10 @@ export function PerspectiveCarousel({
   }, []);
 
   const isMobile = windowWidth <= 640;
-  const responsiveSlideWidth = isMobile ? Math.min(slideWidth, 180) : slideWidth;
+  const responsiveSlideWidth = isMobile ? Math.min(slideWidth, 210) : slideWidth;
   const safeSlideWidth = Math.max(96, responsiveSlideWidth);
-  const safeInactiveScale = isMobile ? 0.78 : clamp(inactiveScale, 0.5, 1);
-  const effectiveRotationStep = isMobile ? 38 : rotationStep;
+  const safeInactiveScale = isMobile ? 0.85 : clamp(inactiveScale, 0.5, 1);
+  const effectiveRotationStep = isMobile ? 42 : rotationStep;
 
   const selectSlide = React.useCallback(
     (nextIndex) => {
@@ -113,7 +113,7 @@ export function PerspectiveCarousel({
     >
       <div
         className={cn("absolute inset-0 overflow-hidden", viewportClassName)}
-        style={{ perspective: isMobile ? "800px" : "1200px" }}
+        style={{ perspective: "1200px" }}
       >
         <motion.div
           className="absolute left-1/2 top-[46%] sm:top-1/2 flex w-fit -translate-y-1/2 items-center"
@@ -127,7 +127,7 @@ export function PerspectiveCarousel({
               <div
                 key={`${item.src}-${index}`}
                 className="shrink-0"
-                style={{ width: safeSlideWidth, perspective: isMobile ? "800px" : "1200px" }}
+                style={{ width: safeSlideWidth, perspective: "1200px" }}
               >
                 <motion.div
                   className={cn(

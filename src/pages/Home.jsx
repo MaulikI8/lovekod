@@ -39,7 +39,7 @@ export default function Home() {
   const heroTitleAccent = siteSettings?.heroTitleAccent || 'Crafted for Celebration';
   const heroSubtitle = siteSettings?.heroSubtitle || 'Intricately embroidered georgettes, pure chanderi silks, and regal zari borders. Consciously curated for Laxmi Puja, Bhai Tika, and cherished gatherings across Nepal.';
   const heroImage = siteSettings?.heroImage || '/images/hero-banner.jpg';
-  const heroTrust1 = siteSettings?.heroTrustItem1 || 'Free Nepal Delivery > Rs. 3,000';
+  const heroTrust1 = siteSettings?.heroTrustItem1 || 'Express 77-District Delivery';
   const heroTrust2 = siteSettings?.heroTrustItem2 || 'Pure Georgette & Silk';
   const heroTrust3 = siteSettings?.heroTrustItem3 || 'Ready for Bhai Tika';
 
@@ -459,6 +459,7 @@ export default function Home() {
             }))}
             defaultActiveIndex={2}
             slideWidth={220}
+            loop={true}
             className="perspective-carousel-shell h-[520px] rounded-2xl border border-[var(--line)] bg-[var(--surface)] text-[var(--ink)] shadow-sm"
           />
         </div>

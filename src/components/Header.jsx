@@ -114,7 +114,7 @@ export default function Header() {
               {announcements[announcementIdx]}
             </span>
           </div>
-          {/* Tihar Lights Hanging from the bottom of Announcement Band */}
+          {/* Tihar Lights Hanging from Announcement Band */}
           <TiharLights />
         </div>
 

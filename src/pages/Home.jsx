@@ -484,31 +484,16 @@ export default function Home() {
           columns="grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
           items={[
             {
-              id: "pure-fabrics",
-              icon: SparklesIcon,
-              badge: "Raw Material",
               title: "Pure Georgette & Silks",
-              subtitle: "Fluidity & Grace",
-              description: "Lightweight, breathable weaves hand-picked for effortless movement from morning Laxmi Puja to evening festivities.",
-              footer: "Imported tissue chanderi and fluid georgettes"
+              description: "Lightweight, breathable weaves hand-picked for effortless movement from morning Laxmi Puja to evening Bhai Tika ceremonies."
             },
             {
-              id: "nepal-fit",
-              icon: ShieldCheckIcon,
-              badge: "Fit Engineering",
               title: "Nepali Standard Sizing",
-              subtitle: "Generous Seam Allowance",
-              description: "Tailored to Nepali feminine proportions with 2-inch side seam margins for effortless bespoke adjustments.",
-              footer: "Tested across S, M, L, XL, and XXL body measurements"
+              description: "Tailored to Nepali feminine proportions with generous seam margins for comfortable day-long festive wear."
             },
             {
-              id: "nationwide-delivery",
-              icon: TruckIcon,
-              badge: "Logistics",
               title: "Priority 77-District Dispatch",
-              subtitle: "Insured Festive Transit",
-              description: "Dispatched within 24 hours via reliable domestic logistics networks to ensure your outfit arrives well before Tihar.",
-              footer: "Express Kathmandu Valley same-day delivery available"
+              description: "Fast express dispatch across Nepal to ensure your celebratory attire arrives well in time for Tihar."
             }
           ]}
         />

@@ -420,7 +420,7 @@ export default function Home() {
             <div className="product-editorial-grid">
               {products.filter(p => !filteredProducts.find(fp => fp.id === p.id)).slice(0, 3).map(rec => (
                 <article key={rec.id} className="editorial-product-card">
-                  <Link to={`/product/${product.id}`} className="card-media-wrapper" tabIndex={-1} aria-hidden="true">
+                  <Link to={`/product/${rec.id}`} className="card-media-wrapper" tabIndex={-1} aria-hidden="true">
                     <img src={rec.image} alt={rec.name} className="card-product-img" />
                   </Link>
                   <div className="card-body">

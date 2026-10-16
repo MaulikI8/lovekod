@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import AnimatedFooter from './ui/AnimatedFooter';
-import { DiyaIcon } from './Icons';
 
 export default function Footer() {
   return (
@@ -44,12 +43,6 @@ export default function Footer() {
 
         <div className="footer-bottom">
           <span>&copy; 2083 LoveKod. All rights reserved across Nepal.</span>
-          <div className="footer-bottom-right">
-            <span className="diya-mention">
-              <DiyaIcon size={15} active={true} />
-              <span>Crafted for Tihar 2083</span>
-            </span>
-          </div>
         </div>
       </footer>
     </AnimatedFooter>

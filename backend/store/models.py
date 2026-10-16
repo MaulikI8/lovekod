@@ -36,7 +36,12 @@ class Product(models.Model):
     price = models.IntegerField(default=2999)
     original_price = models.IntegerField(null=True, blank=True, default=4999)
     description = models.TextField(blank=True, default='')
-    image = models.CharField(max_length=255, default='/images/kurtha-charcoal.jpg')
+    image = models.ImageField(
+        upload_to='',
+        blank=True,
+        null=True,
+        help_text="Upload outfit photo directly from your device (JPG, PNG, WebP)"
+    )
     badge = models.CharField(max_length=100, blank=True, default='')
     is_featured = models.BooleanField(default=False)
 
@@ -64,7 +69,7 @@ class Product(models.Model):
             'price': self.price,
             'originalPrice': self.original_price,
             'description': self.description,
-            'image': self.image,
+            'image': (f'/images/{self.image.name}' if self.image and not str(self.image).startswith('/') else (str(self.image) if self.image else '/images/kurtha-charcoal.jpg')),
             'badge': self.badge,
             'isFeatured': self.is_featured,
             'sizes': {
@@ -349,7 +354,7 @@ class OrderItem(models.Model):
             'size': self.size,
             'quantity': self.quantity,
             'price': self.price,
-            'image': self.image,
+            'image': (f'/images/{self.image.name}' if self.image and not str(self.image).startswith('/') else (str(self.image) if self.image else '/images/kurtha-charcoal.jpg')),
         }
 
     def __str__(self):

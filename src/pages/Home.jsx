@@ -25,7 +25,7 @@ import {
 } from '../components/Icons';
 
 export default function Home() {
-  const { products, categories, siteSettings, testimonials } = useStore();
+  const { products, categories, siteSettings, testimonials, addToCart, setCartOpen } = useStore();
   const [activeCategorySlug, setActiveCategorySlug] = useState('all');
   const [mobilePanelIndex, setMobilePanelIndex] = useState(1);
   const [selectedSizes, setSelectedSizes] = useState({}); // { [productId]: 'M' }
@@ -115,7 +115,8 @@ export default function Home() {
   const handleCardAddToBag = (product) => {
     const chosenSize = selectedSizes[product.id];
     if (!chosenSize) return;
-    addToCart(product, chosenSize, 1);
+    addToCart(product.id, chosenSize);
+    setCartOpen(true);
   };
 
   const getWaLink = (product) => {

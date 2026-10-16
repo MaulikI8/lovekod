@@ -19,7 +19,7 @@ const API_BASE = '/api';
 
 const DEFAULT_SETTINGS = {
   announcementNepali: 'TIHAR FESTIVE EDIT',
-  announcementText: 'Free Delivery on Orders Above Rs. 3,000 Across Nepal',
+  announcementText: 'Delivering Across All 77 Districts of Nepal for Tihar 2083',
   freeShippingThreshold: 3000,
   contactPhone: '+977 9800000000',
   contactWhatsapp: '+977 9800000000',
@@ -32,7 +32,7 @@ const DEFAULT_SETTINGS = {
   heroSubtitle: 'Intricately embroidered georgettes, pure chanderi silks, and regal zari borders. Consciously curated for Laxmi Puja, Bhai Tika, and cherished gatherings across Nepal.',
   heroWatermark: 'LOVEKOD',
   heroImage: '/images/hero-banner.jpg',
-  heroTrustItem1: 'Free Nepal Delivery > Rs. 3,000',
+  heroTrustItem1: 'Delivering Across All 77 Districts',
   heroTrustItem2: 'Pure Georgette & Silk',
   heroTrustItem3: 'Ready for Bhai Tika',
   spotlightBadge: 'Signature Tihar Set',

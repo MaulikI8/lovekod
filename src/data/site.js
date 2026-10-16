@@ -1,6 +1,6 @@
 export const siteConfig = {
   announcements: [
-    "Free delivery above Rs. 3,000 across Nepal",
+    "Delivering across all 77 districts of Nepal",
     "Order by Kartik 15 for guaranteed Bhai Tika arrival",
     "Handcrafted pure georgette & rich silk blends",
     "Priority dispatch within 24 hours across all 77 districts"

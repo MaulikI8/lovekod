@@ -31,7 +31,7 @@ export const siteConfig = {
   // Hero Section Config
   hero: {
     headline: "Kurtha sets for Bhai Tika",
-    subtext: "Georgette and silk, hand-embroidered. Free delivery above Rs. 3,000.",
+    subtext: "Georgette and silk, hand-embroidered. Delivering across all 77 districts.",
     ctaText: "Shop the Tihar edit",
     ctaLink: "#collection",
     image: "/images/kurtha-charcoal.jpg",

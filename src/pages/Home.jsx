@@ -197,7 +197,7 @@ export default function Home() {
             </h1>
 
             <p className="hero-revised-subtext">
-              Georgette and silk, hand-embroidered. Free delivery above Rs. 3,000.
+              Georgette and silk, hand-embroidered. Delivering across all 77 districts.
             </p>
 
             <div className="hero-cta-action">

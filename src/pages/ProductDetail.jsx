@@ -248,7 +248,7 @@ export default function ProductDetail() {
             <div className="guarantee-item">
               <TruckIcon size={18} />
               <div>
-                <strong>Nationwide Delivery:</strong> Free shipping across Nepal on orders above Rs. {(siteSettings?.freeShippingThreshold || 3000).toLocaleString()}.
+                <strong>Nationwide Delivery:</strong> Fast express shipping across all 77 districts in Nepal.
               </div>
             </div>
             <div className="guarantee-item">

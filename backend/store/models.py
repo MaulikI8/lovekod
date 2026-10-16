@@ -89,7 +89,7 @@ class SiteSettings(models.Model):
     announcement_nepali = models.CharField(max_length=255, default='TIHAR FESTIVE EDIT')
     announcement_text = models.CharField(
         max_length=255,
-        default='Free Delivery on Orders Above Rs. 3,000 Across Nepal'
+        default='Delivering Across All 77 Districts of Nepal for Tihar 2083'
     )
     free_shipping_threshold = models.IntegerField(default=3000)
 
@@ -111,7 +111,7 @@ class SiteSettings(models.Model):
     hero_image = models.CharField(max_length=255, default='/images/hero-banner.jpg')
 
     # Hero Trust Pills
-    hero_trust_item_1 = models.CharField(max_length=100, default='Free Nepal Delivery > Rs. 3,000')
+    hero_trust_item_1 = models.CharField(max_length=100, default='Delivering Across All 77 Districts')
     hero_trust_item_2 = models.CharField(max_length=100, default='Pure Georgette & Silk')
     hero_trust_item_3 = models.CharField(max_length=100, default='Ready for Bhai Tika')
 

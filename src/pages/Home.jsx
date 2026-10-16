@@ -441,10 +441,12 @@ export default function Home() {
       <section className="perspective-carousel-section" id="lookbook" style={{ padding: '48px 0 64px' }}>
         <div className="section-header-editorial">
           <div className="section-eyebrow">
-            <span>Curated 3D Collection Showcase</span>
+            <span>{siteSettings?.lookbookEyebrow || 'Curated 3D Collection Showcase'}</span>
           </div>
-          <h2 className="section-main-title">Festive Lookbook Showcase</h2>
-
+          <h2 className="section-main-title">{siteSettings?.lookbookTitle || 'Festive Lookbook Showcase'}</h2>
+          <p className="section-main-desc">
+            {siteSettings?.lookbookSubtitle || 'Spin through our authentic hand-embroidered Tihar kurthas'}
+          </p>
         </div>
 
         <div className="relative w-full max-w-6xl mx-auto px-4 mt-6">

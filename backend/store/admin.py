@@ -146,6 +146,14 @@ class SiteSettingsAdmin(ModelAdmin):
             ),
             'description': 'Control the live festive countdown banner on the storefront. Leave disabled for normal days.'
         }),
+        ('3D Lookbook Showcase Settings', {
+            'fields': (
+                'lookbook_eyebrow',
+                'lookbook_title',
+                'lookbook_subtitle',
+            ),
+            'description': 'Customize the 3D rotating ring carousel section title and headings on the home page.'
+        }),
     )
 
     def has_add_permission(self, request):

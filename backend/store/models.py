@@ -170,6 +170,21 @@ class SiteSettings(models.Model):
         default='#collection',
         help_text="Link destination (e.g. #collection, /collection, or /occasions)."
     )
+    lookbook_eyebrow = models.CharField(
+        max_length=150,
+        default='Curated 3D Collection Showcase',
+        help_text="Eyebrow tag above the 3D lookbook carousel."
+    )
+    lookbook_title = models.CharField(
+        max_length=200,
+        default='Festive Lookbook Showcase',
+        help_text="Main heading for the 3D lookbook carousel."
+    )
+    lookbook_subtitle = models.CharField(
+        max_length=255,
+        default='Spin through our authentic hand-embroidered Tihar kurthas',
+        help_text="Subheading description for the 3D lookbook carousel."
+    )
 
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -213,6 +228,9 @@ class SiteSettings(models.Model):
             'saleCountdownTargetDate': self.sale_countdown_target_date,
             'saleCountdownCtaText': self.sale_countdown_cta_text,
             'saleCountdownCtaLink': self.sale_countdown_cta_link,
+            'lookbookEyebrow': self.lookbook_eyebrow,
+            'lookbookTitle': self.lookbook_title,
+            'lookbookSubtitle': self.lookbook_subtitle,
         }
 
     def __str__(self):

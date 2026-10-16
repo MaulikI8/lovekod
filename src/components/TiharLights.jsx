@@ -1,50 +1,31 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useStore } from "../context/StoreContext";
 
 /**
  * TiharLights
- * Fixed corner arcs on both top-left and top-right of the viewport.
- * Uses festive catenary corner swoops and animated glowing fairy bulbs.
+ * Perfectly symmetric festive light arcs on both top-left and top-right corners.
+ * Uses exact mirrored coordinates and standard orientation so both sides match flawlessly.
  */
 export default function TiharLights() {
   const { lightsEnabled, celebrateLights } = useStore();
 
-  // Left Corner Arc Bulbs (hanging from top-left outwards and downwards in an arc)
-  const leftArcBulbs = useMemo(() => {
-    const colors = ["#FFD54F", "#FF9800", "#FF5722", "#E53935", "#81C784", "#FFA726", "#FFCA28"];
-    const count = 10;
-    return Array.from({ length: count }, (_, i) => {
-      const t = i / (count - 1);
-      // Quarter-oval / arc trajectory from (0, 48) to (180, 0)
-      const x = Math.round(t * 180);
-      const y = Math.round(Math.pow(1 - t, 1.8) * 52 + Math.sin(t * Math.PI) * 12);
-      return {
-        id: `arc-l-${i}`,
-        left: `${x}px`,
-        top: `${y}px`,
-        color: colors[i % colors.length],
-        pattern: i % 3 === 0 ? "steady" : i % 3 === 1 ? "chase" : "alt",
-        delay: `${(i * 0.14).toFixed(2)}s`,
-      };
-    });
-  }, []);
+  const bulbColors = ["#FFD54F", "#FF9800", "#FF5722", "#E53935", "#81C784", "#FFA726", "#FFCA28"];
+  const count = 9;
 
-  // Right Corner Arc Bulbs (hanging from top-right outwards and downwards in an arc)
-  const rightArcBulbs = useMemo(() => {
-    const colors = ["#FFA726", "#81C784", "#E53935", "#FF5722", "#FF9800", "#FFD54F", "#FFCA28"];
-    const count = 10;
+  // Arc path math: starting at corner edge (x=0, y=56) sweeping upward to top header (x=170, y=4)
+  const bulbPoints = useMemo(() => {
     return Array.from({ length: count }, (_, i) => {
       const t = i / (count - 1);
-      // Quarter-oval / arc trajectory from (0, 0) to (180, 48) measured from right
-      const x = Math.round((1 - t) * 180);
-      const y = Math.round(Math.pow(1 - t, 1.8) * 52 + Math.sin((1 - t) * Math.PI) * 12);
+      const x = Math.round(t * 170);
+      // Smooth catenary curve
+      const y = Math.round(Math.pow(1 - t, 2) * 52 + 4);
       return {
-        id: `arc-r-${i}`,
-        right: `${x}px`,
-        top: `${y}px`,
-        color: colors[i % colors.length],
-        pattern: i % 3 === 0 ? "alt" : i % 3 === 1 ? "steady" : "chase",
-        delay: `${(i * 0.14 + 0.1).toFixed(2)}s`,
+        id: i,
+        x,
+        y,
+        color: bulbColors[i % bulbColors.length],
+        pattern: i % 3 === 0 ? "steady" : i % 3 === 1 ? "chase" : "alt",
+        delay: `${(i * 0.12).toFixed(2)}s`,
       };
     });
   }, []);
@@ -58,29 +39,27 @@ export default function TiharLights() {
     >
       {/* ── Left Top Corner Arc ── */}
       <div className="corner-arc-wrap corner-left">
-        <svg className="corner-arc-wire" viewBox="0 0 200 80" fill="none">
-          {/* Main drape curve */}
+        <svg className="corner-arc-wire" viewBox="0 0 190 70" fill="none">
           <path
-            d="M 0 54 Q 70 54, 185 0"
-            stroke="rgba(90, 60, 45, 0.75)"
+            d="M 0 56 Q 70 56, 170 4"
+            stroke="rgba(90, 60, 45, 0.7)"
             strokeWidth="1.5"
             strokeDasharray="3 3"
           />
-          {/* Secondary subtle wire */}
           <path
-            d="M 0 42 Q 60 40, 160 0"
-            stroke="rgba(232, 119, 23, 0.35)"
+            d="M 0 44 Q 60 42, 150 2"
+            stroke="rgba(232, 119, 23, 0.3)"
             strokeWidth="1"
           />
         </svg>
 
-        {leftArcBulbs.map((b) => (
+        {bulbPoints.map((b) => (
           <div
-            key={b.id}
+            key={`left-${b.id}`}
             className={`bulb bulb-${b.pattern}`}
             style={{
-              left: b.left,
-              top: b.top,
+              left: `${b.x}px`,
+              top: `${b.y}px`,
               "--bulb-color": b.color,
               animationDelay: b.delay,
             }}
@@ -92,31 +71,29 @@ export default function TiharLights() {
         ))}
       </div>
 
-      {/* ── Right Top Corner Arc ── */}
-      <div className="corner-arc-wrap corner-right">
-        <svg className="corner-arc-wire" viewBox="0 0 200 80" fill="none">
-          {/* Main drape curve mirroring to top right */}
+      {/* ── Right Top Corner Arc (Identical symmetric mirror using scaleX(-1)) ── */}
+      <div className="corner-arc-wrap corner-right mirrored-arc">
+        <svg className="corner-arc-wire" viewBox="0 0 190 70" fill="none">
           <path
-            d="M 15 0 Q 130 54, 200 54"
-            stroke="rgba(90, 60, 45, 0.75)"
+            d="M 0 56 Q 70 56, 170 4"
+            stroke="rgba(90, 60, 45, 0.7)"
             strokeWidth="1.5"
             strokeDasharray="3 3"
           />
-          {/* Secondary subtle wire */}
           <path
-            d="M 40 0 Q 140 40, 200 42"
-            stroke="rgba(232, 119, 23, 0.35)"
+            d="M 0 44 Q 60 42, 150 2"
+            stroke="rgba(232, 119, 23, 0.3)"
             strokeWidth="1"
           />
         </svg>
 
-        {rightArcBulbs.map((b) => (
+        {bulbPoints.map((b) => (
           <div
-            key={b.id}
+            key={`right-${b.id}`}
             className={`bulb bulb-${b.pattern}`}
             style={{
-              right: b.right,
-              top: b.top,
+              left: `${b.x}px`,
+              top: `${b.y}px`,
               "--bulb-color": b.color,
               animationDelay: b.delay,
             }}

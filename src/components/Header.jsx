@@ -8,6 +8,23 @@ import { Search, Lightbulb, ShoppingBag, Menu, X, ArrowRight, ChevronDown } from
 
 export default function Header() {
   const { cartCount, setCartOpen, lightsEnabled, toggleLights, siteSettings } = useStore();
+  const [guideDismissed, setGuideDismissed] = useState(() => {
+    try {
+      return localStorage.getItem("lovekod_tihar_guide_seen") === "true";
+    } catch {
+      return false;
+    }
+  });
+
+  const handleToggleLightsWithDismiss = () => {
+    toggleLights();
+    if (!guideDismissed) {
+      setGuideDismissed(true);
+      try {
+        localStorage.setItem("lovekod_tihar_guide_seen", "true");
+      } catch {}
+    }
+  };
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -203,21 +220,32 @@ export default function Header() {
                   <Search size={20} />
                 </button>
 
-                {/* Lights Toggle with Guide Tooltip */}
+                {/* Lights Toggle with One-Time Guide Tooltip */}
                 <div className="tihar-lights-toggle-wrapper">
                   <button
                     type="button"
                     className={`nav-icon-action-btn ${lightsEnabled ? 'lights-lit' : ''}`}
-                    onClick={toggleLights}
+                    onClick={handleToggleLightsWithDismiss}
                     aria-label={lightsEnabled ? "Turn off festive lights" : "Turn on festive lights"}
                     title={lightsEnabled ? "Turn off festive lights" : "Turn on festive lights"}
                   >
                     <Lightbulb size={20} />
                   </button>
-                  <div className="tihar-lights-guide-tooltip" role="note">
-                    <span className="guide-sparkle">✨</span>
-                    <span className="guide-text">Let&apos;s celebrate Tihar!</span>
-                  </div>
+                  {!guideDismissed && (
+                    <div 
+                      className="tihar-lights-guide-tooltip" 
+                      role="note"
+                      onClick={() => {
+                        setGuideDismissed(true);
+                        try {
+                          localStorage.setItem("lovekod_tihar_guide_seen", "true");
+                        } catch {}
+                      }}
+                    >
+                      <span className="guide-sparkle">✨</span>
+                      <span className="guide-text">Let&apos;s celebrate Tihar!</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Shopping Bag Button with Notification Count Dot */}

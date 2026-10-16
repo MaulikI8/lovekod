@@ -1,16 +1,9 @@
 import { Link } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import AnimatedFooter from './ui/AnimatedFooter';
-import { DiyaIcon, MapPinIcon, PhoneIcon, MailIcon, WhatsAppIcon } from './Icons';
+import { DiyaIcon } from './Icons';
 
 export default function Footer() {
-  const { siteSettings } = useStore();
-
-  const phone = siteSettings?.contactPhone || '+977 9800000000';
-  const whatsapp = siteSettings?.contactWhatsapp || '+977 9800000000';
-  const email = siteSettings?.contactEmail || 'concierge@lovekod.com';
-  const address = siteSettings?.contactAddress || 'Kathmandu Valley, Nepal';
-
   return (
     <AnimatedFooter>
       <footer className="footer" style={{ borderTop: 'none' }}>
@@ -46,28 +39,6 @@ export default function Footer() {
               <li><a href="#exchange">3-Day Size Exchange</a></li>
               <li><a href="#faq">Frequently Asked</a></li>
             </ul>
-          </div>
-
-          <div className="footer-contact-col">
-            <h4>Boutique Concierge</h4>
-            <div className="footer-contact-list">
-              <p>
-                <MapPinIcon size={15} className="contact-icon" />
-                <span>{address}</span>
-              </p>
-              <p>
-                <PhoneIcon size={15} className="contact-icon" />
-                <span>{phone}</span>
-              </p>
-              <p>
-                <MailIcon size={15} className="contact-icon" />
-                <span>{email}</span>
-              </p>
-              <p>
-                <WhatsAppIcon size={15} className="contact-icon" />
-                <span>WhatsApp: {whatsapp}</span>
-              </p>
-            </div>
           </div>
         </div>
 

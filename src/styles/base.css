@@ -1228,6 +1228,6 @@ body, html {
 
 @media (max-width: 640px) {
   .perspective-carousel-shell {
-    height: 440px;
+    height: 380px !important;
   }
 }

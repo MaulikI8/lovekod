@@ -19,8 +19,8 @@ export function PerspectiveCarousel({
   onActiveIndexChange,
   loop = false,
   slideWidth = 200,
-  rotationStep = 60,
-  inactiveScale = 0.85,
+  rotationStep = 50,
+  inactiveScale = 0.82,
   transition = DEFAULT_TRANSITION,
   showControls = true,
   showDots = true,
@@ -40,8 +40,23 @@ export function PerspectiveCarousel({
     clamp(defaultActiveIndex, 0, maxIndex)
   );
   const currentIndex = clamp(activeIndex ?? uncontrolledIndex, 0, maxIndex);
-  const safeSlideWidth = Math.max(96, slideWidth);
-  const safeInactiveScale = clamp(inactiveScale, 0.5, 1);
+
+  // Responsive slide width: on phone screens (<= 640px), auto-adapt to ~180px
+  const [windowWidth, setWindowWidth] = React.useState(() =>
+    typeof window !== "undefined" ? window.innerWidth : 1200
+  );
+
+  React.useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const isMobile = windowWidth <= 640;
+  const responsiveSlideWidth = isMobile ? Math.min(slideWidth, 180) : slideWidth;
+  const safeSlideWidth = Math.max(96, responsiveSlideWidth);
+  const safeInactiveScale = isMobile ? 0.78 : clamp(inactiveScale, 0.5, 1);
+  const effectiveRotationStep = isMobile ? 38 : rotationStep;
 
   const selectSlide = React.useCallback(
     (nextIndex) => {
@@ -93,15 +108,15 @@ export function PerspectiveCarousel({
       aria-label="Perspective image carousel"
       tabIndex={tabIndex ?? 0}
       onKeyDown={handleKeyDown}
-      className={cn("relative isolate h-full w-full overflow-hidden", className)}
+      className={cn("relative isolate h-full w-full overflow-hidden select-none", className)}
       {...props}
     >
       <div
         className={cn("absolute inset-0 overflow-hidden", viewportClassName)}
-        style={{ perspective: "1200px" }}
+        style={{ perspective: isMobile ? "800px" : "1200px" }}
       >
         <motion.div
-          className="absolute left-1/2 top-1/2 flex w-fit -translate-y-1/2 items-center"
+          className="absolute left-1/2 top-[46%] sm:top-1/2 flex w-fit -translate-y-1/2 items-center"
           animate={{ x: -(currentIndex * safeSlideWidth + safeSlideWidth / 2) }}
           transition={transition}
         >
@@ -112,15 +127,15 @@ export function PerspectiveCarousel({
               <div
                 key={`${item.src}-${index}`}
                 className="shrink-0"
-                style={{ width: safeSlideWidth, perspective: "1200px" }}
+                style={{ width: safeSlideWidth, perspective: isMobile ? "800px" : "1200px" }}
               >
                 <motion.div
                   className={cn(
-                    "flex w-full flex-col items-center gap-3 will-change-transform",
+                    "flex w-full flex-col items-center gap-2 sm:gap-3 will-change-transform",
                     slideClassName
                   )}
                   animate={{
-                    rotateY: (currentIndex - index) * rotationStep,
+                    rotateY: (currentIndex - index) * effectiveRotationStep,
                     scale: isActive ? 1 : safeInactiveScale,
                   }}
                   transition={transition}
@@ -130,7 +145,8 @@ export function PerspectiveCarousel({
                     type="button"
                     aria-label={`Show ${item.title}`}
                     aria-current={isActive ? "true" : undefined}
-                    className="aspect-[3/4] w-full block cursor-pointer overflow-hidden rounded-lg" style={{ height: (safeSlideWidth * 4) / 3 }}
+                    className="w-full block cursor-pointer overflow-hidden rounded-lg shadow-lg"
+                    style={{ height: (safeSlideWidth * 4) / 3 }}
                     onClick={() => {
                       if (isActive && item.id) {
                         navigate(`/product/${item.id}`);
@@ -144,7 +160,7 @@ export function PerspectiveCarousel({
                       alt={item.alt ?? item.title}
                       draggable={false}
                       className={cn(
-                        "h-full w-full select-none rounded-lg object-cover shadow-xl",
+                        "h-full w-full select-none object-cover transition-transform duration-300",
                         imageClassName
                       )}
                       style={{ objectPosition: "top center" }}
@@ -152,7 +168,10 @@ export function PerspectiveCarousel({
                   </button>
 
                   <motion.p
-                    className={cn("whitespace-nowrap text-sm font-medium", labelClassName)}
+                    className={cn(
+                      "text-center text-xs sm:text-sm font-semibold max-w-[210px] sm:max-w-none px-1 text-[var(--ink)] line-clamp-1",
+                      labelClassName
+                    )}
                     animate={{
                       filter: isActive ? "blur(0px)" : "blur(2px)",
                       opacity: isActive ? 1 : 0,
@@ -171,7 +190,7 @@ export function PerspectiveCarousel({
       {showControls && (
         <div
           className={cn(
-            "absolute inset-x-4 bottom-5 z-10 mx-auto flex w-fit items-center justify-center gap-3 rounded-full border border-neutral-300/80 bg-neutral-200/70 px-2 text-neutral-700 shadow-sm backdrop-blur-sm dark:border-white/10 dark:bg-neutral-900/70 dark:text-neutral-100",
+            "absolute inset-x-2 sm:inset-x-4 bottom-3 sm:bottom-5 z-10 mx-auto flex w-fit items-center justify-center gap-2 sm:gap-3 rounded-full border border-[var(--line)] bg-[var(--surface)]/95 px-3 py-1 text-[var(--ink)] shadow-md backdrop-blur-md",
             controlsClassName
           )}
         >
@@ -179,14 +198,14 @@ export function PerspectiveCarousel({
             type="button"
             aria-label="Show previous slide"
             disabled={isPreviousDisabled}
-            className="inline-flex size-9 items-center justify-center rounded-full transition-colors hover:bg-white/70 disabled:cursor-not-allowed disabled:opacity-35 dark:hover:bg-white/10"
+            className="inline-flex size-8 sm:size-9 items-center justify-center rounded-full transition-colors hover:bg-[var(--blush)] disabled:cursor-not-allowed disabled:opacity-35"
             onClick={() => selectSlide(currentIndex - 1)}
           >
-            <ChevronLeft className="size-5" />
+            <ChevronLeft className="size-4 sm:size-5" />
           </button>
 
           {showDots && (
-            <div className="flex items-center justify-center gap-2">
+            <div className="flex items-center justify-center gap-1.5 sm:gap-2">
               {items.map((item, index) => (
                 <button
                   key={`${item.title}-${index}`}
@@ -194,8 +213,10 @@ export function PerspectiveCarousel({
                   aria-label={`Show slide ${index + 1}: ${item.title}`}
                   aria-current={currentIndex === index ? "true" : undefined}
                   className={cn(
-                    "h-2 rounded-full bg-current transition-[width,opacity] duration-300",
-                    currentIndex === index ? "w-7 opacity-100" : "w-2 opacity-30"
+                    "h-1.5 sm:h-2 rounded-full transition-[width,opacity] duration-300",
+                    currentIndex === index
+                      ? "w-5 sm:w-7 bg-[var(--rose-gold)] opacity-100"
+                      : "w-1.5 sm:w-2 bg-[var(--ink)] opacity-30"
                   )}
                   onClick={() => selectSlide(index)}
                 />
@@ -207,10 +228,10 @@ export function PerspectiveCarousel({
             type="button"
             aria-label="Show next slide"
             disabled={isNextDisabled}
-            className="inline-flex size-9 items-center justify-center rounded-full transition-colors hover:bg-white/70 disabled:cursor-not-allowed disabled:opacity-35 dark:hover:bg-white/10"
+            className="inline-flex size-8 sm:size-9 items-center justify-center rounded-full transition-colors hover:bg-[var(--blush)] disabled:cursor-not-allowed disabled:opacity-35"
             onClick={() => selectSlide(currentIndex + 1)}
           >
-            <ChevronRight className="size-5" />
+            <ChevronRight className="size-4 sm:size-5" />
           </button>
         </div>
       )}

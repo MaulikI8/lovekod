@@ -79,9 +79,6 @@ export default function Footer() {
                 <DiyaIcon size={16} active={true} />
                 <span>Crafted for Tihar 2083</span>
               </span>
-              <Link to="/admin" className="staff-link">
-                Admin Management
-              </Link>
             </div>
           </div>
         </footer>

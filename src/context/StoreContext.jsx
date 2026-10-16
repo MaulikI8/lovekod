@@ -15,7 +15,7 @@ const STORAGE_KEYS = {
   TESTIMONIALS: 'lovekod_testimonials',
 };
 
-const API_BASE = '/api';
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 const DEFAULT_SETTINGS = {
   announcementNepali: 'TIHAR FESTIVE EDIT',

@@ -10,6 +10,7 @@ import TextGenerateEffect from '../components/ui/TextGenerateEffect';
 import ShimmerButton from '../components/ui/ShimmerButton';
 import ThreeDCard from '../components/ui/ThreeDCard';
 import { PerspectiveCarousel } from "@/components/ui/perspective-carousel";
+import { StaggeredGrid } from "@/components/ui/staggered-grid";
 import InfiniteMovingCards from '../components/ui/InfiniteMovingCards';
 import Particles from '../components/ui/Particles';
 import {
@@ -463,6 +464,54 @@ export default function Home() {
             className="h-[520px] rounded-2xl border border-[var(--line)] bg-[var(--surface)] text-[var(--ink)] shadow-sm"
           />
         </div>
+      </section>
+
+
+      {/* ── 8. ARTISANAL CRAFTSMANSHIP & ATELIER PROMISES (STAGGERED GRID) ── */}
+      <section className="atelier-craft-section max-w-6xl mx-auto px-4 py-16" id="craft">
+        <div className="section-header-editorial mb-10">
+          <div className="section-eyebrow">
+            <SparklesIcon size={14} />
+            <span>The LoveKod Atelier</span>
+          </div>
+          <h2 className="section-main-title">Festive Craftsmanship &amp; Promises</h2>
+          <p className="section-main-desc">
+            Engineered specifically for Tihar ceremonies and Bhai Tika gatherings with zero compromise on comfort
+          </p>
+        </div>
+
+        <StaggeredGrid
+          columns="grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+          items={[
+            {
+              id: "pure-fabrics",
+              icon: SparklesIcon,
+              badge: "Raw Material",
+              title: "Pure Georgette & Silks",
+              subtitle: "Fluidity & Grace",
+              description: "Lightweight, breathable weaves hand-picked for effortless movement from morning Laxmi Puja to evening festivities.",
+              footer: "Imported tissue chanderi and fluid georgettes"
+            },
+            {
+              id: "nepal-fit",
+              icon: ShieldCheckIcon,
+              badge: "Fit Engineering",
+              title: "Nepali Standard Sizing",
+              subtitle: "Generous Seam Allowance",
+              description: "Tailored to Nepali feminine proportions with 2-inch side seam margins for effortless bespoke adjustments.",
+              footer: "Tested across S, M, L, XL, and XXL body measurements"
+            },
+            {
+              id: "nationwide-delivery",
+              icon: TruckIcon,
+              badge: "Logistics",
+              title: "Priority 77-District Dispatch",
+              subtitle: "Insured Festive Transit",
+              description: "Dispatched within 24 hours via reliable domestic logistics networks to ensure your outfit arrives well before Tihar.",
+              footer: "Express Kathmandu Valley same-day delivery available"
+            }
+          ]}
+        />
       </section>
 
       {/* ── 9. DYNAMIC REVIEWS SECTION FROM DJANGO ── */}

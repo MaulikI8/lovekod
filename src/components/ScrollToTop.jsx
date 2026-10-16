@@ -1,29 +1,50 @@
-import { useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 /**
  * ScrollToTop
- * Automatically resets scroll position to the very top (0, 0)
- * whenever the route or pathname changes, ensuring users never
- * land in the middle or bottom of a newly opened page.
+ * Ensures that whenever a page loads or routes change, the user starts at
+ * the exact top (0, 0), stopping Lenis smooth-scroll from carrying momentum or
+ * preserving previous scroll positions.
  */
 export default function ScrollToTop() {
   const { pathname, search, hash } = useLocation();
 
   useEffect(() => {
-    // If navigating to an in-page hash anchor (e.g. /#collection), let browser handle or scroll to element
+    // If navigating to an in-page hash anchor (e.g. /#collection), let element scrollIntoView
     if (hash) {
-      const element = document.querySelector(hash);
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth" });
-        return;
-      }
+      setTimeout(() => {
+        const element = document.querySelector(hash);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 50);
+      return;
     }
 
-    // Otherwise always reset window, documentElement and body to top immediately
-    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    // Tell Lenis smooth scroll to immediately jump to top
+    if (window.__lenis) {
+      try {
+        window.__lenis.scrollTo(0, { immediate: true });
+      } catch {}
+    }
+
+    // Force browser native scroll to top
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     if (document.documentElement) document.documentElement.scrollTop = 0;
     if (document.body) document.body.scrollTop = 0;
+
+    // Second check after next event loop tick to overcome any async image / layout reflow
+    const timer = setTimeout(() => {
+      if (window.__lenis) {
+        try {
+          window.__lenis.scrollTo(0, { immediate: true });
+        } catch {}
+      }
+      window.scrollTo(0, 0);
+    }, 10);
+
+    return () => clearTimeout(timer);
   }, [pathname, search, hash]);
 
   return null;

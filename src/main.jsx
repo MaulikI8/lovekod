@@ -14,6 +14,7 @@ if (typeof window !== 'undefined' && !window.matchMedia('(prefers-reduced-motion
       smoothWheel: true,
       wheelMultiplier: 0.9,
     });
+    window.__lenis = lenis;
 
     function raf(time) {
       lenis.raf(time);

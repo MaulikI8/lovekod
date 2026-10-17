@@ -4,7 +4,10 @@ deployment:
     - export FRONTENDPATH=/home8/aashutos/lovekod.com/
     - export BACKENDPATH=/home8/aashutos/backend/
     - /bin/cp -R dist/* $FRONTENDPATH
+    - /bin/mkdir -p $BACKENDPATH
+    - if [ -f $BACKENDPATH/db.sqlite3 ]; then /bin/cp -f $BACKENDPATH/db.sqlite3 $BACKENDPATH/db.sqlite3.bak; fi
     - /bin/cp -R backend/* $BACKENDPATH
+    - if [ -f $BACKENDPATH/db.sqlite3.bak ]; then /bin/mv -f $BACKENDPATH/db.sqlite3.bak $BACKENDPATH/db.sqlite3; fi
     - /bin/mkdir -p $FRONTENDPATH/static 2>/dev/null || true
     - /bin/cp -R backend/staticfiles/* $FRONTENDPATH/static/ 2>/dev/null || true
     - /bin/touch $BACKENDPATH/tmp/restart.txt 2>/dev/null || true

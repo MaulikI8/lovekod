@@ -198,6 +198,11 @@ def ensure_initial_seed():
         for t in DEFAULT_TESTIMONIALS:
             Testimonial.objects.create(**t)
 
+    # Ensure a default superuser always exists if database is wiped or fresh
+    from django.contrib.auth.models import User
+    if not User.objects.filter(is_superuser=True).exists():
+        User.objects.create_superuser('admin', 'admin@lovekod.com', 'lovekod2026')
+
 
 def health_check(request):
     ensure_initial_seed()

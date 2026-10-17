@@ -69,16 +69,26 @@ if env_file.exists():
 DB_ENGINE = os.environ.get('DB_ENGINE', '').lower()
 
 if DB_ENGINE in ['postgres', 'postgresql', 'django.db.backends.postgresql']:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.environ.get('DB_NAME', 'lovekod_db'),
-            'USER': os.environ.get('DB_USER', 'postgres'),
-            'PASSWORD': os.environ.get('DB_PASSWORD', ''),
-            'HOST': os.environ.get('DB_HOST', 'localhost'),
-            'PORT': os.environ.get('DB_PORT', '5432'),
+    try:
+        import psycopg2
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': os.environ.get('DB_NAME', 'aashutos_lovekod'),
+                'USER': os.environ.get('DB_USER', 'aashutos_admin'),
+                'PASSWORD': os.environ.get('DB_PASSWORD', 'lovekod123'),
+                'HOST': os.environ.get('DB_HOST', 'localhost'),
+                'PORT': os.environ.get('DB_PORT', '5432'),
+            }
         }
-    }
+    except ImportError:
+        # Graceful fallback to sqlite if psycopg2 is not installed in the python environment
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }
+        }
 elif DB_ENGINE in ['mysql', 'django.db.backends.mysql']:
     DATABASES = {
         'default': {

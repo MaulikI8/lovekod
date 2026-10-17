@@ -154,6 +154,16 @@ class SiteSettingsAdmin(ModelAdmin):
             ),
             'description': 'Customize the 3D rotating ring carousel section title and headings on the home page.'
         }),
+        ('Social Channels & Footer Links', {
+            'fields': (
+                'social_handle',
+                'social_instagram',
+                'social_tiktok',
+                'social_facebook',
+                'website_url',
+            ),
+            'description': 'Customize the social media links, handles, and official domain displayed in the footer.'
+        }),
     )
 
     def has_add_permission(self, request):

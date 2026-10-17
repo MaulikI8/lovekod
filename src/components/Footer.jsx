@@ -1,7 +1,7 @@
-import { Link } from 'react-router-dom';
 import AnimatedFooter from './ui/AnimatedFooter';
 import { WhatsAppIcon } from './Icons';
 import { Globe, ArrowUpRight, Sparkles } from 'lucide-react';
+import { useStore } from '../context/StoreContext';
 
 function InstagramIcon({ className = "w-4 h-4", ...props }) {
   return (
@@ -57,6 +57,17 @@ function FacebookIcon({ className = "w-4 h-4", ...props }) {
 }
 
 export default function Footer() {
+  const { siteSettings } = useStore();
+
+  const socialHandle = siteSettings?.socialHandle || '@lovekod.np';
+  const socialInstagram = siteSettings?.socialInstagram || 'https://instagram.com/lovekod.np';
+  const socialTiktok = siteSettings?.socialTiktok || 'https://tiktok.com/@lovekod.np';
+  const socialFacebook = siteSettings?.socialFacebook || 'https://facebook.com/lovekod.np';
+  const websiteUrl = siteSettings?.websiteUrl || 'https://www.lovekod.com';
+  const rawDomain = websiteUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
+  const waPhone = (siteSettings?.contactWhatsapp || '9779800000000').replace(/[^\d]/g, '');
+  const waLink = `https://wa.me/${waPhone}?text=Namaste%20LoveKod%2C%20I%20would%20like%20to%20inquire%20about%20festive%20kurtha%20sets.`;
+
   return (
     <AnimatedFooter>
       <footer className="footer" style={{ borderTop: 'none', background: 'var(--night)', color: 'var(--paper)' }}>
@@ -77,7 +88,7 @@ export default function Footer() {
           </div>
 
           <a
-            href="https://www.lovekod.com"
+            href={websiteUrl}
             target="_blank"
             rel="noopener noreferrer"
             style={{
@@ -98,7 +109,7 @@ export default function Footer() {
             className="hover:bg-[var(--gold)] hover:text-[var(--night)]"
           >
             <Globe size={14} />
-            <span>www.lovekod.com</span>
+            <span>{rawDomain}</span>
             <ArrowUpRight size={13} />
           </a>
         </div>
@@ -137,16 +148,16 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Luxury Social Media Column */}
+          {/* Dynamic Social Media Column */}
           <div className="footer-nav-col">
             <h4 style={{ color: 'var(--paper)', fontSize: '0.95rem', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '10px' }}>Connect</h4>
             <div style={{ fontSize: '0.78rem', color: 'var(--gold)', marginBottom: '16px', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)' }}>
-              @lovekod.np
+              {socialHandle}
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <a
-                href="https://instagram.com/lovekod.np"
+                href={socialInstagram}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
@@ -172,7 +183,7 @@ export default function Footer() {
               </a>
 
               <a
-                href="https://tiktok.com/@lovekod.np"
+                href={socialTiktok}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
@@ -198,7 +209,7 @@ export default function Footer() {
               </a>
 
               <a
-                href="https://facebook.com/lovekod.np"
+                href={socialFacebook}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
@@ -224,7 +235,7 @@ export default function Footer() {
               </a>
 
               <a
-                href="https://wa.me/9779800000000?text=Namaste%20LoveKod%2C%20I%20would%20like%20to%20inquire%20about%20festive%20kurtha%20sets."
+                href={waLink}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
@@ -255,11 +266,11 @@ export default function Footer() {
         <div className="footer-bottom" style={{ borderColor: 'var(--line)', paddingTop: '28px', color: 'var(--ink-muted)' }}>
           <span>&copy; 2083 LoveKod Atelier. All rights reserved across Nepal.</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '0.82rem' }}>
-            <a href="https://www.lovekod.com" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--paper)', textDecoration: 'none', letterSpacing: '0.04em' }}>
-              www.lovekod.com
+            <a href={websiteUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--paper)', textDecoration: 'none', letterSpacing: '0.04em' }}>
+              {rawDomain}
             </a>
             <span style={{ opacity: 0.4 }}>•</span>
-            <span style={{ color: 'var(--gold)', letterSpacing: '0.06em' }}>@lovekod.np</span>
+            <span style={{ color: 'var(--gold)', letterSpacing: '0.06em' }}>{socialHandle}</span>
           </div>
         </div>
       </footer>

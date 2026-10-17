@@ -186,6 +186,34 @@ class SiteSettings(models.Model):
         help_text="Subheading description for the 3D lookbook carousel."
     )
 
+    # Social Media & Footer Links
+    social_handle = models.CharField(
+        max_length=100,
+        default="@lovekod.np",
+        help_text="Social handle shown across footer (e.g. @lovekod.np)"
+    )
+    social_instagram = models.CharField(
+        max_length=255,
+        default="https://instagram.com/lovekod.np",
+        help_text="Full Instagram profile link"
+    )
+    social_tiktok = models.CharField(
+        max_length=255,
+        default="https://tiktok.com/@lovekod.np",
+        help_text="Full TikTok profile link"
+    )
+    social_facebook = models.CharField(
+        max_length=255,
+        default="https://facebook.com/lovekod.np",
+        help_text="Full Facebook page link"
+    )
+    website_url = models.CharField(
+        max_length=255,
+        default="https://www.lovekod.com",
+        help_text="Storefront website URL"
+    )
+
+
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -231,6 +259,11 @@ class SiteSettings(models.Model):
             'lookbookEyebrow': self.lookbook_eyebrow,
             'lookbookTitle': self.lookbook_title,
             'lookbookSubtitle': self.lookbook_subtitle,
+            'socialHandle': self.social_handle,
+            'socialInstagram': self.social_instagram,
+            'socialTiktok': self.social_tiktok,
+            'socialFacebook': self.social_facebook,
+            'websiteUrl': self.website_url,
         }
 
     def __str__(self):

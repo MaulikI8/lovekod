@@ -98,6 +98,11 @@ REST_FRAMEWORK = {
 
 # CSRF Trusted Origins for local development & proxying
 CSRF_TRUSTED_ORIGINS = [
+    "https://lovekod.com",
+    "https://www.lovekod.com",
+    "https://aashutoshbasnet.com",
+    "http://lovekod.com",
+    "http://www.lovekod.com",
     'http://localhost:5173',
     'http://127.0.0.1:5173',
     'http://localhost:8000',

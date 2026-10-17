@@ -1,0 +1,8 @@
+---
+deployment:
+  tasks:
+    - export FRONTENDPATH=/home8/aashutos/lovekod.com/
+    - export BACKENDPATH=/home8/aashutos/backend/
+    - /bin/cp -R dist/* $FRONTENDPATH
+    - /bin/cp -R backend/* $BACKENDPATH
+    - /bin/touch $BACKENDPATH/tmp/restart.txt 2>/dev/null || true

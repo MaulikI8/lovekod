@@ -3,6 +3,7 @@ import Header from './Header';
 import Footer from './Footer';
 import CartDrawer from './CartDrawer';
 import Toast from './Toast';
+import CookieConsent from './ui/CookieConsent';
 
 export default function Layout() {
   return (
@@ -14,6 +15,7 @@ export default function Layout() {
       <Footer />
       <CartDrawer />
       <Toast />
+      <CookieConsent />
     </div>
   );
 }

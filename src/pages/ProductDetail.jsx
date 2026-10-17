@@ -25,7 +25,20 @@ export default function ProductDetail() {
   const [sizeError, setSizeError] = useState(false);
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, [id]);
+    if (product) {
+      document.title = `${product.name} (${product.pieces || "3-Piece"}) | LoveKod Atelier`;
+      const metaDesc = document.querySelector("meta[name=\"description\"]");
+      if (metaDesc) {
+        metaDesc.setAttribute(
+          "content",
+          `${product.description} Price: Rs. ${product.price.toLocaleString()}. Handcrafted festive kurtha set with express delivery across all 77 districts of Nepal.`
+        );
+      }
+    }
+    return () => {
+      document.title = "LoveKod (लभकोड) | Handcrafted Tihar Kurtha Sets & Festive Atelier Nepal";
+    };
+  }, [id, product]);
 
 
   if (!product) {
@@ -73,6 +86,58 @@ export default function ProductDetail() {
   return (
     <div className="pd-page">
       {/* ── Breadcrumb Navigation ── */}
+      {/* Breadcrumb & Product JSON-LD Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://www.lovekod.com/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Collection",
+                "item": "https://www.lovekod.com/#collection"
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": product.name,
+                "item": `https://www.lovekod.com/product/${product.id}`
+              }
+            ]
+          })
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Product",
+            "name": product.name,
+            "image": `https://www.lovekod.com${product.image}`,
+            "description": product.description,
+            "sku": product.id,
+            "brand": { "@type": "Brand", "name": "LoveKod" },
+            "offers": {
+              "@type": "Offer",
+              "url": `https://www.lovekod.com/product/${product.id}`,
+              "priceCurrency": "NPR",
+              "price": product.price,
+              "priceValidUntil": "2027-12-31",
+              "availability": "https://schema.org/InStock"
+            }
+          })
+        }}
+      />
       <nav className="pd-breadcrumb" aria-label="Breadcrumb">
         <Link to="/">Home</Link>
         <span className="bc-sep">/</span>

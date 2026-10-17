@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  
+  <!-- Homepage / Main Atelier Storefront -->
+  <url>
+    <loc>https://www.lovekod.com/</loc>
+    <lastmod>2026-10-17</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://www.lovekod.com/images/hero-banner.jpg</image:loc>
+      <image:title>LoveKod Tihar Festive Kurtha Collection</image:title>
+      <image:caption>Handcrafted festive kurtha sets in pure georgette and silk blends for Bhai Tika and Laxmi Puja</image:caption>
+    </image:image>
+  </url>
+
+  <!-- Product: Charcoal Embroidered Georgette Set -->
+  <url>
+    <loc>https://www.lovekod.com/product/lk-001</loc>
+    <lastmod>2026-10-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://www.lovekod.com/images/kurtha-charcoal.jpg</image:loc>
+      <image:title>Charcoal Embroidered Georgette Kurtha Set - 3 Piece</image:title>
+    </image:image>
+  </url>
+
+  <!-- Product: Rani Pink Silk Embroidered Set -->
+  <url>
+    <loc>https://www.lovekod.com/product/lk-002</loc>
+    <lastmod>2026-10-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://www.lovekod.com/images/kurtha-rani-pink.png</image:loc>
+      <image:title>Rani Pink Silk Embroidered Kurtha Set - 3 Piece</image:title>
+    </image:image>
+  </url>
+
+  <!-- Product: Royal Red Festive Set with Gold Dupatta -->
+  <url>
+    <loc>https://www.lovekod.com/product/lk-003</loc>
+    <lastmod>2026-10-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://www.lovekod.com/images/kurtha-red-gold.png</image:loc>
+      <image:title>Royal Red Festive Kurtha Set with Gold Dupatta</image:title>
+    </image:image>
+  </url>
+
+  <!-- Product: Olive Green Embroidered Georgette Set -->
+  <url>
+    <loc>https://www.lovekod.com/product/lk-004</loc>
+    <lastmod>2026-10-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://www.lovekod.com/images/kurtha-olive-green.png</image:loc>
+      <image:title>Olive Green Embroidered Georgette Kurtha Set</image:title>
+    </image:image>
+  </url>
+
+  <!-- Product: Sage Green Floral Co-ord Set -->
+  <url>
+    <loc>https://www.lovekod.com/product/lk-005</loc>
+    <lastmod>2026-10-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://www.lovekod.com/images/kurtha-sage.jpg</image:loc>
+      <image:title>Sage Green Floral Co-ord Festive Kurtha Set</image:title>
+    </image:image>
+  </url>
+
+  <!-- Checkout Page -->
+  <url>
+    <loc>https://www.lovekod.com/checkout</loc>
+    <lastmod>2026-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+</urlset>

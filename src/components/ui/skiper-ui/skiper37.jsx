@@ -250,7 +250,7 @@ function AnimatedNumber_004() {
 }
 
 /**
- * Skiper 37 AnimatedNumber — React + Number Flow + Framer Motion
+ * Skiper 37 AnimatedNumber : React + Number Flow + Framer Motion
  * Design Inspired by https://number-flow.barvian.me/
  * Code Inspired by https://number-flow.barvian.me/
  * We respect the original creators. This is an inspired rebuild with our own taste and does not claim any ownership.

@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 export default function CountdownTimer() {
   const { siteSettings } = useStore();
 
-  // INVISIBLE BY DEFAULT — Only shows if explicitly toggled ON in Django Admin or React Admin
+  // INVISIBLE BY DEFAULT : Only shows if explicitly toggled ON in Django Admin or React Admin
   const isEnabled = siteSettings?.saleCountdownEnabled === true;
   const targetDateStr = siteSettings?.saleCountdownTargetDate || '2026-11-10T23:59:59';
   const title = siteSettings?.saleCountdownTitle || 'Flash Sale • Tihar Festive Drop';

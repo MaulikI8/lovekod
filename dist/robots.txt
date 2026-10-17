@@ -1,4 +1,4 @@
-# LoveKod Boutique Atelier - Search Engine Directives
+# LoveKod Boutique Atelier: Search Engine Directives
 # https://www.lovekod.com
 
 User-agent: *

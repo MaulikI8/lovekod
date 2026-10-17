@@ -146,7 +146,7 @@ const HoverExpand_001 = ({
 export { HoverExpand_001 };
 
 /**
- * Skiper 52 HoverExpand_001 — React + Framer Motion
+ * Skiper 52 HoverExpand_001 : React + Framer Motion
  * Illustrations by AarzooAly - https://x.com/AarzooAly
  *
  * License & Usage:

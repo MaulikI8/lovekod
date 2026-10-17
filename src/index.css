@@ -2,7 +2,7 @@
 @import "./styles/tokens.css";
 @import "./styles/base.css";
 /* ══════════════════════════════════════════════════════════════════════════════
-   LoveKod (लभकोण) — Tihar 2083 Festive Design System
+   LoveKod (लभकोण) : Tihar 2083 Festive Design System
    Culturally rooted in Nepal: Deep kaalo, marigold (sayapatri), amber diya flame,
    and Newari red. No generic template cards or emojis.
    ══════════════════════════════════════════════════════════════════════════════ */
@@ -4519,7 +4519,7 @@ img {
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════
-   PHASE 1 REVISION — FULL-BLEED THREE-PANEL STRIP HERO
+   PHASE 1 REVISION : FULL-BLEED THREE-PANEL STRIP HERO
    Full viewport width, edge-to-edge, height = calc(100svh - 108px), hairline gap
    Soft paper-to-transparent gradient overlay, full uncropped Devanagari mark at 18%
    ══════════════════════════════════════════════════════════════════════════════ */

@@ -432,7 +432,7 @@ export default function AdminContent() {
                 type="text"
                 value={form.saleCountdownTitle || 'Flash Sale • Tihar Festive Drop'}
                 onChange={e => setForm({ ...form, saleCountdownTitle: e.target.value })}
-                placeholder="e.g. Bhai Tika Midnight Drop — 20% Off All Georgettes"
+                placeholder="e.g. Bhai Tika Midnight Drop : 20% Off All Georgettes"
               />
             </div>
 

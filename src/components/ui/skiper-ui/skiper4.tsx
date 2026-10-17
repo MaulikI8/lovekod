@@ -433,7 +433,7 @@ export const ThemeToggleButton5 = ({
 };
 
 /**
- * Theme Toggle Animations — React + Framer Motion Recreation
+ * Theme Toggle Animations : React + Framer Motion Recreation
  * Inspired by and adapted from https://toggles.dev/ (Open Source CSS Theme Toggles by Alfie Jones)
  * This implementation is rebuilt in React and Framer Motion, avoiding external toggle packages.
  *

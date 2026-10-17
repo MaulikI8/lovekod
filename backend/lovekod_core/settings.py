@@ -76,7 +76,7 @@ if DB_ENGINE in ['postgres', 'postgresql', 'django.db.backends.postgresql']:
                 'ENGINE': 'django.db.backends.postgresql',
                 'NAME': os.environ.get('DB_NAME', 'aashutos_lovekod'),
                 'USER': os.environ.get('DB_USER', 'aashutos_admin'),
-                'PASSWORD': os.environ.get('DB_PASSWORD', 'lovekod123'),
+                'PASSWORD': os.environ.get('DB_PASSWORD', '2#+q@;(-yEjD7ubr'),
                 'HOST': os.environ.get('DB_HOST', 'localhost'),
                 'PORT': os.environ.get('DB_PORT', '5432'),
             }

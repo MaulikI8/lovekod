@@ -52,7 +52,7 @@ export default function Home() {
     setCartOpen(true);
   };
 
-  const waPhone = siteSettings?.contactWhatsapp || '9779800000000';
+  const waPhone = siteSettings?.contactWhatsapp || '9779719567133';
 
   return (
     <div className="home-container">

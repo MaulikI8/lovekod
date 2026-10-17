@@ -43,7 +43,7 @@ export function buildLowStockNote(sizes) {
  * @param {string} phone Raw phone number (digits only).
  * @returns {string} Full wa.me URL
  */
-export function getWhatsAppLink(product, phone = '9779800000000') {
+export function getWhatsAppLink(product, phone = '9779719567133') {
   const cleanPhone = String(phone).replace(/[^\d]/g, '');
   const text = encodeURIComponent(
     `Namaste LoveKod! I would like to inquire about "${product.name}" (Rs. ${product.price.toLocaleString()}) for Tihar. Is it available in stock?`

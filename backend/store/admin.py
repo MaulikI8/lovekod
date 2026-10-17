@@ -18,8 +18,8 @@ class CategoryAdmin(ModelAdmin):
 
 class OrderItemInline(TabularInline):
     model = OrderItem
-    extra = 0
-    readonly_fields = ('product_id', 'name', 'size', 'quantity', 'price')
+    extra = 1
+    fields = ('product_id', 'name', 'size', 'quantity', 'price')
 
 
 @admin.register(Product)
@@ -192,12 +192,85 @@ class OrderAdmin(ModelAdmin):
         'phone',
         'district',
         'payment_method',
-        'total',
+        'total_display',
         'status',
-        'created_at'
+        'whatsapp_chat_action',
+        'created_at',
     )
     list_filter = ('status', 'district', 'payment_method', 'created_at')
-    search_fields = ('order_id', 'customer_name', 'phone', 'district')
+    search_fields = ('order_id', 'customer_name', 'phone', 'whatsapp', 'district', 'city', 'address')
     list_editable = ('status',)
     inlines = [OrderItemInline]
     ordering = ('-created_at',)
+    readonly_fields = ('created_at',)
+
+    fieldsets = (
+        ('Order Identification & Status', {
+            'fields': (
+                ('order_id', 'status'),
+                ('payment_method', 'total'),
+            ),
+            'description': 'Leave Order ID empty to auto-generate (e.g. ORD-190A...). Set Total to 0 to auto-sum from line items.'
+        }),
+        ('Customer Contact Information', {
+            'fields': (
+                'customer_name',
+                ('phone', 'whatsapp'),
+            )
+        }),
+        ('Delivery Destination in Nepal', {
+            'fields': (
+                ('district', 'city'),
+                'address',
+                'note',
+            )
+        }),
+        ('System Timestamps', {
+            'fields': ('created_at',),
+            'classes': ('collapse',),
+        }),
+    )
+
+    def total_display(self, obj):
+        return f"Rs. {obj.total:,}"
+    total_display.short_description = "Total"
+
+    def status_badge(self, obj):
+        colors = {
+            'Pending': '#CA8A04',
+            'Confirmed': '#2563EB',
+            'Shipped': '#7C3AED',
+            'Delivered': '#059669',
+        }
+        color = colors.get(obj.status, '#4B5563')
+        return format_html(
+            '<span style="background: {}; color: #fff; padding: 3px 8px; border-radius: 4px; font-weight: 600; font-size: 0.78rem;">{}</span>',
+            color, obj.status
+        )
+    status_badge.short_description = "Status"
+
+    def whatsapp_chat_action(self, obj):
+        raw_phone = obj.whatsapp or obj.phone
+        if not raw_phone:
+            return "—"
+        clean = ''.join(filter(str.isdigit, raw_phone))
+        if clean.startswith('0'):
+            clean = clean[1:]
+        if not clean.startswith('977'):
+            clean = f"977{clean}"
+        msg = f"Namaste {obj.customer_name}, this is LoveKod reaching out regarding your festive order {obj.order_id}."
+        from urllib.parse import quote
+        url = f"https://wa.me/{clean}?text={quote(msg)}"
+        return format_html(
+            '<a href="{}" target="_blank" style="background: #25D366; color: #fff; padding: 4px 8px; border-radius: 4px; text-decoration: none; font-size: 0.75rem; font-weight: 600; display: inline-block;">WhatsApp</a>',
+            url
+        )
+    whatsapp_chat_action.short_description = "WhatsApp"
+
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+        order = form.instance
+        calc_total = sum((item.price or 0) * (item.quantity or 1) for item in order.items.all())
+        if calc_total > 0 and (order.total == 0 or not change):
+            order.total = calc_total
+            order.save(update_fields=['total'])

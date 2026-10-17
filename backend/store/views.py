@@ -574,49 +574,82 @@ def order_list_create(request):
         try:
             data = json.loads(request.body.decode('utf-8'))
             customer = data.get('customer', {})
+            # Allow flat fields as fallback if submitted without nested customer dict
+            c_name = customer.get('fullName') or customer.get('name') or data.get('customerName') or data.get('customer_name') or 'Customer'
+            c_phone = customer.get('phone') or data.get('phone') or ''
+            c_whatsapp = customer.get('whatsapp') or data.get('whatsapp') or c_phone
+            c_district = customer.get('district') or data.get('district') or 'Kathmandu'
+            c_city = customer.get('city') or data.get('city') or 'Kathmandu'
+            c_address = customer.get('address') or data.get('address') or ''
+            c_note = customer.get('note') or data.get('note') or ''
+            c_payment = customer.get('paymentMethod') or data.get('paymentMethod') or data.get('payment_method') or 'COD'
+
             items = data.get('items', [])
             total = int(data.get('total', 0))
-            order_id = data.get('id') or f"ORD-{Order.objects.count() + 101}"
+            order_id = data.get('id')
+            if not order_id:
+                import time, random
+                order_id = f"ORD-{int(time.time()*1000):X}{random.randint(10, 99)}"
 
             order = Order.objects.create(
                 order_id=order_id,
-                customer_name=customer.get('fullName', 'Customer'),
-                phone=customer.get('phone', ''),
-                whatsapp=customer.get('whatsapp', ''),
-                district=customer.get('district', 'Kathmandu'),
-                city=customer.get('city', ''),
-                address=customer.get('address', ''),
-                note=customer.get('note', ''),
-                payment_method=customer.get('paymentMethod', 'COD'),
+                customer_name=c_name,
+                phone=c_phone,
+                whatsapp=c_whatsapp,
+                district=c_district,
+                city=c_city,
+                address=c_address,
+                note=c_note,
+                payment_method=c_payment,
                 total=total,
-                status='Pending',
+                status=data.get('status', 'Pending'),
             )
 
-            # Create OrderItems and decrement stock in database
+            calc_items_total = 0
             for item in items:
-                pid = item.get('productId')
+                pid = item.get('productId') or item.get('product_id') or ''
                 size = item.get('size', 'M')
                 qty = int(item.get('quantity', 1))
+                price = int(item.get('price', 0))
+                calc_items_total += price * qty
+                img = item.get('image', '')
+
+                # If name or price empty and pid present, resolve from Product
+                item_name = item.get('name', '')
+                if pid:
+                    p = Product.objects.filter(product_id=pid).first()
+                    if p:
+                        if not item_name: item_name = p.name
+                        if not price: price = p.price
+                        if not img: img = p.image.url if p.image and not str(p.image).startswith('/') else (str(p.image) if p.image else '/images/kurtha-charcoal.jpg')
+
+                if not item_name: item_name = 'Kurtha Set'
+                if not img: img = '/images/kurtha-charcoal.jpg'
 
                 OrderItem.objects.create(
                     order=order,
                     product_id=pid,
-                    name=item.get('name', 'Kurtha'),
+                    name=item_name,
                     size=size,
                     quantity=qty,
-                    price=int(item.get('price', 0)),
-                    image=item.get('image', ''),
+                    price=price,
+                    image=img,
                 )
 
-                try:
-                    product = Product.objects.get(product_id=pid)
-                    if size == 'M': product.stock_m = max(0, product.stock_m - qty)
-                    elif size == 'L': product.stock_l = max(0, product.stock_l - qty)
-                    elif size == 'XL': product.stock_xl = max(0, product.stock_xl - qty)
-                    elif size == 'XXL': product.stock_xxl = max(0, product.stock_xxl - qty)
-                    product.save()
-                except Product.DoesNotExist:
-                    pass
+                if pid:
+                    try:
+                        product = Product.objects.get(product_id=pid)
+                        if size == 'M': product.stock_m = max(0, product.stock_m - qty)
+                        elif size == 'L': product.stock_l = max(0, product.stock_l - qty)
+                        elif size == 'XL': product.stock_xl = max(0, product.stock_xl - qty)
+                        elif size == 'XXL': product.stock_xxl = max(0, product.stock_xxl - qty)
+                        product.save()
+                    except Product.DoesNotExist:
+                        pass
+
+            if order.total == 0 and calc_items_total > 0:
+                order.total = calc_items_total
+                order.save(update_fields=['total'])
 
             return JsonResponse(order.to_dict(), status=201)
         except Exception as e:

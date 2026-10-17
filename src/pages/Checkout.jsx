@@ -35,7 +35,7 @@ export default function Checkout() {
   const deliveryFee = 150;
   const grandTotal = cartTotal + deliveryFee;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.fullName || !formData.phone || !formData.address) {
       alert('Please fill in your name, phone number, and delivery address.');
@@ -48,9 +48,16 @@ export default function Checkout() {
       whatsapp: formData.sameAsPhone ? formData.phone : formData.whatsapp,
     };
 
-    const newOrder = placeOrder(orderData);
-    setSubmitting(false);
-    navigate(`/order-success/${newOrder.id}`);
+    try {
+      const newOrder = await placeOrder(orderData);
+      setSubmitting(false);
+      const targetId = newOrder?.id || ('ORD-' + Date.now().toString(36).toUpperCase());
+      navigate(`/order-success/${targetId}`);
+    } catch (err) {
+      console.error('Order placement failed:', err);
+      setSubmitting(false);
+      alert('Unable to process order. Please try again or message our WhatsApp concierge directly.');
+    }
   };
 
   return (

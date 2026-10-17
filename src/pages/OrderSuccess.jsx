@@ -5,17 +5,18 @@ import { formatPrice } from '../utils/format';
 
 export default function OrderSuccess() {
   const { orderId } = useParams();
-  const { orders } = useStore();
+  const { orders, siteSettings } = useStore();
 
   const order = orders.find(o => o.id === orderId);
 
   const getWaConfirmationLink = () => {
-    if (!order) return 'https://wa.me/9779800000000';
+    const waPhone = (siteSettings?.contactWhatsapp || '9779719567133').replace(/[^\d]/g, '');
+    if (!order) return `https://wa.me/${waPhone}`;
     const itemsText = order.items.map(i => `${i.name} (Size: ${i.size}, Qty: ${i.quantity})`).join(', ');
     const text = encodeURIComponent(
       `Namaste LoveKod!\n\nI just placed an order!\n\nOrder ID: ${order.id}\nCustomer: ${order.customer?.fullName}\nPhone: ${order.customer?.phone}\nAddress: ${order.customer?.address}, ${order.customer?.city}, ${order.customer?.district}\nPayment: ${order.customer?.paymentMethod}\nTotal: ${formatPrice(order.total)}\n\nItems:\n${itemsText}\n\nPlease confirm my Tihar delivery!`
     );
-    return `https://wa.me/9779800000000?text=${text}`;
+    return `https://wa.me/${waPhone}?text=${text}`;
   };
 
   return (

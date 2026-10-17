@@ -21,8 +21,8 @@ const DEFAULT_SETTINGS = {
   announcementNepali: 'TIHAR FESTIVE EDIT',
   announcementText: 'Delivering Across All 77 Districts of Nepal for Tihar 2083',
   freeShippingThreshold: 3000,
-  contactPhone: '+977 9800000000',
-  contactWhatsapp: '+977 9800000000',
+  contactPhone: '+977 9719567133',
+  contactWhatsapp: '+977 9719567133',
   contactEmail: 'concierge@lovekod.com',
   contactAddress: 'Kathmandu Valley, Nepal',
   socialHandle: '@lovekod.np',
@@ -448,6 +448,28 @@ export function StoreProvider({ children }) {
     } catch { /* offline fallback */ }
   }
 
+  async function createManualOrder(orderData) {
+    try {
+      const res = await fetch(`${API_BASE}/orders/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData),
+      });
+      if (res.ok) {
+        const saved = await res.json();
+        await refreshFromBackend();
+        showToast(`Order ${saved.id} created successfully!`);
+        return saved;
+      } else {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Failed to create order');
+      }
+    } catch (err) {
+      showToast(err.message || 'Error creating order', 'error');
+      throw err;
+    }
+  }
+
   async function updateOrderStatus(orderId, status) {
     setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status } : o));
     showToast('Order status updated');
@@ -504,7 +526,7 @@ export function StoreProvider({ children }) {
     addCategory, updateCategory, deleteCategory,
     addFestivalMoment, updateFestivalMoment, deleteFestivalMoment,
     addTestimonial, updateTestimonial, deleteTestimonial,
-    updateProduct, addProduct, deleteProduct, updateOrderStatus,
+    updateProduct, addProduct, deleteProduct, createManualOrder, updateOrderStatus,
     adminLogin, adminLogout, showToast, resetInventory, refreshFromBackend,
   };
 

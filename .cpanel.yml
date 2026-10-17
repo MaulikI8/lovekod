@@ -5,4 +5,6 @@ deployment:
     - export BACKENDPATH=/home8/aashutos/backend/
     - /bin/cp -R dist/* $FRONTENDPATH
     - /bin/cp -R backend/* $BACKENDPATH
+    - /bin/mkdir -p $FRONTENDPATH/static 2>/dev/null || true
+    - /bin/cp -R backend/staticfiles/* $FRONTENDPATH/static/ 2>/dev/null || true
     - /bin/touch $BACKENDPATH/tmp/restart.txt 2>/dev/null || true

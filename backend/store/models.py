@@ -94,8 +94,8 @@ class SiteSettings(models.Model):
     free_shipping_threshold = models.IntegerField(default=3000)
 
     # Contact & Storefront Info
-    contact_phone = models.CharField(max_length=50, default='+977 9800000000')
-    contact_whatsapp = models.CharField(max_length=50, default='+977 9800000000')
+    contact_phone = models.CharField(max_length=50, default='+977 9719567133')
+    contact_whatsapp = models.CharField(max_length=50, default='+977 9719567133')
     contact_email = models.CharField(max_length=100, default='concierge@lovekod.com')
     contact_address = models.CharField(max_length=255, default='Kathmandu Valley, Nepal')
 
@@ -344,15 +344,22 @@ class Testimonial(models.Model):
 
 
 class Order(models.Model):
-    order_id = models.CharField(max_length=50, unique=True, db_index=True)
+    order_id = models.CharField(max_length=50, unique=True, db_index=True, blank=True)
     customer_name = models.CharField(max_length=255)
     phone = models.CharField(max_length=50)
     whatsapp = models.CharField(max_length=50, blank=True, default='')
-    district = models.CharField(max_length=100)
-    city = models.CharField(max_length=100)
+    district = models.CharField(max_length=100, default='Kathmandu')
+    city = models.CharField(max_length=100, blank=True, default='Kathmandu')
     address = models.TextField()
     note = models.TextField(blank=True, default='')
-    payment_method = models.CharField(max_length=50, default='COD')
+    payment_method = models.CharField(
+        max_length=50,
+        default='COD',
+        choices=[
+            ('COD', 'Cash on Delivery'),
+            ('DynamicQR', 'Dynamic QR Pay'),
+        ]
+    )
     total = models.IntegerField(default=0)
     status = models.CharField(
         max_length=50,
@@ -365,6 +372,12 @@ class Order(models.Model):
         ]
     )
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        if not self.order_id:
+            import time, random
+            self.order_id = f"ORD-{int(time.time()*1000):X}{random.randint(10, 99)}"
+        super().save(*args, **kwargs)
 
     def to_dict(self):
         return {
@@ -391,12 +404,24 @@ class Order(models.Model):
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
-    product_id = models.CharField(max_length=50)
+    product_id = models.CharField(max_length=50, blank=True, default='')
     name = models.CharField(max_length=255)
-    size = models.CharField(max_length=10)
+    size = models.CharField(max_length=10, default='M')
     quantity = models.PositiveIntegerField(default=1)
     price = models.IntegerField(default=0)
-    image = models.CharField(max_length=255, blank=True, default='')
+    image = models.CharField(max_length=255, blank=True, default='/images/kurtha-charcoal.jpg')
+
+    def save(self, *args, **kwargs):
+        if self.product_id:
+            p = Product.objects.filter(product_id=self.product_id).first()
+            if p:
+                if not self.name or self.name == 'Kurtha':
+                    self.name = p.name
+                if not self.price:
+                    self.price = p.price
+                if not self.image or self.image == '/images/kurtha-charcoal.jpg':
+                    self.image = p.image.url if p.image and not str(p.image).startswith('/') else (str(p.image) if p.image else '/images/kurtha-charcoal.jpg')
+        super().save(*args, **kwargs)
 
     def to_dict(self):
         return {

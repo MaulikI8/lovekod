@@ -664,7 +664,7 @@ def order_list_create(request):
                 if not item_name: item_name = 'Kurtha Set'
                 if not img: img = '/images/kurtha-charcoal.jpg'
 
-                OrderItem.objects.create(
+                order_item = OrderItem.objects.create(
                     order=order,
                     product_id=pid,
                     name=item_name,
@@ -673,17 +673,7 @@ def order_list_create(request):
                     price=price,
                     image=img,
                 )
-
-                if pid:
-                    try:
-                        product = Product.objects.get(product_id=pid)
-                        if size == 'M': product.stock_m = max(0, product.stock_m - qty)
-                        elif size == 'L': product.stock_l = max(0, product.stock_l - qty)
-                        elif size == 'XL': product.stock_xl = max(0, product.stock_xl - qty)
-                        elif size == 'XXL': product.stock_xxl = max(0, product.stock_xxl - qty)
-                        product.save()
-                    except Product.DoesNotExist:
-                        pass
+                order_item.deduct_inventory()
 
             if order.total == 0 and calc_items_total > 0:
                 order.total = calc_items_total
@@ -707,14 +697,24 @@ def order_detail_update(request, order_id):
         try:
             data = json.loads(request.body.decode('utf-8'))
             if 'status' in data:
-                order.status = data['status']
-                order.save()
+                old_status = order.status
+                new_status = data['status']
+                order.status = new_status
+                order.save(update_fields=['status'])
+                if new_status == 'Cancelled' and old_status != 'Cancelled':
+                    for item in order.items.all():
+                        item.restore_inventory()
+                elif old_status == 'Cancelled' and new_status != 'Cancelled':
+                    for item in order.items.all():
+                        item.deduct_inventory()
             return JsonResponse(order.to_dict())
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
 
     elif request.method == 'DELETE':
         hard = request.GET.get('hard') == 'true' or request.GET.get('permanent') == 'true'
+        for item in order.items.all():
+            item.restore_inventory()
         if hard:
             order.delete()
             return JsonResponse({'success': True, 'hard_deleted': order_id})

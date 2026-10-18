@@ -32,6 +32,12 @@ class TrashStatusFilter(admin.SimpleListFilter):
 
 @admin.action(description="🗑️ Soft Delete (Move selected to Trash)")
 def soft_delete_selected(modeladmin, request, queryset):
+    # If soft-deleting orders, restore product stock back to inventory
+    for obj in queryset:
+        if hasattr(obj, 'items'):
+            for item in obj.items.all():
+                if hasattr(item, 'restore_inventory'):
+                    item.restore_inventory()
     updated = queryset.update(is_deleted=True)
     modeladmin.message_user(
         request,
@@ -42,6 +48,12 @@ def soft_delete_selected(modeladmin, request, queryset):
 
 @admin.action(description="♻️ Restore (Recover selected from Trash)")
 def restore_selected(modeladmin, request, queryset):
+    # If restoring orders, re-deduct product stock
+    for obj in queryset:
+        if hasattr(obj, 'items'):
+            for item in obj.items.all():
+                if hasattr(item, 'deduct_inventory'):
+                    item.deduct_inventory()
     updated = queryset.update(is_deleted=False)
     modeladmin.message_user(
         request,
@@ -52,6 +64,12 @@ def restore_selected(modeladmin, request, queryset):
 
 @admin.action(description="⚠️ Hard Delete (Permanently remove selected from database)")
 def hard_delete_selected(modeladmin, request, queryset):
+    # Restore inventory before permanent deletion if still deducted
+    for obj in queryset:
+        if hasattr(obj, 'items'):
+            for item in obj.items.all():
+                if hasattr(item, 'restore_inventory'):
+                    item.restore_inventory()
     count = queryset.count()
     queryset.delete()
     modeladmin.message_user(
@@ -404,9 +422,27 @@ class OrderAdmin(ModelAdmin):
         )
     whatsapp_chat_action.short_description = "WhatsApp"
 
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        # If order status changed to Cancelled or moved to Trash, restore stock
+        if change:
+            if obj.status == 'Cancelled' or obj.is_deleted:
+                for item in obj.items.all():
+                    item.restore_inventory()
+            else:
+                for item in obj.items.all():
+                    item.deduct_inventory()
+
     def save_related(self, request, form, formsets, change):
         super().save_related(request, form, formsets, change)
         order = form.instance
+        # Synchronize inventory for line items (deducts stock for each item)
+        for item in order.items.all():
+            if not getattr(item, 'stock_deducted', False) and not order.is_deleted and order.status != 'Cancelled':
+                item.deduct_inventory()
+            elif (order.is_deleted or order.status == 'Cancelled') and getattr(item, 'stock_deducted', False):
+                item.restore_inventory()
+
         calc_total = sum((item.price or 0) * (item.quantity or 1) for item in order.items.all())
         if calc_total > 0 and (order.total == 0 or not change):
             order.total = calc_total

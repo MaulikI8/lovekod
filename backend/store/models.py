@@ -420,6 +420,45 @@ class OrderItem(models.Model):
     quantity = models.PositiveIntegerField(default=1)
     price = models.IntegerField(default=0)
     image = models.CharField(max_length=255, blank=True, default='/images/kurtha-charcoal.jpg')
+    stock_deducted = models.BooleanField(default=False, help_text="Whether this item has deducted product inventory")
+
+    def deduct_inventory(self):
+        """Deduct size-specific inventory from the associated product."""
+        if not self.stock_deducted and self.product_id:
+            p = Product.objects.filter(product_id=self.product_id).first()
+            if p:
+                size_upper = (self.size or 'M').strip().upper()
+                qty = max(1, int(self.quantity or 1))
+                if 'XXL' in size_upper:
+                    p.stock_xxl = max(0, p.stock_xxl - qty)
+                elif 'XL' in size_upper:
+                    p.stock_xl = max(0, p.stock_xl - qty)
+                elif 'L' in size_upper:
+                    p.stock_l = max(0, p.stock_l - qty)
+                else:
+                    p.stock_m = max(0, p.stock_m - qty)
+                p.save()
+                self.stock_deducted = True
+                self.save(update_fields=['stock_deducted'])
+
+    def restore_inventory(self):
+        """Restore size-specific inventory to the associated product on cancel/trash."""
+        if self.stock_deducted and self.product_id:
+            p = Product.objects.filter(product_id=self.product_id).first()
+            if p:
+                size_upper = (self.size or 'M').strip().upper()
+                qty = max(1, int(self.quantity or 1))
+                if 'XXL' in size_upper:
+                    p.stock_xxl += qty
+                elif 'XL' in size_upper:
+                    p.stock_xl += qty
+                elif 'L' in size_upper:
+                    p.stock_l += qty
+                else:
+                    p.stock_m += qty
+                p.save()
+                self.stock_deducted = False
+                self.save(update_fields=['stock_deducted'])
 
     def save(self, *args, **kwargs):
         if self.product_id:

@@ -244,3 +244,7 @@ UNFOLD = {
         ],
     },
 }
+
+# Bypass PostgreSQL version check for cPanel legacy PostgreSQL 10
+from django.db.backends.base.base import BaseDatabaseWrapper
+BaseDatabaseWrapper.check_database_version_supported = lambda self: None

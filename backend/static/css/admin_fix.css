@@ -1,11 +1,42 @@
-/* Unfold Admin layout fix: prevent sidebar from covering content on laptop/desktop screens */
+/* ═══════════════════════════════════════════════════════════════════════════
+   LOVEKOD ADMIN FIXES & RESPONSIVE POLISH
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 1. Prevent sidebar from overlaying form content on desktop/laptop */
 @media (min-width: 768px) {
     #page > .relative.z-60 > div:first-child {
         position: relative !important;
     }
 }
 
-/* Ensure form controls and fieldsets fit gracefully */
+/* 2. Fix searchbar collapsing into a lonely [/] square on changelist */
+#toolbar {
+    min-width: 260px !important;
+    max-width: 440px !important;
+    flex-grow: 1 !important;
+    display: flex !important;
+}
+
+#changelist-search {
+    width: 100% !important;
+    display: flex !important;
+}
+
+#changelist-search > div {
+    width: 100% !important;
+    min-width: 240px !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+#searchbar {
+    width: 100% !important;
+    min-width: 160px !important;
+    display: block !important;
+    visibility: visible !important;
+}
+
+/* 3. Form controls & fieldsets fit nicely */
 #content, #content-main {
     max-width: 100% !important;
 }
@@ -16,4 +47,15 @@ fieldset {
 
 textarea, input[type="text"], input[type="email"], input[type="number"], select {
     box-sizing: border-box !important;
+}
+
+/* 4. Filter button & toolbar spacing */
+.filter-open-button {
+    white-space: nowrap !important;
+}
+
+/* 5. Clean Empty State */
+.empty-state {
+    padding: 60px 24px !important;
+    text-align: center !important;
 }

@@ -15,6 +15,26 @@ const STORAGE_KEYS = {
   TESTIMONIALS: 'lovekod_testimonials',
 };
 
+// Auto-purge stale localStorage cache so all visitors and friends immediately get live catalog data
+const LIVE_CACHE_VERSION = 'lovekod_v5_live';
+if (typeof window !== 'undefined') {
+  try {
+    if (localStorage.getItem('lovekod_cache_ver') !== LIVE_CACHE_VERSION) {
+      [
+        'lovekod_products',
+        'lovekod_categories',
+        'lovekod_site_settings',
+        'lovekod_festivals',
+        'lovekod_testimonials',
+        'lovekod_orders',
+      ].forEach((key) => {
+        try { localStorage.removeItem(key); } catch {}
+      });
+      localStorage.setItem('lovekod_cache_ver', LIVE_CACHE_VERSION);
+    }
+  } catch { /* ignore */ }
+}
+
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 const DEFAULT_SETTINGS = {
@@ -82,13 +102,16 @@ function saveState(key, value) {
 }
 
 export function StoreProvider({ children }) {
-  const [products, setProducts] = useState(() => loadState(STORAGE_KEYS.PRODUCTS, []));
-  const [categories, setCategories] = useState(() => loadState(STORAGE_KEYS.CATEGORIES, DEFAULT_CATEGORIES));
-  const [siteSettings, setSiteSettings] = useState(() => loadState(STORAGE_KEYS.SITE_SETTINGS, DEFAULT_SETTINGS));
-  const [festivalMoments, setFestivalMoments] = useState(() => loadState(STORAGE_KEYS.FESTIVALS, []));
-  const [testimonials, setTestimonials] = useState(() => loadState(STORAGE_KEYS.TESTIMONIALS, []));
+  // Dynamic catalog state strictly in-memory (synced live with Django backend)
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
+  const [siteSettings, setSiteSettings] = useState(DEFAULT_SETTINGS);
+  const [festivalMoments, setFestivalMoments] = useState([]);
+  const [testimonials, setTestimonials] = useState([]);
+  const [orders, setOrders] = useState([]);
+
+  // Client session state (persisted)
   const [cart, setCart] = useState(() => loadState(STORAGE_KEYS.CART, []));
-  const [orders, setOrders] = useState(() => loadState(STORAGE_KEYS.ORDERS, []));
   const [cartOpen, setCartOpen] = useState(false);
   const [toast, setToast] = useState(null);
   const [isAdmin, setIsAdmin] = useState(() => loadState(STORAGE_KEYS.ADMIN_AUTH, false));
@@ -97,92 +120,92 @@ export function StoreProvider({ children }) {
   const [lightsEnabled, setLightsEnabled] = useState(() => loadState(STORAGE_KEYS.LIGHTS, true));
   const [celebrateLights, setCelebrateLights] = useState(false);
 
-  // Sync to localStorage
-  useEffect(() => saveState(STORAGE_KEYS.PRODUCTS, products), [products]);
-  useEffect(() => saveState(STORAGE_KEYS.CATEGORIES, categories), [categories]);
-  useEffect(() => saveState(STORAGE_KEYS.SITE_SETTINGS, siteSettings), [siteSettings]);
-  useEffect(() => saveState(STORAGE_KEYS.FESTIVALS, festivalMoments), [festivalMoments]);
-  useEffect(() => saveState(STORAGE_KEYS.TESTIMONIALS, testimonials), [testimonials]);
+  // Sync ONLY client session state to localStorage (never catalog items!)
   useEffect(() => saveState(STORAGE_KEYS.CART, cart), [cart]);
-  useEffect(() => saveState(STORAGE_KEYS.ORDERS, orders), [orders]);
   useEffect(() => saveState(STORAGE_KEYS.ADMIN_AUTH, isAdmin), [isAdmin]);
   useEffect(() => saveState(STORAGE_KEYS.LIGHTS, lightsEnabled), [lightsEnabled]);
+
+  // Anti-cache fetch helper: guarantees fresh responses bypassing browser/proxy cache
+  const fetchLive = async (path) => {
+    const sep = path.includes('?') ? '&' : '?';
+    return fetch(`${API_BASE}${path}${sep}_t=${Date.now()}`, {
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+      },
+    });
+  };
 
   // Fetch all dynamic data from Django Backend
   const refreshFromBackend = useCallback(async () => {
     // 1. Products (Exclude soft deleted)
     try {
-      const res = await fetch(`${API_BASE}/products/`);
+      const res = await fetchLive('/products/');
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data)) {
           const activeOnly = data.filter(p => !p.isDeleted && !p.is_deleted);
           setProducts(activeOnly);
-          saveState(STORAGE_KEYS.PRODUCTS, activeOnly);
         }
       }
     } catch { /* offline fallback */ }
 
     // 2. Categories (Exclude soft deleted)
     try {
-      const catRes = await fetch(`${API_BASE}/categories/`);
+      const catRes = await fetchLive('/categories/');
       if (catRes.ok) {
         const catData = await catRes.json();
         if (Array.isArray(catData)) {
           const activeOnly = catData.filter(c => !c.isDeleted && !c.is_deleted);
           setCategories(activeOnly);
-          saveState(STORAGE_KEYS.CATEGORIES, activeOnly);
         }
       }
     } catch { /* offline fallback */ }
 
     // 3. Site Settings
     try {
-      const setRes = await fetch(`${API_BASE}/site-settings/`);
+      const setRes = await fetchLive('/site-settings/');
       if (setRes.ok) {
         const setData = await setRes.json();
         if (setData && !setData.error) {
           setSiteSettings(prev => ({ ...prev, ...setData }));
-          saveState(STORAGE_KEYS.SITE_SETTINGS, setData);
         }
       }
     } catch { /* offline fallback */ }
 
     // 4. Festival Moments Marquee
     try {
-      const festRes = await fetch(`${API_BASE}/festival-moments/`);
+      const festRes = await fetchLive('/festival-moments/');
       if (festRes.ok) {
         const festData = await festRes.json();
         if (Array.isArray(festData)) {
           const activeOnly = festData.filter(m => !m.isDeleted && !m.is_deleted);
           setFestivalMoments(activeOnly);
-          saveState(STORAGE_KEYS.FESTIVALS, activeOnly);
         }
       }
     } catch { /* offline fallback */ }
 
     // 5. Testimonials
     try {
-      const testRes = await fetch(`${API_BASE}/testimonials/`);
+      const testRes = await fetchLive('/testimonials/');
       if (testRes.ok) {
         const testData = await testRes.json();
         if (Array.isArray(testData)) {
           const activeOnly = testData.filter(t => !t.isDeleted && !t.is_deleted);
           setTestimonials(activeOnly);
-          saveState(STORAGE_KEYS.TESTIMONIALS, activeOnly);
         }
       }
     } catch { /* offline fallback */ }
 
     // 6. Orders
     try {
-      const ordersRes = await fetch(`${API_BASE}/orders/`);
+      const ordersRes = await fetchLive('/orders/');
       if (ordersRes.ok) {
         const orderData = await ordersRes.json();
         if (Array.isArray(orderData)) {
           const activeOnly = orderData.filter(o => !o.isDeleted && !o.is_deleted);
           setOrders(activeOnly);
-          saveState(STORAGE_KEYS.ORDERS, activeOnly);
         }
       }
     } catch { /* offline fallback */ }

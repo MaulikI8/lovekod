@@ -122,6 +122,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_DIRS = [BASE_DIR / 'static']
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -169,6 +170,7 @@ UNFOLD = {
     "SITE_HEADER": "LoveKod (लभकोण) Boutique Admin",
     "SITE_URL": "http://localhost:5173",
     "DASHBOARD_CALLBACK": None,
+    "STYLES": ["/static/css/admin_fix.css"],
     "COLORS": {
         "primary": {
             "50": "249 243 238",

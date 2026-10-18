@@ -167,36 +167,9 @@ DEFAULT_TESTIMONIALS = [
 
 
 def ensure_initial_seed():
-    """Ensure catalog, categories, site settings, festival moments, and testimonials exist."""
-    if Category.objects.count() == 0:
-        for c in DEFAULT_CATEGORIES:
-            Category.objects.create(**c)
-
-    if Product.objects.count() == 0:
-        georgette_cat = Category.objects.filter(slug='georgette').first()
-        silk_cat = Category.objects.filter(slug='silk').first()
-        coord_cat = Category.objects.filter(slug='co-ord').first()
-
-        for item in DEFAULT_KURTHAS:
-            prod = Product(**item)
-            if 'Georgette' in item['fabric_type'] and georgette_cat:
-                prod.category = georgette_cat
-            elif 'Silk' in item['fabric_type'] and silk_cat:
-                prod.category = silk_cat
-            elif 'Co-ord' in item['pieces'] and coord_cat:
-                prod.category = coord_cat
-            prod.save()
-
+    """Ensure site settings and default superuser exist. Never auto-repopulates dummy catalog items."""
     if SiteSettings.objects.count() == 0:
         SiteSettings.objects.create()
-
-    if FestivalMoment.objects.count() == 0:
-        for m in DEFAULT_FESTIVAL_MOMENTS:
-            FestivalMoment.objects.create(**m)
-
-    if Testimonial.objects.count() == 0:
-        for t in DEFAULT_TESTIMONIALS:
-            Testimonial.objects.create(**t)
 
     # Ensure a default superuser always exists if database is wiped or fresh
     from django.contrib.auth.models import User

@@ -223,11 +223,6 @@ UNFOLD = {
                         "icon": "rate_review",
                         "link": reverse_lazy("admin:store_testimonial_changelist"),
                     },
-                    {
-                        "title": "Tihar Festival Moments",
-                        "icon": "celebration",
-                        "link": reverse_lazy("admin:store_festivalmoment_changelist"),
-                    },
                 ],
             },
             {
@@ -235,9 +230,14 @@ UNFOLD = {
                 "separator": True,
                 "items": [
                     {
+                        "title": "Merchant Suite Portal",
+                        "icon": "dashboard",
+                        "link": "https://lovekod.com/admin",
+                    },
+                    {
                         "title": "View Live Storefront",
                         "icon": "open_in_new",
-                        "link": "http://localhost:5173",
+                        "link": "https://lovekod.com",
                     },
                 ],
             },

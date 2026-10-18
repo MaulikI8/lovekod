@@ -4,7 +4,9 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
+    # Support both /django-admin/ and /api/django-admin/ for cPanel Passenger compatibility
     path('django-admin/', admin.site.urls),
+    path('api/django-admin/', admin.site.urls),
     path('api/', include('store.urls')),
     path('', include('store.urls')),
 ]

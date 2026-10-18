@@ -51,8 +51,18 @@ export default function CuratedCollection({
       </div>
 
       {/* Product Grid */}
-      <div className="product-editorial-grid">
-        {filteredProducts.map((product, pIdx) => {
+      {filteredProducts.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '64px 20px', color: 'var(--text-muted)' }}>
+          <p style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem', color: 'var(--ink)', marginBottom: '8px' }}>
+            No garments in this collection yet.
+          </p>
+          <p style={{ fontSize: '0.9rem' }}>
+            New handcrafted couture sets are being added by our studio concierge.
+          </p>
+        </div>
+      ) : (
+        <div className="product-editorial-grid">
+          {filteredProducts.map((product, pIdx) => {
           const discount = calcDiscount(product.originalPrice, product.price);
           const selectedSize = selectedSizes[product.id];
           const lowStockEntries = Object.entries(product.sizes || {})
@@ -170,7 +180,8 @@ export default function CuratedCollection({
             </Skiper104ScrollCard>
           );
         })}
-      </div>
+        </div>
+      )}
 
       {/* You May Also Like Row if filter returns fewer than 3 */}
       {filteredProducts.length > 0 && filteredProducts.length < 3 && (

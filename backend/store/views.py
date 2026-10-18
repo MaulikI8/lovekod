@@ -295,7 +295,10 @@ def category_list_create(request):
     ensure_initial_seed()
 
     if request.method == 'GET':
+        include_deleted = request.GET.get('include_deleted') == 'true'
         categories = Category.objects.all().order_by('order', 'id')
+        if not include_deleted:
+            categories = categories.filter(is_deleted=False)
         return JsonResponse([c.to_dict() for c in categories], safe=False)
 
     elif request.method == 'POST':
@@ -338,8 +341,14 @@ def category_detail_update_delete(request, category_id):
             return JsonResponse({'error': str(e)}, status=400)
 
     elif request.method == 'DELETE':
-        category.delete()
-        return JsonResponse({'success': True, 'deleted': category_id})
+        hard = request.GET.get('hard') == 'true' or request.GET.get('permanent') == 'true'
+        if hard:
+            category.delete()
+            return JsonResponse({'success': True, 'hard_deleted': category_id})
+        else:
+            category.is_deleted = True
+            category.save(update_fields=['is_deleted'])
+            return JsonResponse({'success': True, 'soft_deleted': category_id})
 
     return JsonResponse({'error': 'Method not allowed'}, status=405)
 
@@ -353,7 +362,7 @@ def festival_moment_list_create(request):
     ensure_initial_seed()
 
     if request.method == 'GET':
-        moments = FestivalMoment.objects.filter(is_active=True).order_by('order', 'id')
+        moments = FestivalMoment.objects.filter(is_deleted=False, is_active=True).order_by('order', 'id')
         return JsonResponse([m.to_dict() for m in moments], safe=False)
 
     elif request.method == 'POST':
@@ -396,8 +405,14 @@ def festival_moment_detail_update_delete(request, moment_id):
             return JsonResponse({'error': str(e)}, status=400)
 
     elif request.method == 'DELETE':
-        moment.delete()
-        return JsonResponse({'success': True, 'deleted': moment_id})
+        hard = request.GET.get('hard') == 'true' or request.GET.get('permanent') == 'true'
+        if hard:
+            moment.delete()
+            return JsonResponse({'success': True, 'hard_deleted': moment_id})
+        else:
+            moment.is_deleted = True
+            moment.save(update_fields=['is_deleted'])
+            return JsonResponse({'success': True, 'soft_deleted': moment_id})
 
     return JsonResponse({'error': 'Method not allowed'}, status=405)
 
@@ -411,7 +426,7 @@ def testimonial_list_create(request):
     ensure_initial_seed()
 
     if request.method == 'GET':
-        items = Testimonial.objects.filter(is_active=True).order_by('order', 'id')
+        items = Testimonial.objects.filter(is_deleted=False, is_active=True).order_by('order', 'id')
         return JsonResponse([t.to_dict() for t in items], safe=False)
 
     elif request.method == 'POST':
@@ -456,8 +471,14 @@ def testimonial_detail_update_delete(request, testimonial_id):
             return JsonResponse({'error': str(e)}, status=400)
 
     elif request.method == 'DELETE':
-        t.delete()
-        return JsonResponse({'success': True, 'deleted': testimonial_id})
+        hard = request.GET.get('hard') == 'true' or request.GET.get('permanent') == 'true'
+        if hard:
+            t.delete()
+            return JsonResponse({'success': True, 'hard_deleted': testimonial_id})
+        else:
+            t.is_deleted = True
+            t.save(update_fields=['is_deleted'])
+            return JsonResponse({'success': True, 'soft_deleted': testimonial_id})
 
     return JsonResponse({'error': 'Method not allowed'}, status=405)
 
@@ -472,7 +493,10 @@ def product_list_create(request):
 
     if request.method == 'GET':
         category_slug = request.GET.get('category')
+        include_deleted = request.GET.get('include_deleted') == 'true'
         products = Product.objects.all().order_by('id')
+        if not include_deleted:
+            products = products.filter(is_deleted=False)
         if category_slug and category_slug != 'all':
             products = products.filter(category__slug=category_slug)
         return JsonResponse([p.to_dict() for p in products], safe=False)
@@ -549,8 +573,14 @@ def product_detail_update_delete(request, product_id):
             return JsonResponse({'error': str(e)}, status=400)
 
     elif request.method == 'DELETE':
-        product.delete()
-        return JsonResponse({'success': True, 'deleted': product_id})
+        hard = request.GET.get('hard') == 'true' or request.GET.get('permanent') == 'true'
+        if hard:
+            product.delete()
+            return JsonResponse({'success': True, 'hard_deleted': product_id})
+        else:
+            product.is_deleted = True
+            product.save(update_fields=['is_deleted'])
+            return JsonResponse({'success': True, 'soft_deleted': product_id})
 
     return JsonResponse({'error': 'Method not allowed'}, status=405)
 
@@ -572,7 +602,10 @@ def reset_products_inventory(request):
 @csrf_exempt
 def order_list_create(request):
     if request.method == 'GET':
+        include_deleted = request.GET.get('include_deleted') == 'true'
         orders = Order.objects.all().order_by('-created_at')
+        if not include_deleted:
+            orders = orders.filter(is_deleted=False)
         return JsonResponse([o.to_dict() for o in orders], safe=False)
 
     elif request.method == 'POST':
@@ -679,6 +712,16 @@ def order_detail_update(request, order_id):
             return JsonResponse(order.to_dict())
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
+
+    elif request.method == 'DELETE':
+        hard = request.GET.get('hard') == 'true' or request.GET.get('permanent') == 'true'
+        if hard:
+            order.delete()
+            return JsonResponse({'success': True, 'hard_deleted': order_id})
+        else:
+            order.is_deleted = True
+            order.save(update_fields=['is_deleted'])
+            return JsonResponse({'success': True, 'soft_deleted': order_id})
 
     return JsonResponse({'error': 'Method not allowed'}, status=405)
 

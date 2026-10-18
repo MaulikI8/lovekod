@@ -1,6 +1,9 @@
-from django.contrib import admin
+from django import forms
+from django.contrib import admin, messages
+from django.shortcuts import redirect
 from django.utils.html import format_html
 from unfold.admin import ModelAdmin, TabularInline
+from unfold.decorators import action
 from .models import Category, Product, SiteSettings, FestivalMoment, Testimonial, Order, OrderItem
 
 admin.site.site_header = "LoveKod Boutique Administration"
@@ -8,18 +11,134 @@ admin.site.site_title = "LoveKod Admin"
 admin.site.index_title = "Storefront Control Center"
 
 
+class TrashStatusFilter(admin.SimpleListFilter):
+    title = "Trash / Deletion Status"
+    parameter_name = "trash_status"
+
+    def lookups(self, request, model_admin):
+        return (
+            ('active', '● Active Only (Exclude Trash)'),
+            ('trash', '🗑️ Trash Only (Soft Deleted)'),
+            ('all', 'All Items (Active + Trash)'),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == 'active':
+            return queryset.filter(is_deleted=False)
+        if self.value() == 'trash':
+            return queryset.filter(is_deleted=True)
+        return queryset
+
+
+@admin.action(description="🗑️ Soft Delete (Move selected to Trash)")
+def soft_delete_selected(modeladmin, request, queryset):
+    updated = queryset.update(is_deleted=True)
+    modeladmin.message_user(
+        request,
+        f"Successfully moved {updated} item(s) to Trash (Soft Deleted).",
+        messages.SUCCESS,
+    )
+
+
+@admin.action(description="♻️ Restore (Recover selected from Trash)")
+def restore_selected(modeladmin, request, queryset):
+    updated = queryset.update(is_deleted=False)
+    modeladmin.message_user(
+        request,
+        f"Successfully restored {updated} item(s) to Active.",
+        messages.SUCCESS,
+    )
+
+
+@admin.action(description="⚠️ Hard Delete (Permanently remove selected from database)")
+def hard_delete_selected(modeladmin, request, queryset):
+    count = queryset.count()
+    queryset.delete()
+    modeladmin.message_user(
+        request,
+        f"Permanently removed {count} item(s) from database.",
+        messages.WARNING,
+    )
+
+
+COMMON_ACTIONS = [soft_delete_selected, restore_selected, hard_delete_selected]
+
+
+def deletion_badge(obj):
+    if getattr(obj, 'is_deleted', False):
+        return format_html(
+            '<span style="background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); padding: 2px 8px; border-radius: 9999px; font-weight: 600; font-size: 0.72rem; display: inline-flex; align-items: center; gap: 4px;">'
+            '🗑️ In Trash</span>'
+        )
+    return format_html(
+        '<span style="background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); padding: 2px 8px; border-radius: 9999px; font-weight: 600; font-size: 0.72rem; display: inline-flex; align-items: center; gap: 4px;">'
+        '● Active</span>'
+    )
+
+
 @admin.register(Category)
 class CategoryAdmin(ModelAdmin):
-    list_display = ('name', 'nepali_name', 'slug', 'order', 'is_active')
+    list_display = ('name', 'nepali_name', 'slug', 'order', 'is_active', 'trash_status')
     list_editable = ('order', 'is_active')
+    list_filter = (TrashStatusFilter, 'is_active')
     search_fields = ('name', 'nepali_name', 'slug')
     prepopulated_fields = {'slug': ('name',)}
+    actions = COMMON_ACTIONS
+    actions_on_top = True
+    actions_on_bottom = True
+
+    def trash_status(self, obj):
+        return deletion_badge(obj)
+    trash_status.short_description = "Trash Status"
+
+
+class OrderItemForm(forms.ModelForm):
+    product_choice = forms.ModelChoiceField(
+        queryset=Product.objects.filter(is_deleted=False).order_by('name'),
+        required=False,
+        label="Quick Select Garment",
+        help_text="Select a catalog garment to auto-populate name, price, and ID."
+    )
+    size = forms.ChoiceField(
+        choices=[
+            ('M', 'M (Medium)'),
+            ('L', 'L (Large)'),
+            ('XL', 'XL (Extra Large)'),
+            ('XXL', 'XXL (Double Extra Large)'),
+            ('Free', 'Free Size'),
+        ],
+        initial='M'
+    )
+
+    class Meta:
+        model = OrderItem
+        fields = ('product_choice', 'product_id', 'name', 'size', 'quantity', 'price')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.product_id:
+            p = Product.objects.filter(product_id=self.instance.product_id).first()
+            if p:
+                self.fields['product_choice'].initial = p
+
+    def clean(self):
+        cleaned_data = super().clean()
+        prod = cleaned_data.get('product_choice')
+        if prod:
+            if not cleaned_data.get('product_id'):
+                cleaned_data['product_id'] = prod.product_id
+            if not cleaned_data.get('name'):
+                cleaned_data['name'] = prod.name
+            if not cleaned_data.get('price') or cleaned_data.get('price') == 0:
+                cleaned_data['price'] = prod.price
+        return cleaned_data
 
 
 class OrderItemInline(TabularInline):
     model = OrderItem
+    form = OrderItemForm
     extra = 1
-    fields = ('product_id', 'name', 'size', 'quantity', 'price')
+    fields = ('product_choice', 'product_id', 'name', 'size', 'quantity', 'price')
 
 
 @admin.register(Product)
@@ -34,12 +153,16 @@ class ProductAdmin(ModelAdmin):
         'original_price',
         'total_stock',
         'badge',
-        'is_featured'
+        'is_featured',
+        'trash_status',
     )
-    list_filter = ('category', 'fabric_type', 'is_featured')
+    list_filter = (TrashStatusFilter, 'category', 'fabric_type', 'is_featured')
     search_fields = ('name', 'nepali_name', 'product_id', 'fabric_type')
     list_editable = ('category', 'price', 'badge', 'is_featured')
     readonly_fields = ('image_display',)
+    actions = COMMON_ACTIONS
+    actions_on_top = True
+    actions_on_bottom = True
 
     fieldsets = (
         ('Garment Identification', {
@@ -60,6 +183,7 @@ class ProductAdmin(ModelAdmin):
             'fields': (
                 ('price', 'original_price'),
                 ('badge', 'is_featured'),
+                'is_deleted',
                 'description',
             )
         }),
@@ -70,6 +194,10 @@ class ProductAdmin(ModelAdmin):
             )
         }),
     )
+
+    def trash_status(self, obj):
+        return deletion_badge(obj)
+    trash_status.short_description = "Trash Status"
 
     def image_preview(self, obj):
         img_url = obj.image.url if obj.image else '/images/kurtha-charcoal.jpg'
@@ -124,7 +252,6 @@ class SiteSettingsAdmin(ModelAdmin):
                 'spotlight_product_id'
             )
         }),
-
         ('Festive Sale Countdown Timer (Default: Invisible)', {
             'fields': (
                 'sale_countdown_enabled',
@@ -160,14 +287,19 @@ class SiteSettingsAdmin(ModelAdmin):
         return SiteSettings.objects.count() == 0
 
 
-# FestivalMomentAdmin removed (section deprecated from storefront)
-
-
 @admin.register(Testimonial)
 class TestimonialAdmin(ModelAdmin):
-    list_display = ('customer_name', 'location', 'rating', 'order', 'is_active')
+    list_display = ('customer_name', 'location', 'rating', 'order', 'is_active', 'trash_status')
     list_editable = ('rating', 'order', 'is_active')
+    list_filter = (TrashStatusFilter, 'rating', 'is_active')
     search_fields = ('customer_name', 'location', 'quote')
+    actions = COMMON_ACTIONS
+    actions_on_top = True
+    actions_on_bottom = True
+
+    def trash_status(self, obj):
+        return deletion_badge(obj)
+    trash_status.short_description = "Trash Status"
 
 
 @admin.register(Order)
@@ -180,29 +312,36 @@ class OrderAdmin(ModelAdmin):
         'payment_method',
         'total_display',
         'status',
+        'trash_status',
         'whatsapp_chat_action',
         'created_at',
     )
-    list_filter = ('status', 'district', 'payment_method', 'created_at')
+    list_filter = (TrashStatusFilter, 'status', 'district', 'payment_method', 'created_at')
     search_fields = ('order_id', 'customer_name', 'phone', 'whatsapp', 'district', 'city', 'address')
     list_editable = ('status',)
     inlines = [OrderItemInline]
     ordering = ('-created_at',)
     readonly_fields = ('created_at',)
+    actions = COMMON_ACTIONS
+    actions_on_top = True
+    actions_on_bottom = True
+    actions_list = ["manual_create_order_action"]
 
     fieldsets = (
         ('Order Identification & Status', {
             'fields': (
                 ('order_id', 'status'),
                 ('payment_method', 'total'),
+                'is_deleted',
             ),
-            'description': 'Leave Order ID empty to auto-generate (e.g. ORD-190A...). Set Total to 0 to auto-sum from line items.'
+            'description': 'Leave Order ID blank to auto-generate (e.g. ORD-190A...). Set Total to 0 to auto-sum from line items below. Check is_deleted to move this order to Trash.'
         }),
         ('Customer Contact Information', {
             'fields': (
                 'customer_name',
                 ('phone', 'whatsapp'),
-            )
+            ),
+            'description': 'Customer phone number is used for WhatsApp concierge dispatch.'
         }),
         ('Delivery Destination in Nepal', {
             'fields': (
@@ -216,6 +355,18 @@ class OrderAdmin(ModelAdmin):
             'classes': ('collapse',),
         }),
     )
+
+    @action(
+        description="➕ Manually Create Order",
+        icon="add_shopping_cart",
+        url_path="create-order",
+    )
+    def manual_create_order_action(self, request):
+        return redirect("admin:store_order_add")
+
+    def trash_status(self, obj):
+        return deletion_badge(obj)
+    trash_status.short_description = "Trash Status"
 
     def total_display(self, obj):
         return f"Rs. {obj.total:,}"
@@ -238,7 +389,7 @@ class OrderAdmin(ModelAdmin):
     def whatsapp_chat_action(self, obj):
         raw_phone = obj.whatsapp or obj.phone
         if not raw_phone:
-            return "—"
+            return "-"
         clean = ''.join(filter(str.isdigit, raw_phone))
         if clean.startswith('0'):
             clean = clean[1:]

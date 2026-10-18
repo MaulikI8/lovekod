@@ -203,6 +203,11 @@ UNFOLD = {
                         "link": reverse_lazy("admin:store_order_changelist"),
                     },
                     {
+                        "title": "Create Order (Manual)",
+                        "icon": "add_shopping_cart",
+                        "link": reverse_lazy("admin:store_order_add"),
+                    },
+                    {
                         "title": "Categories",
                         "icon": "category",
                         "link": reverse_lazy("admin:store_category_changelist"),

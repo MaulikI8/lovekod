@@ -6,6 +6,7 @@ class Category(models.Model):
     nepali_name = models.CharField(max_length=100, blank=True, default='')
     order = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)
+    is_deleted = models.BooleanField(default=False, db_index=True, help_text="Soft delete flag")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -20,6 +21,7 @@ class Category(models.Model):
             'nepaliName': self.nepali_name,
             'order': self.order,
             'isActive': self.is_active,
+            'isDeleted': self.is_deleted,
         }
 
     def __str__(self):
@@ -44,6 +46,7 @@ class Product(models.Model):
     )
     badge = models.CharField(max_length=100, blank=True, default='')
     is_featured = models.BooleanField(default=False)
+    is_deleted = models.BooleanField(default=False, db_index=True, help_text="Soft delete flag")
 
     # Per-size inventory tracking
     stock_m = models.IntegerField(default=5)
@@ -72,6 +75,7 @@ class Product(models.Model):
             'image': (f'/images/{self.image.name}' if self.image and not str(self.image).startswith('/') else (str(self.image) if self.image else '/images/kurtha-charcoal.jpg')),
             'badge': self.badge,
             'isFeatured': self.is_featured,
+            'isDeleted': self.is_deleted,
             'sizes': {
                 'M': self.stock_m,
                 'L': self.stock_l,
@@ -287,6 +291,7 @@ class FestivalMoment(models.Model):
     )
     order = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)
+    is_deleted = models.BooleanField(default=False, db_index=True, help_text="Soft delete flag")
 
     class Meta:
         ordering = ['order', 'id']
@@ -301,6 +306,7 @@ class FestivalMoment(models.Model):
             'iconKey': self.icon_key,
             'order': self.order,
             'isActive': self.is_active,
+            'isDeleted': self.is_deleted,
         }
 
     def __str__(self):
@@ -315,6 +321,7 @@ class Testimonial(models.Model):
     rating = models.PositiveSmallIntegerField(default=5)
     order = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)
+    is_deleted = models.BooleanField(default=False, db_index=True, help_text="Soft delete flag")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -337,6 +344,7 @@ class Testimonial(models.Model):
             'rating': self.rating,
             'order': self.order,
             'isActive': self.is_active,
+            'isDeleted': self.is_deleted,
         }
 
     def __str__(self):
@@ -371,6 +379,7 @@ class Order(models.Model):
             ('Delivered', 'Delivered'),
         ]
     )
+    is_deleted = models.BooleanField(default=False, db_index=True, help_text="Soft delete flag")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
@@ -395,6 +404,7 @@ class Order(models.Model):
             'items': [item.to_dict() for item in self.items.all()],
             'total': self.total,
             'status': self.status,
+            'isDeleted': self.is_deleted,
             'createdAt': self.created_at.isoformat(),
         }
 

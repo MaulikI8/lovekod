@@ -124,17 +124,7 @@ class SiteSettingsAdmin(ModelAdmin):
                 'spotlight_product_id'
             )
         }),
-        ('Our Story Section', {
-            'fields': (
-                'story_tag',
-                'story_title',
-                'story_p1',
-                'story_p2',
-                'story_quote',
-                'story_quote_author',
-                'diyas_lit_count'
-            )
-        }),
+
         ('Festive Sale Countdown Timer (Default: Invisible)', {
             'fields': (
                 'sale_countdown_enabled',
@@ -170,11 +160,7 @@ class SiteSettingsAdmin(ModelAdmin):
         return SiteSettings.objects.count() == 0
 
 
-@admin.register(FestivalMoment)
-class FestivalMomentAdmin(ModelAdmin):
-    list_display = ('nepali_title', 'english_sub', 'tag', 'icon_key', 'order', 'is_active')
-    list_editable = ('order', 'is_active', 'icon_key')
-    search_fields = ('nepali_title', 'english_sub', 'tag')
+# FestivalMomentAdmin removed (section deprecated from storefront)
 
 
 @admin.register(Testimonial)

@@ -42,8 +42,8 @@ export default function AdminContent() {
           { id: 'hero', label: 'Hero & Watermark' },
           { id: 'announcement', label: 'Announcement & Shipping' },
           { id: 'spotlight', label: 'Spotlight Feature' },
-          { id: 'story', label: 'Our Story & Diya Counter' },
           { id: 'contact', label: 'Concierge Contacts' },
+          { id: 'social', label: 'Footer & Socials' },
           { id: 'countdown', label: 'Flash Sale Timer' },
         ].map(tab => (
           <button
@@ -265,70 +265,52 @@ export default function AdminContent() {
           </div>
         )}
 
-        {/* ── 4. OUR STORY TAB ── */}
-        {activeTab === 'story' && (
+        {/* ── 4. FOOTER & SOCIALS TAB ── */}
+        {activeTab === 'social' && (
           <div>
             <h3 style={{ fontFamily: 'var(--font-serif)', color: '#fff', fontSize: '1.25rem', marginBottom: '18px' }}>
-              Our Story &amp; Diya Counter Baseline
+              Footer Connect &amp; Social Channels
             </h3>
             <div className="form-row">
               <div className="form-group">
-                <label>Section Tag</label>
+                <label>Social Handle (e.g. @lovekod.np)</label>
                 <input
                   type="text"
-                  value={form.storyTag || ''}
-                  onChange={e => setForm({ ...form, storyTag: e.target.value })}
+                  value={form.socialHandle || '@lovekod.np'}
+                  onChange={e => setForm({ ...form, socialHandle: e.target.value })}
                 />
               </div>
               <div className="form-group">
-                <label>Story Main Title</label>
+                <label>Official Website Domain</label>
                 <input
                   type="text"
-                  value={form.storyTitle || ''}
-                  onChange={e => setForm({ ...form, storyTitle: e.target.value })}
+                  value={form.websiteUrl || 'https://www.lovekod.com'}
+                  onChange={e => setForm({ ...form, websiteUrl: e.target.value })}
                 />
               </div>
             </div>
             <div className="form-group">
-              <label>First Paragraph</label>
-              <textarea
-                rows="3"
-                value={form.storyP1 || ''}
-                onChange={e => setForm({ ...form, storyP1: e.target.value })}
-              />
-            </div>
-            <div className="form-group">
-              <label>Second Paragraph</label>
-              <textarea
-                rows="3"
-                value={form.storyP2 || ''}
-                onChange={e => setForm({ ...form, storyP2: e.target.value })}
-              />
-            </div>
-            <div className="form-row">
-              <div className="form-group">
-                <label>Featured Quote</label>
-                <input
-                  type="text"
-                  value={form.storyQuote || ''}
-                  onChange={e => setForm({ ...form, storyQuote: e.target.value })}
-                />
-              </div>
-              <div className="form-group">
-                <label>Quote Attribution</label>
-                <input
-                  type="text"
-                  value={form.storyQuoteAuthor || ''}
-                  onChange={e => setForm({ ...form, storyQuoteAuthor: e.target.value })}
-                />
-              </div>
-            </div>
-            <div className="form-group">
-              <label>Base Number of Diyas Lit</label>
+              <label>Instagram Page Link</label>
               <input
-                type="number"
-                value={form.diyasLitCount || 108}
-                onChange={e => setForm({ ...form, diyasLitCount: parseInt(e.target.value, 10) || 0 })}
+                type="text"
+                value={form.socialInstagram || 'https://instagram.com/lovekod.np'}
+                onChange={e => setForm({ ...form, socialInstagram: e.target.value })}
+              />
+            </div>
+            <div className="form-group">
+              <label>TikTok Profile Link</label>
+              <input
+                type="text"
+                value={form.socialTiktok || 'https://tiktok.com/@lovekod.np'}
+                onChange={e => setForm({ ...form, socialTiktok: e.target.value })}
+              />
+            </div>
+            <div className="form-group">
+              <label>Facebook Page Link</label>
+              <input
+                type="text"
+                value={form.socialFacebook || 'https://facebook.com/lovekod.np'}
+                onChange={e => setForm({ ...form, socialFacebook: e.target.value })}
               />
             </div>
           </div>

@@ -22,7 +22,6 @@ export default function AdminLayout() {
     { path: '/admin/products', label: 'Kurthas & Stock' },
     { path: '/admin/categories', label: 'Categories' },
     { path: '/admin/content', label: 'Site Content & Hero' },
-    { path: '/admin/festivals', label: 'Festival Ticker' },
     { path: '/admin/testimonials', label: 'Testimonials' },
     { path: '/admin/orders', label: 'Customer Orders' },
   ];

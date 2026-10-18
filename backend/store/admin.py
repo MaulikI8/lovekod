@@ -96,10 +96,10 @@ def deletion_badge(obj):
 
 @admin.register(Category)
 class CategoryAdmin(ModelAdmin):
-    list_display = ('name', 'nepali_name', 'slug', 'order', 'is_active', 'trash_status')
+    list_display = ('name', 'slug', 'order', 'is_active', 'trash_status')
     list_editable = ('order', 'is_active')
     list_filter = (TrashStatusFilter, 'is_active')
-    search_fields = ('name', 'nepali_name', 'slug')
+    search_fields = ('name', 'slug')
     prepopulated_fields = {'slug': ('name',)}
     actions = COMMON_ACTIONS
     actions_on_top = True
@@ -119,11 +119,14 @@ class OrderItemForm(forms.ModelForm):
     )
     size = forms.ChoiceField(
         choices=[
+            ('XS', 'XS (Extra Small)'),
+            ('S', 'S (Small)'),
             ('M', 'M (Medium)'),
             ('L', 'L (Large)'),
             ('XL', 'XL (Extra Large)'),
             ('XXL', 'XXL (Double Extra Large)'),
-            ('Free', 'Free Size'),
+            ('XXXL', 'XXXL (Triple Extra Large)'),
+            ('Free Size', 'Free Size'),
         ],
         initial='M'
     )
@@ -163,19 +166,15 @@ class OrderItemInline(TabularInline):
 class ProductAdmin(ModelAdmin):
     list_display = (
         'image_preview',
-        'name',
-        'product_id',
+        'product_details',
         'category',
-        'fabric_type',
-        'price',
-        'original_price',
-        'total_stock',
-        'badge',
+        'price_display',
+        'inventory_display',
         'is_featured',
         'trash_status',
     )
     list_filter = (TrashStatusFilter, 'category', 'fabric_type', 'is_featured')
-    search_fields = ('name', 'nepali_name', 'product_id', 'fabric_type')
+    search_fields = ('name', 'product_id', 'fabric_type')
     readonly_fields = ('image_display',)
     actions = COMMON_ACTIONS
     actions_on_top = True
@@ -185,8 +184,8 @@ class ProductAdmin(ModelAdmin):
         ('Garment Identification', {
             'fields': (
                 ('product_id', 'category'),
-                ('name', 'nepali_name'),
-                ('fabric_type', 'pieces'),
+                ('name', 'fabric_type'),
+                'pieces',
             )
         }),
         ('Product Imagery (Upload from Computer)', {
@@ -206,34 +205,76 @@ class ProductAdmin(ModelAdmin):
         }),
         ('Inventory by Size (Units)', {
             'fields': (
+                ('stock_xs', 'stock_s'),
                 ('stock_m', 'stock_l'),
                 ('stock_xl', 'stock_xxl'),
-            )
+                ('stock_xxxl', 'stock_free'),
+                'custom_sizes',
+            ),
+            'description': 'Enter available units for each size. Items with 0 units will automatically show as Sold Out on the storefront. Use custom sizes JSON for extra sizes (e.g. {"4XL": 5}).'
         }),
     )
 
     def trash_status(self, obj):
         return deletion_badge(obj)
-    trash_status.short_description = "Trash Status"
+    trash_status.short_description = "Status"
 
     def image_preview(self, obj):
-        img_url = obj.image.url if obj.image else '/images/kurtha-charcoal.jpg'
-        if not img_url.startswith('/'):
-            img_url = f'/images/{img_url}'
+        img_url = obj.get_image_url()
+        placeholder = '/images/kurtha-charcoal.jpg'
         return format_html(
-            '<img src="{}" style="width: 48px; height: 58px; object-fit: cover; border-radius: 4px; border: 1px solid rgba(138,90,77,0.2);" />',
+            '<div style="width: 46px; height: 56px; border-radius: 6px; overflow: hidden; background: #231916; border: 1px solid rgba(255,255,255,0.12); display: flex; align-items: center; justify-content: center;">'
+            '<img src="{}" onerror="this.onerror=null; this.src=\'' + placeholder + '\';" style="width: 100%; height: 100%; object-fit: cover;" alt="preview" />'
+            '</div>',
             img_url
         )
     image_preview.short_description = "Photo"
 
+    def product_details(self, obj):
+        badge_html = f' <span style="background: rgba(192,129,122,0.2); color: #c0817a; border: 1px solid rgba(192,129,122,0.4); padding: 1px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 600;">{obj.badge}</span>' if obj.badge else ''
+        return format_html(
+            '<div>'
+            '<div style="font-weight: 600; font-size: 0.92rem; color: #f3ece6;">{}{}</div>'
+            '<div style="font-size: 0.75rem; color: #8e807a; margin-top: 3px;">SKU: <code style="background: rgba(255,255,255,0.06); padding: 1px 4px; border-radius: 3px; font-weight: 600; color: #d6ccc7;">{}</code> &bull; {}</div>'
+            '</div>',
+            obj.name,
+            format_html(badge_html),
+            obj.product_id,
+            obj.fabric_type
+        )
+    product_details.short_description = "Product Name & SKU"
+
+    def price_display(self, obj):
+        orig_html = f'<span style="text-decoration: line-through; color: #887872; font-size: 0.78rem; margin-left: 6px;">Rs. {obj.original_price:,}</span>' if obj.original_price and obj.original_price > obj.price else ''
+        formatted_price = f"{obj.price:,}" if obj.price else "0"
+        return format_html(
+            '<div style="font-weight: 600; color: #c0817a; font-size: 0.9rem;">Rs. {}{}</div>',
+            formatted_price,
+            format_html(orig_html)
+        )
+    price_display.short_description = "Price"
+
+    def inventory_display(self, obj):
+        tot = obj.total_stock()
+        color = '#34d399' if tot > 5 else ('#fbbf24' if tot > 0 else '#f87171')
+        bg = 'rgba(16, 185, 129, 0.15)' if tot > 5 else ('rgba(251, 191, 36, 0.15)' if tot > 0 else 'rgba(239, 68, 68, 0.15)')
+        return format_html(
+            '<div style="display: inline-flex; align-items: center; gap: 6px; background: {}; color: {}; border: 1px solid {}; padding: 3px 10px; border-radius: 6px; font-weight: 600; font-size: 0.82rem;">'
+            '<span>{} units</span>'
+            '</div>',
+            bg, color, color, tot
+        )
+    inventory_display.short_description = "Total Stock"
+
     def image_display(self, obj):
-        if obj.image:
-            img_url = obj.image.url if not str(obj.image).startswith('/') else str(obj.image)
-            return format_html(
-                '<div style="margin-top: 8px;"><img src="{}" style="max-width: 240px; max-height: 320px; object-fit: cover; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);" /></div>',
-                img_url
-            )
-        return "No image uploaded yet"
+        img_url = obj.get_image_url()
+        placeholder = '/images/kurtha-charcoal.jpg'
+        return format_html(
+            '<div style="margin-top: 8px;">'
+            '<img src="{}" onerror="this.onerror=null; this.src=\'' + placeholder + '\';" style="max-width: 260px; max-height: 340px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 4px 16px rgba(0,0,0,0.3);" />'
+            '</div>',
+            img_url
+        )
     image_display.short_description = "Current Preview"
 
 

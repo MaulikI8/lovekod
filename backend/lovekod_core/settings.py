@@ -161,7 +161,14 @@ CSRF_USE_SESSIONS = False
 
 # Media files configuration (File uploads)
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR.parent / 'public' / 'images'
+# Media files configuration (File uploads)
+cpanel_root = Path('/home8/aashutos/lovekod.com')
+if cpanel_root.exists():
+    MEDIA_ROOT = cpanel_root / 'media'
+elif (BASE_DIR.parent / 'public' / 'images').exists():
+    MEDIA_ROOT = BASE_DIR.parent / 'public' / 'images'
+else:
+    MEDIA_ROOT = BASE_DIR / 'media'
 
 # Modern Unfold Admin Customization & Navigation
 from django.urls import reverse_lazy

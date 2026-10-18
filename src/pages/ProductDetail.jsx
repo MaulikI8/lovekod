@@ -225,47 +225,64 @@ export default function ProductDetail() {
                     </tr>
                   </thead>
                   <tbody>
+                    <tr><td>XS</td><td>34"</td><td>30"</td><td>36"</td><td>43"</td></tr>
+                    <tr><td>S</td><td>36"</td><td>32"</td><td>38"</td><td>43"</td></tr>
                     <tr><td>M</td><td>38"</td><td>34"</td><td>40"</td><td>44"</td></tr>
                     <tr><td>L</td><td>40"</td><td>36"</td><td>42"</td><td>44"</td></tr>
                     <tr><td>XL</td><td>42"</td><td>38"</td><td>44"</td><td>45"</td></tr>
                     <tr><td>XXL</td><td>44"</td><td>40"</td><td>46"</td><td>45"</td></tr>
+                    <tr><td>XXXL</td><td>46"</td><td>42"</td><td>48"</td><td>46"</td></tr>
                   </tbody>
                 </table>
               </div>
             )}
 
-            {/* Distinct State Size Buttons */}
+            {/* Distinct State Size Buttons (Customizable & Dynamic) */}
             <div className="size-buttons-grid">
-              {['M', 'L', 'XL', 'XXL'].map(size => {
-                const stock = sizes[size] || 0;
-                const isSelected = selectedSize === size;
-                const isOutOfStock = stock === 0;
-                const isLow = stock > 0 && stock <= 2;
+              {(() => {
+                const standardOrder = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'Free Size'];
+                const rawSizes = Object.keys(sizes);
+                const allKeys = rawSizes.length > 0 ? rawSizes : ['M', 'L', 'XL', 'XXL', 'XXXL'];
+                const sortedSizes = allKeys.sort((a, b) => {
+                  const idxA = standardOrder.indexOf(a);
+                  const idxB = standardOrder.indexOf(b);
+                  if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+                  if (idxA !== -1) return -1;
+                  if (idxB !== -1) return 1;
+                  return a.localeCompare(b);
+                });
 
-                return (
-                  <button
-                    key={size}
-                    type="button"
-                    disabled={isOutOfStock}
-                    onClick={() => {
-                      setSelectedSize(size);
-                      setSizeError(false);
-                    }}
-                    className={`size-choice-btn ${isSelected ? 'is-selected' : isOutOfStock ? 'is-out-of-stock' : isLow ? 'is-low-stock' : 'is-available'}`}
-                  >
-                    <span className="choice-size-name">{size}</span>
-                    <span className="choice-status">
-                      {isOutOfStock ? (
-                        'Sold Out'
-                      ) : isLow ? (
-                        `${stock} left`
-                      ) : (
-                        'In Stock'
-                      )}
-                    </span>
-                  </button>
-                );
-              })}
+                return sortedSizes.map(size => {
+                  const stock = sizes[size] || 0;
+                  const isSelected = selectedSize === size;
+                  const isOutOfStock = stock === 0;
+                  const isLow = stock > 0 && stock <= 2;
+
+                  return (
+                    <button
+                      key={size}
+                      type="button"
+                      disabled={isOutOfStock}
+                      onClick={() => {
+                        setSelectedSize(size);
+                        setSizeError(false);
+                      }}
+                      className={`size-choice-btn ${isSelected ? 'is-selected' : isOutOfStock ? 'is-out-of-stock' : isLow ? 'is-low-stock' : 'is-available'}`}
+                    >
+                      <span className="choice-size-name">{size}</span>
+                      <span className="choice-status">
+                        {isOutOfStock ? (
+                          'Sold Out'
+                        ) : isLow ? (
+                          `${stock} left`
+                        ) : (
+                          'In Stock'
+                        )}
+                      </span>
+                    </button>
+                  );
+                });
+              })()}
             </div>
 
             {sizeError && (

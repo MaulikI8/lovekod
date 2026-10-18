@@ -11,5 +11,6 @@ deployment:
     - /bin/cp backend/.env $BACKENDPATH/.env 2>/dev/null || true
     - if [ -f $BACKENDPATH/db.sqlite3.bak ]; then /bin/mv -f $BACKENDPATH/db.sqlite3.bak $BACKENDPATH/db.sqlite3; fi
     - /bin/mkdir -p $FRONTENDPATH/static 2>/dev/null || true
+    - /bin/mkdir -p $FRONTENDPATH/media 2>/dev/null || true
     - /bin/cp -R backend/staticfiles/* $FRONTENDPATH/static/ 2>/dev/null || true
     - /bin/touch $BACKENDPATH/tmp/restart.txt 2>/dev/null || true

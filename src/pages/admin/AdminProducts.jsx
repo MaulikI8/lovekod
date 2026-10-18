@@ -18,7 +18,7 @@ export default function AdminProducts() {
     originalPrice: 4499,
     description: '',
     image: '/images/kurtha-charcoal.jpg',
-    sizes: { M: 5, L: 5, XL: 5, XXL: 5 },
+    sizes: { XS: 0, S: 0, M: 5, L: 5, XL: 5, XXL: 5, XXXL: 0 },
     badge: 'Tihar Special',
     isFeatured: true,
   });
@@ -67,7 +67,7 @@ export default function AdminProducts() {
       originalPrice: 4499,
       description: '',
       image: '/images/kurtha-charcoal.jpg',
-      sizes: { M: 5, L: 5, XL: 5, XXL: 5 },
+      sizes: { XS: 0, S: 0, M: 5, L: 5, XL: 5, XXL: 5, XXXL: 0 },
       badge: 'Tihar Special',
       isFeatured: true,
     });
@@ -424,8 +424,8 @@ export default function AdminProducts() {
                 <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--marigold-light)', marginBottom: '8px', fontWeight: 600 }}>
                   Per-Size Stock Inventory:
                 </label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
-                  {['M', 'L', 'XL', 'XXL'].map(sz => (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(75px, 1fr))', gap: '10px' }}>
+                  {['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'].map(sz => (
                     <div key={sz} className="form-group" style={{ margin: 0 }}>
                       <label style={{ fontSize: '0.75rem' }}>Size {sz}</label>
                       <input
@@ -597,8 +597,8 @@ export default function AdminProducts() {
                 <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--marigold-light)', marginBottom: '8px', fontWeight: 600 }}>
                   Initial Stock Per Size:
                 </label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
-                  {['M', 'L', 'XL', 'XXL'].map(sz => (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(75px, 1fr))', gap: '10px' }}>
+                  {['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'].map(sz => (
                     <div key={sz} className="form-group" style={{ margin: 0 }}>
                       <label style={{ fontSize: '0.75rem' }}>Size {sz}</label>
                       <input

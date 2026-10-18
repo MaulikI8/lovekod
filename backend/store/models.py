@@ -48,17 +48,76 @@ class Product(models.Model):
     is_featured = models.BooleanField(default=False)
     is_deleted = models.BooleanField(default=False, db_index=True, help_text="Soft delete flag")
 
-    # Per-size inventory tracking
-    stock_m = models.IntegerField(default=5)
-    stock_l = models.IntegerField(default=5)
-    stock_xl = models.IntegerField(default=5)
-    stock_xxl = models.IntegerField(default=5)
+    # Customizable inventory tracking across boutique sizes
+    stock_xs = models.IntegerField(default=0, help_text="XS Size stock")
+    stock_s = models.IntegerField(default=0, help_text="S Size stock")
+    stock_m = models.IntegerField(default=5, help_text="M Size stock")
+    stock_l = models.IntegerField(default=5, help_text="L Size stock")
+    stock_xl = models.IntegerField(default=5, help_text="XL Size stock")
+    stock_xxl = models.IntegerField(default=5, help_text="XXL Size stock")
+    stock_xxxl = models.IntegerField(default=0, help_text="XXXL / 3XL Size stock")
+    stock_free = models.IntegerField(default=0, help_text="Free Size stock")
+    custom_sizes = models.JSONField(default=dict, blank=True, help_text='Additional custom sizes in JSON (e.g. {"4XL": 3, "Custom": 1})')
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def get_image_url(self):
+        if self.image:
+            try:
+                url = self.image.url
+                if url:
+                    return url
+            except Exception:
+                pass
+            name = str(self.image)
+            if name.startswith('http') or name.startswith('/'):
+                return name
+            return f'/media/{name}'
+        return '/images/kurtha-charcoal.jpg'
+
+    def get_sizes_dict(self):
+        result = {}
+        all_sizes = [
+            ('XS', self.stock_xs),
+            ('S', self.stock_s),
+            ('M', self.stock_m),
+            ('L', self.stock_l),
+            ('XL', self.stock_xl),
+            ('XXL', self.stock_xxl),
+            ('XXXL', self.stock_xxxl),
+            ('Free Size', self.stock_free),
+        ]
+        if isinstance(self.custom_sizes, dict):
+            for sz, qty in self.custom_sizes.items():
+                try:
+                    result[str(sz)] = int(qty)
+                except (ValueError, TypeError):
+                    pass
+
+        for name, qty in all_sizes:
+            if qty > 0 or name in ['M', 'L', 'XL', 'XXL', 'XXXL']:
+                result[name] = qty or 0
+        return result
+
     def total_stock(self):
-        return self.stock_m + self.stock_l + self.stock_xl + self.stock_xxl
+        tot = (
+            (self.stock_xs or 0) +
+            (self.stock_s or 0) +
+            (self.stock_m or 0) +
+            (self.stock_l or 0) +
+            (self.stock_xl or 0) +
+            (self.stock_xxl or 0) +
+            (self.stock_xxxl or 0) +
+            (self.stock_free or 0)
+        )
+        if isinstance(self.custom_sizes, dict):
+            for v in self.custom_sizes.values():
+                try:
+                    tot += int(v)
+                except (ValueError, TypeError):
+                    pass
+        return tot
 
     def to_dict(self):
         return {
@@ -66,22 +125,16 @@ class Product(models.Model):
             'categoryId': self.category_id,
             'categoryName': self.category.name if self.category else '',
             'name': self.name,
-            'nepaliName': self.nepali_name,
             'fabricType': self.fabric_type,
             'pieces': self.pieces,
             'price': self.price,
             'originalPrice': self.original_price,
             'description': self.description,
-            'image': (f'/images/{self.image.name}' if self.image and not str(self.image).startswith('/') else (str(self.image) if self.image else '/images/kurtha-charcoal.jpg')),
+            'image': self.get_image_url(),
             'badge': self.badge,
             'isFeatured': self.is_featured,
             'isDeleted': self.is_deleted,
-            'sizes': {
-                'M': self.stock_m,
-                'L': self.stock_l,
-                'XL': self.stock_xl,
-                'XXL': self.stock_xxl,
-            }
+            'sizes': self.get_sizes_dict(),
         }
 
     def __str__(self):
@@ -416,7 +469,7 @@ class OrderItem(models.Model):
     order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
     product_id = models.CharField(max_length=50, blank=True, default='')
     name = models.CharField(max_length=255)
-    size = models.CharField(max_length=10, default='M')
+    size = models.CharField(max_length=50, default='M')
     quantity = models.PositiveIntegerField(default=1)
     price = models.IntegerField(default=0)
     image = models.CharField(max_length=255, blank=True, default='/images/kurtha-charcoal.jpg')
@@ -427,16 +480,26 @@ class OrderItem(models.Model):
         if not self.stock_deducted and self.product_id:
             p = Product.objects.filter(product_id=self.product_id).first()
             if p:
-                size_upper = (self.size or 'M').strip().upper()
+                sz = (self.size or 'M').strip().upper()
                 qty = max(1, int(self.quantity or 1))
-                if 'XXL' in size_upper:
-                    p.stock_xxl = max(0, p.stock_xxl - qty)
-                elif 'XL' in size_upper:
-                    p.stock_xl = max(0, p.stock_xl - qty)
-                elif 'L' in size_upper:
-                    p.stock_l = max(0, p.stock_l - qty)
+                if 'XXXL' in sz or '3XL' in sz:
+                    p.stock_xxxl = max(0, (p.stock_xxxl or 0) - qty)
+                elif 'XXL' in sz or '2XL' in sz:
+                    p.stock_xxl = max(0, (p.stock_xxl or 0) - qty)
+                elif 'XL' in sz:
+                    p.stock_xl = max(0, (p.stock_xl or 0) - qty)
+                elif 'L' in sz:
+                    p.stock_l = max(0, (p.stock_l or 0) - qty)
+                elif 'XS' in sz:
+                    p.stock_xs = max(0, (p.stock_xs or 0) - qty)
+                elif 'S' in sz:
+                    p.stock_s = max(0, (p.stock_s or 0) - qty)
+                elif 'FREE' in sz:
+                    p.stock_free = max(0, (p.stock_free or 0) - qty)
+                elif isinstance(p.custom_sizes, dict) and sz in p.custom_sizes:
+                    p.custom_sizes[sz] = max(0, int(p.custom_sizes[sz]) - qty)
                 else:
-                    p.stock_m = max(0, p.stock_m - qty)
+                    p.stock_m = max(0, (p.stock_m or 0) - qty)
                 p.save()
                 self.stock_deducted = True
                 self.save(update_fields=['stock_deducted'])
@@ -446,16 +509,26 @@ class OrderItem(models.Model):
         if self.stock_deducted and self.product_id:
             p = Product.objects.filter(product_id=self.product_id).first()
             if p:
-                size_upper = (self.size or 'M').strip().upper()
+                sz = (self.size or 'M').strip().upper()
                 qty = max(1, int(self.quantity or 1))
-                if 'XXL' in size_upper:
-                    p.stock_xxl += qty
-                elif 'XL' in size_upper:
-                    p.stock_xl += qty
-                elif 'L' in size_upper:
-                    p.stock_l += qty
+                if 'XXXL' in sz or '3XL' in sz:
+                    p.stock_xxxl = (p.stock_xxxl or 0) + qty
+                elif 'XXL' in sz or '2XL' in sz:
+                    p.stock_xxl = (p.stock_xxl or 0) + qty
+                elif 'XL' in sz:
+                    p.stock_xl = (p.stock_xl or 0) + qty
+                elif 'L' in sz:
+                    p.stock_l = (p.stock_l or 0) + qty
+                elif 'XS' in sz:
+                    p.stock_xs = (p.stock_xs or 0) + qty
+                elif 'S' in sz:
+                    p.stock_s = (p.stock_s or 0) + qty
+                elif 'FREE' in sz:
+                    p.stock_free = (p.stock_free or 0) + qty
+                elif isinstance(p.custom_sizes, dict) and sz in p.custom_sizes:
+                    p.custom_sizes[sz] = int(p.custom_sizes[sz]) + qty
                 else:
-                    p.stock_m += qty
+                    p.stock_m = (p.stock_m or 0) + qty
                 p.save()
                 self.stock_deducted = False
                 self.save(update_fields=['stock_deducted'])

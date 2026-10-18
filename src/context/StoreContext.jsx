@@ -82,7 +82,7 @@ function saveState(key, value) {
 }
 
 export function StoreProvider({ children }) {
-  const [products, setProducts] = useState(() => loadState(STORAGE_KEYS.PRODUCTS, defaultProducts));
+  const [products, setProducts] = useState(() => loadState(STORAGE_KEYS.PRODUCTS, []));
   const [categories, setCategories] = useState(() => loadState(STORAGE_KEYS.CATEGORIES, DEFAULT_CATEGORIES));
   const [siteSettings, setSiteSettings] = useState(() => loadState(STORAGE_KEYS.SITE_SETTINGS, DEFAULT_SETTINGS));
   const [festivalMoments, setFestivalMoments] = useState(() => loadState(STORAGE_KEYS.FESTIVALS, []));
@@ -110,21 +110,29 @@ export function StoreProvider({ children }) {
 
   // Fetch all dynamic data from Django Backend
   const refreshFromBackend = useCallback(async () => {
-    // 1. Products
+    // 1. Products (Exclude soft deleted)
     try {
       const res = await fetch(`${API_BASE}/products/`);
       if (res.ok) {
         const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) setProducts(data);
+        if (Array.isArray(data)) {
+          const activeOnly = data.filter(p => !p.isDeleted && !p.is_deleted);
+          setProducts(activeOnly);
+          saveState(STORAGE_KEYS.PRODUCTS, activeOnly);
+        }
       }
     } catch { /* offline fallback */ }
 
-    // 2. Categories
+    // 2. Categories (Exclude soft deleted)
     try {
       const catRes = await fetch(`${API_BASE}/categories/`);
       if (catRes.ok) {
         const catData = await catRes.json();
-        if (Array.isArray(catData) && catData.length > 0) setCategories(catData);
+        if (Array.isArray(catData)) {
+          const activeOnly = catData.filter(c => !c.isDeleted && !c.is_deleted);
+          setCategories(activeOnly);
+          saveState(STORAGE_KEYS.CATEGORIES, activeOnly);
+        }
       }
     } catch { /* offline fallback */ }
 
@@ -133,7 +141,10 @@ export function StoreProvider({ children }) {
       const setRes = await fetch(`${API_BASE}/site-settings/`);
       if (setRes.ok) {
         const setData = await setRes.json();
-        if (setData && !setData.error) setSiteSettings(prev => ({ ...prev, ...setData }));
+        if (setData && !setData.error) {
+          setSiteSettings(prev => ({ ...prev, ...setData }));
+          saveState(STORAGE_KEYS.SITE_SETTINGS, setData);
+        }
       }
     } catch { /* offline fallback */ }
 
@@ -142,7 +153,11 @@ export function StoreProvider({ children }) {
       const festRes = await fetch(`${API_BASE}/festival-moments/`);
       if (festRes.ok) {
         const festData = await festRes.json();
-        if (Array.isArray(festData)) setFestivalMoments(festData);
+        if (Array.isArray(festData)) {
+          const activeOnly = festData.filter(m => !m.isDeleted && !m.is_deleted);
+          setFestivalMoments(activeOnly);
+          saveState(STORAGE_KEYS.FESTIVALS, activeOnly);
+        }
       }
     } catch { /* offline fallback */ }
 
@@ -151,7 +166,11 @@ export function StoreProvider({ children }) {
       const testRes = await fetch(`${API_BASE}/testimonials/`);
       if (testRes.ok) {
         const testData = await testRes.json();
-        if (Array.isArray(testData)) setTestimonials(testData);
+        if (Array.isArray(testData)) {
+          const activeOnly = testData.filter(t => !t.isDeleted && !t.is_deleted);
+          setTestimonials(activeOnly);
+          saveState(STORAGE_KEYS.TESTIMONIALS, activeOnly);
+        }
       }
     } catch { /* offline fallback */ }
 
@@ -160,7 +179,11 @@ export function StoreProvider({ children }) {
       const ordersRes = await fetch(`${API_BASE}/orders/`);
       if (ordersRes.ok) {
         const orderData = await ordersRes.json();
-        if (Array.isArray(orderData)) setOrders(orderData);
+        if (Array.isArray(orderData)) {
+          const activeOnly = orderData.filter(o => !o.isDeleted && !o.is_deleted);
+          setOrders(activeOnly);
+          saveState(STORAGE_KEYS.ORDERS, activeOnly);
+        }
       }
     } catch { /* offline fallback */ }
   }, []);

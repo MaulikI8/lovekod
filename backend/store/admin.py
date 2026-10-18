@@ -176,7 +176,6 @@ class ProductAdmin(ModelAdmin):
     )
     list_filter = (TrashStatusFilter, 'category', 'fabric_type', 'is_featured')
     search_fields = ('name', 'nepali_name', 'product_id', 'fabric_type')
-    list_editable = ('category', 'price', 'badge', 'is_featured')
     readonly_fields = ('image_display',)
     actions = COMMON_ACTIONS
     actions_on_top = True

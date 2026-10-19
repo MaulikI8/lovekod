@@ -243,6 +243,15 @@ def site_settings_detail_update(request):
                 'saleCountdownTargetDate': 'sale_countdown_target_date',
                 'saleCountdownCtaText': 'sale_countdown_cta_text',
                 'saleCountdownCtaLink': 'sale_countdown_cta_link',
+                'heroHotspots': 'hero_hotspots',
+                'lookbookEyebrow': 'lookbook_eyebrow',
+                'lookbookTitle': 'lookbook_title',
+                'lookbookSubtitle': 'lookbook_subtitle',
+                'socialHandle': 'social_handle',
+                'socialInstagram': 'social_instagram',
+                'socialTiktok': 'social_tiktok',
+                'socialFacebook': 'social_facebook',
+                'websiteUrl': 'website_url',
             }
             for json_key, model_field in mapping.items():
                 if json_key in data:

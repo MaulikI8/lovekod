@@ -298,7 +298,8 @@ class SiteSettingsAdmin(ModelAdmin):
                 'hero_image',
                 'hero_trust_item_1',
                 'hero_trust_item_2',
-                'hero_trust_item_3'
+                'hero_trust_item_3',
+                'hero_hotspots'
             )
         }),
         ('Spotlight Signature Showcase', {

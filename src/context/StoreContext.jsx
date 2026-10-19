@@ -78,6 +78,7 @@ const DEFAULT_SETTINGS = {
   saleCountdownTargetDate: '2026-11-10T23:59:59',
   saleCountdownCtaText: 'Shop the Flash Sale',
   saleCountdownCtaLink: '#collection',
+  heroHotspots: [],
 };
 
 const DEFAULT_CATEGORIES = [

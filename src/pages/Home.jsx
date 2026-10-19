@@ -57,7 +57,7 @@ export default function Home() {
   return (
     <div className="home-container">
       {/* ── 1. FULL-BLEED THREE-PANEL STRIP HERO WITH HOTSPOTS ── */}
-      <HeroStrip siteSettings={siteSettings} />
+      <HeroStrip siteSettings={siteSettings} products={products} />
 
       {/* ── 2. FESTIVE BHAI TIKA COUNTDOWN ── */}
       <CountdownTimer />

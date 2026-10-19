@@ -166,6 +166,111 @@ export default function AdminContent() {
                 onChange={e => setForm({ ...form, heroTrustItem3: e.target.value })}
               />
             </div>
+
+            <h4 style={{ color: 'var(--marigold-light)', fontSize: '0.95rem', margin: '26px 0 8px' }}>
+              Craftsmanship Hotspots (Interactive Pins &amp; Popover Notes)
+            </h4>
+            <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.6)', marginBottom: '16px' }}>
+              Configure the 3 interactive embroidery pins that appear on the hero center outfit (Neckline, Dupatta, Hemline).
+            </p>
+
+            {(form.heroHotspots && form.heroHotspots.length === 3
+              ? form.heroHotspots
+              : [
+                  { id: 'neckline', x: 50, y: 26, label: 'Neckline Zari Work', note: 'Hand-embossed silver needlework framed along an artisanal split collar.', productSlug: '' },
+                  { id: 'dupatta', x: 66, y: 42, label: 'Dupatta Edge', note: 'Gossamer georgette with scalloped silver embroidery edging.', productSlug: '' },
+                  { id: 'hemline', x: 50, y: 65, label: 'Embroidered Hem Band', note: 'Handcrafted kurtha border with fine floral needlework.', productSlug: '' },
+                ]
+            ).map((hs, idx) => {
+              const handleHsChange = (field, val) => {
+                const current = (form.heroHotspots && form.heroHotspots.length === 3)
+                  ? [...form.heroHotspots]
+                  : [
+                      { id: 'neckline', x: 50, y: 26, label: 'Neckline Zari Work', note: 'Hand-embossed silver needlework framed along an artisanal split collar.', productSlug: '' },
+                      { id: 'dupatta', x: 66, y: 42, label: 'Dupatta Edge', note: 'Gossamer georgette with scalloped silver embroidery edging.', productSlug: '' },
+                      { id: 'hemline', x: 50, y: 65, label: 'Embroidered Hem Band', note: 'Handcrafted kurtha border with fine floral needlework.', productSlug: '' },
+                    ];
+                current[idx] = { ...current[idx], [field]: val, isCustom: true };
+                setForm({ ...form, heroHotspots: current });
+              };
+
+              return (
+                <div
+                  key={hs.id || idx}
+                  style={{
+                    background: 'rgba(255,255,255,0.03)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: '8px',
+                    padding: '14px',
+                    marginBottom: '14px',
+                  }}
+                >
+                  <div style={{ fontWeight: 600, color: '#fff', fontSize: '0.88rem', marginBottom: '10px' }}>
+                    Pin {idx + 1}: {hs.id ? hs.id.toUpperCase() : `HOTSPOT ${idx + 1}`} ({hs.x}%, {hs.y}%)
+                  </div>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Popup Title / Label</label>
+                      <input
+                        type="text"
+                        value={hs.label || ''}
+                        onChange={(e) => handleHsChange('label', e.target.value)}
+                        placeholder="e.g. Dupatta Edge"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Target Product (View set &rarr; link)</label>
+                      <select
+                        value={hs.productSlug || ''}
+                        onChange={(e) => handleHsChange('productSlug', e.target.value)}
+                        style={{
+                          background: 'rgba(0,0,0,0.4)',
+                          border: '1px solid rgba(255,255,255,0.15)',
+                          color: '#fff',
+                          borderRadius: '6px',
+                          padding: '10px',
+                          width: '100%',
+                        }}
+                      >
+                        <option value="">Auto (Current Featured / Center Outfit)</option>
+                        {products.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.name} ({p.id})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label>Popup Description Note</label>
+                    <textarea
+                      rows="2"
+                      value={hs.note || ''}
+                      onChange={(e) => handleHsChange('note', e.target.value)}
+                      placeholder="e.g. Gossamer georgette with scalloped silver embroidery edging."
+                    />
+                  </div>
+                </div>
+              );
+            })}
+
+            <button
+              type="button"
+              className="btn-secondary"
+              style={{ fontSize: '0.8rem', padding: '6px 12px', marginTop: '4px' }}
+              onClick={() => {
+                setForm({
+                  ...form,
+                  heroHotspots: [
+                    { id: 'neckline', x: 50, y: 26, label: 'Neckline Zari Work', note: 'Hand-embossed silver needlework framed along an artisanal split collar.', productSlug: '' },
+                    { id: 'dupatta', x: 66, y: 42, label: 'Dupatta Edge', note: 'Gossamer georgette with scalloped silver embroidery edging.', productSlug: '' },
+                    { id: 'hemline', x: 50, y: 65, label: 'Embroidered Hem Band', note: 'Handcrafted kurtha border with fine floral needlework.', productSlug: '' },
+                  ],
+                });
+              }}
+            >
+              Reset Hotspots to Defaults
+            </button>
           </div>
         )}
 

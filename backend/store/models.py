@@ -243,6 +243,13 @@ class SiteSettings(models.Model):
         help_text="Subheading description for the 3D lookbook carousel."
     )
 
+    # Dynamic Craftsmanship Hotspots on Hero Outfit
+    hero_hotspots = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="Dynamic craftsmanship hotspots list with id, label, note, x, y, productSlug"
+    )
+
     # Social Media & Footer Links
     social_handle = models.CharField(
         max_length=100,
@@ -321,6 +328,7 @@ class SiteSettings(models.Model):
             'socialTiktok': self.social_tiktok,
             'socialFacebook': self.social_facebook,
             'websiteUrl': self.website_url,
+            'heroHotspots': self.hero_hotspots if self.hero_hotspots else [],
         }
 
     def __str__(self):

@@ -93,6 +93,10 @@ export default function CuratedCollection({
                     alt={product.name}
                     loading="lazy"
                     className="card-product-img"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = '/images/kurtha-charcoal.jpg';
+                    }}
                   />
                 </Link>
 

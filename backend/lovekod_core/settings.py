@@ -170,6 +170,11 @@ elif (BASE_DIR.parent / 'public' / 'images').exists():
 else:
     MEDIA_ROOT = BASE_DIR / 'media'
 
+try:
+    MEDIA_ROOT.mkdir(parents=True, exist_ok=True)
+except Exception:
+    pass
+
 # Modern Unfold Admin Customization & Navigation
 from django.urls import reverse_lazy
 

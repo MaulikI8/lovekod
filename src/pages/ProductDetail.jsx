@@ -149,7 +149,7 @@ export default function ProductDetail() {
       <div className="pd-grid">
         {/* Left: Product Imagery with warm ambient frame */}
         <div className="pd-image-frame">
-          <img src={product.image} alt={product.name} className="pd-main-img" />
+          <img src={product.image} alt={product.name} className="pd-main-img" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/kurtha-charcoal.jpg'; }} />
           {product.badge && (
             <div className="pd-cut-badge">
               <span>{product.badge}</span>

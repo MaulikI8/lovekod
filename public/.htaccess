@@ -1,19 +1,14 @@
-# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION BEGIN
-PassengerAppRoot "/home8/aashutos/backend"
-PassengerBaseURI "/api"
-PassengerPython "/home8/aashutos/virtualenv/backend/3.11/bin/python3.11"
-# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION END
-
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
   RewriteRule ^index\.html$ - [L]
 
   # Exclude Backend API, Django Admin, Static, and Media from React SPA fallback
-  RewriteRule ^api(/.*)?$ - [L]
-  RewriteRule ^django-admin(/.*)?$ - [L]
-  RewriteRule ^static(/.*)?$ - [L]
-  RewriteRule ^media(/.*)?$ - [L]
+  RewriteCond %{REQUEST_URI} ^/api [NC,OR]
+  RewriteCond %{REQUEST_URI} ^/django-admin [NC,OR]
+  RewriteCond %{REQUEST_URI} ^/static [NC,OR]
+  RewriteCond %{REQUEST_URI} ^/media [NC]
+  RewriteRule ^ - [L]
 
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d

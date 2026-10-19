@@ -4,7 +4,6 @@ deployment:
     - export FRONTENDPATH=/home8/aashutos/lovekod.com/
     - export BACKENDPATH=/home8/aashutos/backend/
     - /bin/cp -R dist/* $FRONTENDPATH
-    - /bin/cp -f dist/.htaccess $FRONTENDPATH/.htaccess 2>/dev/null || true
     - /bin/mkdir -p $BACKENDPATH
     - if [ -f $BACKENDPATH/db.sqlite3 ]; then /bin/cp -f $BACKENDPATH/db.sqlite3 $BACKENDPATH/db.sqlite3.bak; fi
     - /bin/cp -R backend/* $BACKENDPATH

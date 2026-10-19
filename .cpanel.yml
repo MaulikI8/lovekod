@@ -13,4 +13,7 @@ deployment:
     - /bin/mkdir -p $FRONTENDPATH/static 2>/dev/null || true
     - /bin/mkdir -p $FRONTENDPATH/media 2>/dev/null || true
     - /bin/cp -R backend/staticfiles/* $FRONTENDPATH/static/ 2>/dev/null || true
+    - /home8/aashutos/virtualenv/backend/3.11/bin/python $BACKENDPATH/manage.py migrate --noinput 2>/dev/null || true
+    - /home8/aashutos/virtualenv/backend/3.11/bin/python $BACKENDPATH/manage.py collectstatic --noinput 2>/dev/null || true
+    - /bin/mkdir -p $BACKENDPATH/tmp
     - /bin/touch $BACKENDPATH/tmp/restart.txt 2>/dev/null || true

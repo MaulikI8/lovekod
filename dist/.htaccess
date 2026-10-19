@@ -1,6 +1,11 @@
+DirectoryIndex index.html
+
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
+
+  # Serve root homepage immediately with index.html (never let passenger intercept root)
+  RewriteRule ^$ index.html [L]
   RewriteRule ^index\.html$ - [L]
 
   # Exclude Backend API, Django Admin, Static, and Media from React SPA fallback

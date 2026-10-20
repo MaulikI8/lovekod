@@ -72,6 +72,26 @@
         }
     </style>
     <script>
+    /* Live Image File Upload Instant Preview */
+    document.addEventListener('change', function(e) {
+        if (e.target && e.target.type === 'file' && e.target.name === 'image') {
+            const file = e.target.files && e.target.files[0];
+            const previewImg = document.getElementById('product-preview-img');
+            const previewBox = document.getElementById('product-preview-container');
+            const emptyBox = document.getElementById('product-preview-empty');
+
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    if (previewImg) previewImg.src = evt.target.result;
+                    if (previewBox) previewBox.style.display = 'block';
+                    if (emptyBox) emptyBox.style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+    });
+
     /* Unfold popup fix: Ensure Alpine opens the modal when adding a category */
     document.addEventListener("DOMContentLoaded", function() {
         document.addEventListener("click", function(e) {

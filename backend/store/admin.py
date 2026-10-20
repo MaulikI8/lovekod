@@ -488,18 +488,20 @@ class ProductAdmin(ModelAdmin):
     seo_image_display.short_description = "Social Card Image Preview"
 
     def image_display(self, obj):
-        if not obj or not obj.image:
-            return format_html(
-                '<div style="margin-top: 6px; padding: 20px; background: #F9FAFB; border: 1.5px dashed #D1D5DB; border-radius: 8px; max-width: 300px; text-align: center; color: #6B7280; font-size: 12px;">'
-                '<span style="font-size: 22px; display: block; margin-bottom: 4px;">📷</span>'
-                "No photo uploaded yet. Choose an image file above to set this outfit's photo."
-                '</div>'
-            )
-        img_url = obj.get_image_url()
+        img_url = obj.get_image_url() if (obj and obj.image) else ''
+        has_img = bool(obj and obj.image)
         return format_html(
-            '<div style="margin-top: 8px;">'
-            '<img src="{}" style="max-width: 220px; max-height: 280px; object-fit: cover; border-radius: 8px; border: 1px solid #E5E7EB; box-shadow: 0 2px 8px rgba(0,0,0,0.06);" />'
+            '<div id="product-live-preview-box" style="margin-top: 6px;">'
+            '  <div id="product-preview-empty" style="padding: 20px; background: #F9FAFB; border: 1.5px dashed #D1D5DB; border-radius: 8px; max-width: 300px; text-align: center; color: #6B7280; font-size: 12px; display: {};">'
+            '    <span style="font-size: 22px; display: block; margin-bottom: 4px;">📷</span>'
+            '    No photo chosen yet. Choose an image file above to preview.'
+            '  </div>'
+            '  <div id="product-preview-container" style="display: {};">'
+            '    <img id="product-preview-img" src="{}" style="max-width: 240px; max-height: 320px; object-fit: cover; border-radius: 8px; border: 1px solid #E5E7EB; box-shadow: 0 4px 12px rgba(0,0,0,0.08); display: block;" />'
+            '  </div>'
             '</div>',
+            'none' if has_img else 'block',
+            'block' if has_img else 'none',
             img_url
         )
     image_display.short_description = "Current Preview"

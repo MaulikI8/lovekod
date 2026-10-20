@@ -228,13 +228,13 @@ class ProductAdmin(ModelAdmin):
         img_url = obj.get_image_url()
         edit_url = reverse('admin:store_product_change', args=[obj.id])
         return format_html(
-            '<div class="flex items-center gap-3.5 py-1">'
-            '<div class="w-11 h-14 rounded-lg overflow-hidden border border-gray-200 bg-gray-50 flex-shrink-0 shadow-2xs">'
-            '<img src="{}" onerror="this.onerror=null; this.src=&quot;/images/kurtha-charcoal.jpg&quot;;" class="w-full h-full object-cover" alt="{}" />'
+            '<div style="display: flex; align-items: center; gap: 12px; padding: 2px 0;">'
+            '<div style="width: 44px; min-width: 44px; max-width: 44px; height: 56px; min-height: 56px; max-height: 56px; border-radius: 8px; overflow: hidden; border: 1px solid #E5E7EB; background: #F9FAFB; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">'
+            '<img src="{}" onerror="this.onerror=null; this.src=&quot;/images/kurtha-charcoal.jpg&quot;;" style="width: 44px; height: 56px; max-width: 44px; max-height: 56px; object-fit: cover; display: block;" alt="{}" />'
             '</div>'
-            '<div class="min-w-0">'
-            '<a href="{}" class="font-bold text-gray-900 hover:text-purple-600 transition-colors text-sm tracking-tight block truncate">{}</a>'
-            '<span class="text-[11px] text-gray-400 font-mono">SKU: {}</span>'
+            '<div style="min-width: 0; display: flex; flex-direction: column; gap: 2px;">'
+            '<a href="{}" style="font-weight: 700; color: #111827; text-decoration: none; font-size: 13px; line-height: 1.3;" class="hover:text-purple-600 block truncate">{}</a>'
+            '<span style="font-size: 11px; color: #9CA3AF; font-family: monospace;">SKU: {}</span>'
             '</div>'
             '</div>',
             img_url, obj.name, edit_url, obj.name, obj.product_id

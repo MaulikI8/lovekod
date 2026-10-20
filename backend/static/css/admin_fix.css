@@ -208,3 +208,24 @@ table#result_list .action-checkbox {
         bottom: 12px !important;
     }
 }
+
+/* 7. Strict thumbnail constraints for table previews */
+table#result_list img,
+.result-list img,
+.field-blanxer_name img,
+.field-image_preview img {
+    width: 44px !important;
+    height: 56px !important;
+    max-width: 44px !important;
+    max-height: 56px !important;
+    min-width: 44px !important;
+    min-height: 56px !important;
+    object-fit: cover !important;
+    border-radius: 8px !important;
+    display: block !important;
+}
+
+table#result_list td.field-blanxer_name {
+    min-width: 220px !important;
+    max-width: 420px !important;
+}

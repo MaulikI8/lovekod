@@ -224,11 +224,6 @@ UNFOLD = {
                         "link": reverse_lazy("admin:store_product_changelist"),
                     },
                     {
-                        "title": "Inventory",
-                        "icon": "inventory",
-                        "link": reverse_lazy("admin:store_product_changelist"),
-                    },
-                    {
                         "title": "Orders",
                         "icon": "shopping_bag",
                         "link": reverse_lazy("admin:store_order_changelist"),

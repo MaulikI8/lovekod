@@ -23,7 +23,6 @@ export default function AdminLayout() {
     { path: '/admin', label: 'Home', icon: '🏠', exact: true },
     { path: '/admin/products', label: 'Products', icon: '📦' },
     { path: '/admin/categories', label: 'Categories', icon: '🏷️' },
-    { path: '/admin/inventory', label: 'Inventory', icon: '🗄️' },
     { path: '/admin/customers', label: 'Customers', icon: '👥' },
     { path: '/admin/orders', label: 'Orders', icon: '🛍️', badge: pendingCount > 0 ? pendingCount : null },
     { path: '/admin/analytics', label: 'Analytics', icon: '📈' },

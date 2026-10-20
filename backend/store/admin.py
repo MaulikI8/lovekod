@@ -97,14 +97,113 @@ def deletion_badge(obj):
 
 @admin.register(Category)
 class CategoryAdmin(ModelAdmin):
-    list_display = ('name', 'slug', 'order', 'is_active', 'trash_status')
+    list_display = ('image_preview', 'name', 'nepali_name', 'slug', 'order', 'seo_status', 'is_active', 'trash_status')
     list_editable = ('order', 'is_active')
     list_filter = (TrashStatusFilter, 'is_active')
-    search_fields = ('name', 'slug')
+    search_fields = ('name', 'slug', 'seo_tags')
     prepopulated_fields = {'slug': ('name',)}
+    readonly_fields = ('image_display', 'seo_image_display', 'google_preview_snippet')
     actions = COMMON_ACTIONS
     actions_on_top = True
     actions_on_bottom = True
+
+    fieldsets = (
+        ('Category Information', {
+            'fields': (
+                ('name', 'slug'),
+                ('nepali_name', 'order'),
+                ('is_active', 'is_deleted'),
+            )
+        }),
+        ('Collection Imagery (Banner & Social Share Card)', {
+            'fields': (
+                'image',
+                'image_display',
+            ),
+            'description': 'Upload collection cover photo (also used when sharing this category on WhatsApp, Instagram, or Facebook).'
+        }),
+        ('🔍 Search Engine Optimization (SEO & Social Tags)', {
+            'fields': (
+                'meta_title',
+                'meta_description',
+                'seo_tags',
+                'canonical_url',
+                'google_preview_snippet',
+            ),
+            'description': 'Configure how this category collection ranks on Google and appears in social sharing cards.'
+        }),
+    )
+
+    def image_preview(self, obj):
+        img_url = obj.get_image_url()
+        return format_html(
+            '<div style="width: 44px; min-width: 44px; max-width: 44px; height: 44px; min-height: 44px; max-height: 44px; border-radius: 8px; overflow: hidden; border: 1px solid #E5E7EB; background: #F9FAFB; display: flex; align-items: center; justify-content: center;">'
+            '<img src="{}" onerror="this.onerror=null; this.src=&quot;/images/hero-banner.jpg&quot;;" style="width: 44px; height: 44px; object-fit: cover; display: block;" alt="{}" />'
+            '</div>',
+            img_url, obj.name
+        )
+    image_preview.short_description = "Image"
+
+    def seo_image_display(self, obj):
+        img_url = obj.get_seo_image_url()
+        return format_html(
+            '<div style="margin-top: 8px;">'
+            '<img src="{}" style="max-width: 220px; max-height: 160px; object-fit: cover; border-radius: 8px; border: 1px solid #E5E7EB; box-shadow: 0 2px 6px rgba(0,0,0,0.06);" />'
+            '<div style="font-size: 11px; color: #6B7280; margin-top: 4px;">Preview of social sharing card (WhatsApp / Facebook / Google)</div>'
+            '</div>',
+            img_url
+        )
+    seo_image_display.short_description = "Social Card Image Preview"
+
+    def image_display(self, obj):
+        img_url = obj.get_image_url()
+        return format_html(
+            '<div style="margin-top: 8px;">'
+            '<img src="{}" onerror="this.onerror=null; this.src=&quot;/images/hero-banner.jpg&quot;;" style="max-width: 320px; max-height: 180px; object-fit: cover; border-radius: 8px; border: 1px solid #E5E7EB; box-shadow: 0 2px 8px rgba(0,0,0,0.06);" />'
+            '</div>',
+            img_url
+        )
+    image_display.short_description = "Collection Banner Preview"
+
+    def seo_status(self, obj):
+        if obj.meta_title and obj.meta_description:
+            return format_html(
+                '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">'
+                '● SEO Configured'
+                '</span>'
+            )
+        return format_html(
+            '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-100 text-gray-500 border border-gray-200">'
+            'Auto-Generated'
+            '</span>'
+        )
+    seo_status.short_description = "SEO Status"
+
+    def google_preview_snippet(self, obj):
+        if not obj or not obj.id:
+            return format_html('<span class="text-xs text-gray-400">Save this category first to preview Google SERP.</span>')
+        title = obj.get_meta_title()
+        desc = obj.get_meta_description()
+        url = f"https://lovekod.com/category/{obj.slug}"
+        return format_html(
+            '<div style="max-width: 620px; padding: 16px; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 12px; font-family: arial, sans-serif; box-shadow: 0 1px 4px rgba(0,0,0,0.06);">'
+            '<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">'
+            '<span style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #7C3AED;">Category Google Search Snippet</span>'
+            '<span style="font-size: 11px; color: #10B981; font-weight: 600; background: #ECFDF5; padding: 2px 8px; border-radius: 9999px;">● Category SEO Live</span>'
+            '</div>'
+            '<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">'
+            '<div style="width: 22px; height: 22px; border-radius: 50%; background: #7C3AED; display: flex; align-items: center; justify-content: center; color: #FFFFFF; font-size: 10px; font-weight: bold; flex-shrink: 0;">LK</div>'
+            '<div style="display: flex; flex-direction: column; overflow: hidden;">'
+            '<span style="font-size: 12px; font-weight: 600; color: #202124; line-height: 1.2;">LoveKod (लभकोड) Collection</span>'
+            '<span style="font-size: 11px; color: #5F6368; line-height: 1.2; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">{}</span>'
+            '</div>'
+            '</div>'
+            '<a href="{}" target="_blank" style="font-size: 18px; line-height: 1.3; color: #1A0DAB; text-decoration: none; font-weight: 500; display: block; margin-top: 4px;">{}</a>'
+            '<div style="font-size: 13px; line-height: 1.5; color: #4D5156; margin-top: 5px;">{}</div>'
+            '</div>',
+            url, url, title, desc
+        )
+    google_preview_snippet.short_description = "Live Google Search Snippet"
 
     def trash_status(self, obj):
         return deletion_badge(obj)
@@ -178,7 +277,7 @@ class ProductAdmin(ModelAdmin):
     list_before_template = "admin/store/product/change_list_header.html"
     list_filter = ('status', 'category', 'fabric_type', 'is_featured', TrashStatusFilter)
     search_fields = ('name', 'product_id', 'fabric_type')
-    readonly_fields = ('image_display', 'google_preview_snippet')
+    readonly_fields = ('image_display', 'seo_image_display', 'google_preview_snippet')
     actions = COMMON_ACTIONS
     actions_on_top = True
     actions_on_bottom = True
@@ -217,12 +316,14 @@ class ProductAdmin(ModelAdmin):
             ),
             'description': 'Enter available units for each size. Items with 0 units will automatically show as Sold Out on the storefront. Use custom sizes JSON for extra sizes (e.g. {"4XL": 5}).'
         }),
-        ('🔍 Search Engine Optimization (SEO & Social Sharing)', {
+        ('🔍 Search Engine Optimization (SEO, Tags & Social Card)', {
             'fields': (
                 'meta_title',
                 'meta_description',
                 ('focus_keyword', 'canonical_url'),
-                'meta_keywords',
+                ('seo_tags', 'meta_keywords'),
+                'seo_image',
+                'seo_image_display',
                 'google_preview_snippet',
             ),
             'description': 'Configure how this outfit appears in Google Search, WhatsApp, Instagram, and Facebook link cards. Leave blank to automatically generate optimized meta tags.'
@@ -365,6 +466,17 @@ class ProductAdmin(ModelAdmin):
             url, url, title, desc
         )
     google_preview_snippet.short_description = "Live Google Search Snippet"
+
+    def seo_image_display(self, obj):
+        img_url = obj.get_seo_image_url()
+        return format_html(
+            '<div style="margin-top: 8px;">'
+            '<img src="{}" style="max-width: 220px; max-height: 160px; object-fit: cover; border-radius: 8px; border: 1px solid #E5E7EB; box-shadow: 0 2px 6px rgba(0,0,0,0.06);" />'
+            '<div style="font-size: 11px; color: #6B7280; margin-top: 4px;">Preview of social sharing card (WhatsApp / Facebook / Google)</div>'
+            '</div>',
+            img_url
+        )
+    seo_image_display.short_description = "Social Card Image Preview"
 
     def image_display(self, obj):
         img_url = obj.get_image_url()

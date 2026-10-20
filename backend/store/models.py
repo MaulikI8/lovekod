@@ -7,11 +7,58 @@ class Category(models.Model):
     order = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False, db_index=True, help_text="Soft delete flag")
+    
+    # Collection & SEO Image
+    image = models.ImageField(
+        upload_to='',
+        blank=True,
+        null=True,
+        help_text="Category collection cover & social share preview image (JPG, PNG, WebP)"
+    )
+    # Search Engine Optimization (SEO & Social Sharing)
+    meta_title = models.CharField(max_length=255, blank=True, default='', help_text="Category SEO title for Google & social sharing (recommended 50-60 chars)")
+    meta_description = models.TextField(blank=True, default='', help_text="Category snippet description for Google SERP (recommended 140-160 chars)")
+    seo_tags = models.CharField(max_length=255, blank=True, default='', help_text="Comma-separated SEO tags & keywords (e.g. kurtha set, festive wear, silk nepal)")
+    canonical_url = models.CharField(max_length=255, blank=True, default='', help_text="Canonical URL (defaults to https://lovekod.com/category/<slug>)")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['order', 'id']
         verbose_name_plural = 'Categories'
+
+    def get_seo_image_url(self):
+        if self.seo_image:
+            try:
+                url = self.seo_image.url
+                if url: return url
+            except Exception: pass
+            name = str(self.seo_image)
+            if name.startswith('http') or name.startswith('/'): return name
+            return f'/media/{name}'
+        return self.get_image_url()
+
+    def get_image_url(self):
+        if self.image:
+            try:
+                url = self.image.url
+                if url: return url
+            except Exception: pass
+            name = str(self.image)
+            if name.startswith('http') or name.startswith('/'): return name
+            return f'/media/{name}'
+        return '/images/hero-banner.jpg'
+
+    def get_meta_title(self):
+        if self.meta_title: return self.meta_title
+        return f"{self.name} Collection | Buy Online in Nepal - LoveKod Boutique"
+
+    def get_meta_description(self):
+        if self.meta_description: return self.meta_description
+        return f"Discover our handcrafted {self.name} collection at LoveKod. Premium boutique festive attire with express delivery across all 77 districts of Nepal."
+
+    def get_seo_tags(self):
+        if self.seo_tags: return self.seo_tags
+        return f"{self.name}, buy {self.name} nepal, lovekod boutique, festive fashion"
 
     def to_dict(self):
         return {
@@ -22,6 +69,14 @@ class Category(models.Model):
             'order': self.order,
             'isActive': self.is_active,
             'isDeleted': self.is_deleted,
+            'image': self.get_image_url(),
+            'seo': {
+                'title': self.get_meta_title(),
+                'description': self.get_meta_description(),
+                'tags': self.get_seo_tags(),
+                'canonicalUrl': self.canonical_url or f"https://lovekod.com/category/{self.slug}",
+                'ogImage': self.get_image_url(),
+            },
         }
 
     def __str__(self):
@@ -67,8 +122,15 @@ class Product(models.Model):
     stock_free = models.IntegerField(default=0, help_text="Free Size stock")
     custom_sizes = models.JSONField(default=dict, blank=True, help_text='Additional custom sizes in JSON (e.g. {"4XL": 3, "Custom": 1})')
     # Search Engine Optimization (SEO & Social Sharing)
+    seo_image = models.ImageField(
+        upload_to='',
+        blank=True,
+        null=True,
+        help_text="Optional custom social share & SEO image (overrides outfit photo for Google/FB/WhatsApp)"
+    )
     meta_title = models.CharField(max_length=255, blank=True, default='', help_text="Google SERP & Social Title (recommended 50-60 chars). Leave blank to auto-generate.")
     meta_description = models.TextField(blank=True, default='', help_text="Google SERP & Social Snippet Description (recommended 140-160 chars). Leave blank to auto-generate.")
+    seo_tags = models.CharField(max_length=255, blank=True, default='', help_text="Comma-separated SEO tags (e.g. kurtha, georgette, 3-piece, tihar-special)")
     meta_keywords = models.CharField(max_length=255, blank=True, default='', help_text="Target SEO keywords separated by commas (e.g. kurtha nepal, tihar dress).")
     focus_keyword = models.CharField(max_length=100, blank=True, default='', help_text="Primary search keyword to rank for on Google.")
     canonical_url = models.CharField(max_length=255, blank=True, default='', help_text="Canonical URL (defaults to https://lovekod.com/product/<id>).")
@@ -91,6 +153,17 @@ class Product(models.Model):
         if self.meta_keywords:
             return self.meta_keywords
         return f"{self.name}, {self.fabric_type} kurtha, buy kurtha online nepal, tihar boutique fashion, lovekod"
+
+    def get_seo_image_url(self):
+        if self.seo_image:
+            try:
+                url = self.seo_image.url
+                if url: return url
+            except Exception: pass
+            name = str(self.seo_image)
+            if name.startswith('http') or name.startswith('/'): return name
+            return f'/media/{name}'
+        return self.get_image_url()
 
     def get_image_url(self):
         if self.image:
@@ -172,9 +245,10 @@ class Product(models.Model):
                 'title': self.get_meta_title(),
                 'description': self.get_meta_description(),
                 'keywords': self.get_meta_keywords(),
+                'tags': self.seo_tags or self.get_meta_keywords(),
                 'focusKeyword': self.focus_keyword,
                 'canonicalUrl': self.canonical_url or f"https://lovekod.com/product/{self.product_id}",
-                'ogImage': self.get_image_url(),
+                'ogImage': self.get_seo_image_url(),
             },
         }
 
@@ -424,6 +498,19 @@ class Testimonial(models.Model):
     order = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False, db_index=True, help_text="Soft delete flag")
+    
+    # Collection & SEO Image
+    image = models.ImageField(
+        upload_to='',
+        blank=True,
+        null=True,
+        help_text="Category collection cover & social share preview image (JPG, PNG, WebP)"
+    )
+    # Search Engine Optimization (SEO & Social Sharing)
+    meta_title = models.CharField(max_length=255, blank=True, default='', help_text="Category SEO title for Google & social sharing (recommended 50-60 chars)")
+    meta_description = models.TextField(blank=True, default='', help_text="Category snippet description for Google SERP (recommended 140-160 chars)")
+    seo_tags = models.CharField(max_length=255, blank=True, default='', help_text="Comma-separated SEO tags & keywords (e.g. kurtha set, festive wear, silk nepal)")
+    canonical_url = models.CharField(max_length=255, blank=True, default='', help_text="Canonical URL (defaults to https://lovekod.com/category/<slug>)")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

@@ -84,7 +84,7 @@ class Category(models.Model):
 
 
 class Product(models.Model):
-    product_id = models.CharField(max_length=50, unique=True, db_index=True)
+    product_id = models.CharField(max_length=50, unique=True, db_index=True, blank=True, help_text='Optional. Automatically assigned serially (1, 2, 3...) if left blank.')
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='products')
     name = models.CharField(max_length=255)
     nepali_name = models.CharField(max_length=255, blank=True, default='')
@@ -241,8 +241,28 @@ class Product(models.Model):
             },
         }
 
+    def save(self, *args, **kwargs):
+        if not self.product_id or str(self.product_id).strip() == '':
+            # Calculate next serial integer (1, 2, 3...)
+            max_id = 0
+            # Exclude current record if updating
+            qs = Product.objects.all()
+            if self.pk:
+                qs = qs.exclude(pk=self.pk)
+            for val in qs.values_list('product_id', flat=True):
+                if val:
+                    val_str = str(val).strip()
+                    if val_str.isdigit():
+                        max_id = max(max_id, int(val_str))
+                    elif val_str.lower().startswith('lk-'):
+                        num_part = val_str[3:]
+                        if num_part.isdigit():
+                            max_id = max(max_id, int(num_part))
+            self.product_id = str(max_id + 1)
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        return f"{self.name} ({self.product_id}) - Rs. {self.price}"
+        return f"{self.name} (#{self.product_id}) - Rs. {self.price}"
 
 
 class SiteSettings(models.Model):

@@ -284,7 +284,8 @@ class ProductAdmin(ModelAdmin):
                 ('product_id', 'category'),
                 ('name', 'fabric_type'),
                 ('status', 'pieces'),
-            )
+            ),
+            'description': 'Leave Product ID blank to automatically assign the next serial ID (1, 2, 3...).'
         }),
         ('Product Imagery (Upload from Computer)', {
             'fields': (

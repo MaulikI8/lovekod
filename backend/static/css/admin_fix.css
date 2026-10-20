@@ -126,3 +126,28 @@ table#result_list .field-image_preview {
     width: 62px !important;
     min-width: 62px !important;
 }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BLANXER VENDOR THEME STYLES (PURPLE HIGHLIGHTS & ROUNDED CARDS)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Blanxer Sidebar Active State */
+#nav-sidebar a.active,
+#nav-sidebar a[aria-current="page"] {
+    background-color: #F3EFFE !important;
+    color: #7C3AED !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+}
+
+#nav-sidebar a.active svg,
+#nav-sidebar a.active span {
+    color: #7C3AED !important;
+}
+
+/* Blanxer Rounded Card Accents */
+.blanxer-dashboard-wrapper .rounded-2xl {
+    border-radius: 16px !important;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04) !important;
+}

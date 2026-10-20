@@ -346,6 +346,13 @@ class SiteSettingsAdmin(ModelAdmin):
         return SiteSettings.objects.count() == 0
 
 
+@admin.register(FestivalMoment)
+class FestivalMomentAdmin(ModelAdmin):
+    list_display = ('nepali_title', 'english_sub', 'tag', 'icon_key', 'order', 'is_active')
+    list_editable = ('order', 'is_active')
+    search_fields = ('nepali_title', 'english_sub', 'tag')
+
+
 @admin.register(Testimonial)
 class TestimonialAdmin(ModelAdmin):
     list_display = ('customer_name', 'location', 'rating', 'order', 'is_active', 'trash_status')
@@ -488,3 +495,61 @@ class OrderAdmin(ModelAdmin):
         if calc_total > 0 and (order.total == 0 or not change):
             order.total = calc_total
             order.save(update_fields=['total'])
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# BLANXER MERCHANT DASHBOARD CONTEXT CALLBACK
+# ═══════════════════════════════════════════════════════════════════════════
+
+from datetime import datetime
+from django.db.models import Sum
+
+def blanxer_dashboard_callback(request, context):
+    now = datetime.now()
+    hour = now.hour
+    if hour < 12:
+        greeting = "Good Morning"
+    elif hour < 17:
+        greeting = "Good Afternoon"
+    else:
+        greeting = "Good Evening"
+
+    today_str = now.strftime("%b %d, %Y")
+    admin_name = request.user.get_full_name() or request.user.username or "Store Admin"
+
+    # Calculate live real metrics from database
+    active_orders = Order.objects.filter(is_deleted=False)
+    total_orders = active_orders.count()
+    total_revenue_num = active_orders.aggregate(total=Sum('total'))['total'] or 0
+    aov_num = int(total_revenue_num / total_orders) if total_orders > 0 else 0
+
+    milestone_target = 100
+    milestone_current = min(milestone_target, total_orders)
+    milestone_to_go = max(0, milestone_target - total_orders)
+    milestone_pct = int((milestone_current / milestone_target) * 100) if milestone_target > 0 else 0
+
+    products_count = Product.objects.filter(is_deleted=False).count()
+    categories_count = Category.objects.filter(is_deleted=False).count()
+
+    recent_orders = active_orders.order_by('-created_at')[:6]
+    recent_products = Product.objects.filter(is_deleted=False).order_by('-id')[:6]
+
+    context.update({
+        'greeting': greeting,
+        'admin_name': admin_name,
+        'today_date': today_str,
+        'total_revenue': f"{total_revenue_num:,}",
+        'total_revenue_num': total_revenue_num,
+        'total_orders': total_orders,
+        'aov': f"{aov_num:,}",
+        'aov_num': aov_num,
+        'milestone_target': milestone_target,
+        'milestone_current': milestone_current,
+        'milestone_to_go': milestone_to_go,
+        'milestone_pct': milestone_pct,
+        'products_count': products_count,
+        'categories_count': categories_count,
+        'recent_orders': recent_orders,
+        'recent_products': recent_products,
+    })
+    return context

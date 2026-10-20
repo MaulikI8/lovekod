@@ -179,84 +179,88 @@ except Exception:
 from django.urls import reverse_lazy
 
 UNFOLD = {
-    "SITE_TITLE": "LoveKod Storefront Admin",
-    "SITE_HEADER": "LoveKod (लभकोण) Boutique Admin",
-    "SITE_URL": "http://localhost:5173",
-    "DASHBOARD_CALLBACK": None,
+    "SITE_TITLE": "LoveKod - Blanxer Vendor",
+    "SITE_HEADER": "LoveKod (लभकोण) Boutique",
+    "SITE_URL": "https://lovekod.com",
+    "DASHBOARD_CALLBACK": "store.admin.blanxer_dashboard_callback",
     "STYLES": ["/static/css/admin_fix.css"],
     "COLORS": {
         "primary": {
-            "50": "249 243 238",
-            "100": "246 240 231",
-            "200": "233 211 203",
-            "300": "192 129 122",
-            "400": "164 103 91",
-            "500": "138 90 77",   # Brand Rose-Gold
-            "600": "115 69 57",
-            "700": "92 51 43",
-            "800": "59 38 33",    # Brand Ink
-            "900": "42 27 23",    # Brand Night
-            "950": "25 15 13",
+            "50": "245 243 255",
+            "100": "237 233 254",
+            "200": "221 214 254",
+            "300": "196 181 253",
+            "400": "167 139 250",
+            "500": "124 58 237",   # Blanxer Purple
+            "600": "109 40 217",
+            "700": "91 33 182",
+            "800": "76 29 149",
+            "900": "46 16 101",
+            "950": "24 8 50",
         },
     },
     "SIDEBAR": {
         "show_search": True,
-        "show_all_applications": True,
+        "show_all_applications": False,
         "navigation": [
             {
-                "title": "Store Operations",
+                "title": "Main Links",
                 "separator": True,
                 "items": [
                     {
-                        "title": "Products & Stock",
-                        "icon": "shopping_bag",
-                        "link": reverse_lazy("admin:store_product_changelist"),
-                    },
-                    {
-                        "title": "Customer Orders",
-                        "icon": "receipt_long",
-                        "link": reverse_lazy("admin:store_order_changelist"),
-                    },
-                    {
-                        "title": "Create Order (Manual)",
-                        "icon": "add_shopping_cart",
-                        "link": reverse_lazy("admin:store_order_add"),
+                        "title": "Home",
+                        "icon": "home",
+                        "link": reverse_lazy("admin:index"),
                     },
                     {
                         "title": "Categories",
-                        "icon": "category",
+                        "icon": "grid_view",
                         "link": reverse_lazy("admin:store_category_changelist"),
                     },
-                ],
-            },
-            {
-                "title": "Storefront Content",
-                "separator": True,
-                "items": [
                     {
-                        "title": "Global Site Settings & Flash Sale Timer",
-                        "icon": "tune",
-                        "link": reverse_lazy("admin:store_sitesettings_changelist"),
+                        "title": "Products",
+                        "icon": "inventory_2",
+                        "link": reverse_lazy("admin:store_product_changelist"),
                     },
                     {
-                        "title": "Customer Reviews",
+                        "title": "Inventory",
+                        "icon": "inventory",
+                        "link": reverse_lazy("admin:store_product_changelist"),
+                    },
+                    {
+                        "title": "Orders",
+                        "icon": "shopping_bag",
+                        "link": reverse_lazy("admin:store_order_changelist"),
+                    },
+                    {
+                        "title": "Reviews",
                         "icon": "rate_review",
                         "link": reverse_lazy("admin:store_testimonial_changelist"),
                     },
+                    {
+                        "title": "Festival Moments",
+                        "icon": "celebration",
+                        "link": reverse_lazy("admin:store_festivalmoment_changelist"),
+                    },
                 ],
             },
             {
-                "title": "Quick Links",
+                "title": "Customizations",
                 "separator": True,
                 "items": [
                     {
-                        "title": "Merchant Suite Portal",
-                        "icon": "dashboard",
-                        "link": "https://lovekod.com/admin",
+                        "title": "Content & Banners",
+                        "icon": "palette",
+                        "link": reverse_lazy("admin:store_sitesettings_changelist"),
                     },
                     {
-                        "title": "View Live Storefront",
-                        "icon": "open_in_new",
+                        "title": "Admin Users",
+                        "icon": "manage_accounts",
+                        "link": reverse_lazy("admin:auth_user_changelist"),
+                    },
+                    {
+                        "title": "Live Storefront",
+                        "icon": "storefront",
                         "link": "https://lovekod.com",
                     },
                 ],

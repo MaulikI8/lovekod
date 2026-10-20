@@ -1468,7 +1468,7 @@
             });
         }
 
-        // ── 7-Column Combinations Table matching Blanxer Step 2 ──
+                // ── 7-Column Combinations Table matching Blanxer Step 2 ──
         let skuCombinations = [];
 
         function syncCombinationsToHidden() {
@@ -1489,6 +1489,52 @@
         window.blanxerRemoveCombo = function(idx) {
             if (idx >= 0 && idx < skuCombinations.length) {
                 skuCombinations.splice(idx, 1);
+                renderCombinationsTable();
+                syncCombinationsToHidden();
+            }
+        };
+
+        window.blanxerHandleVariantImageUpload = function(idx, inputEl) {
+            const file = inputEl.files && inputEl.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const maxDim = 400;
+                    let w = img.width;
+                    let h = img.height;
+                    if (w > maxDim || h > maxDim) {
+                        if (w > h) {
+                            h = Math.round((h * maxDim) / w);
+                            w = maxDim;
+                        } else {
+                            w = Math.round((w * maxDim) / h);
+                            h = maxDim;
+                        }
+                    }
+                    const canvas = document.createElement("canvas");
+                    canvas.width = w;
+                    canvas.height = h;
+                    const ctx = canvas.getContext("2d");
+                    ctx.drawImage(img, 0, 0, w, h);
+                    const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
+
+                    if (skuCombinations[idx]) {
+                        skuCombinations[idx].image = dataUrl;
+                        renderCombinationsTable();
+                        syncCombinationsToHidden();
+                    }
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        };
+
+        window.blanxerRemoveVariantImage = function(idx) {
+            if (skuCombinations[idx]) {
+                skuCombinations[idx].image = "";
                 renderCombinationsTable();
                 syncCombinationsToHidden();
             }
@@ -1540,7 +1586,8 @@
                     cost_price: defaultCost,
                     weight: defaultWeight,
                     quantity: defaultQty,
-                    sku: ""
+                    sku: "",
+                    image: ""
                 };
             });
 
@@ -1566,19 +1613,104 @@
             skuCombinations.forEach(function(combo, idx) {
                 const tr = document.createElement("tr");
 
-                // 1. Variant cell
+                // 1. Variant cell with thumbnail & interactive upload
                 const tdVariant = document.createElement("td");
-                tdVariant.innerHTML = 
-                    '<div class="blanxer-variant-cell">' +
-                        '<div class="blanxer-variant-thumb">' +
-                            '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
-                                '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>' +
-                                '<circle cx="8.5" cy="8.5" r="1.5"></circle>' +
-                                '<polyline points="21 15 16 10 5 21"></polyline>' +
-                            '</svg>' +
-                        '</div>' +
-                        '<span class="blanxer-variant-title">' + escapeHtml(combo.variant) + '</span>' +
-                    '</div>';
+                
+                const variantCell = document.createElement("div");
+                variantCell.className = "blanxer-variant-cell";
+                variantCell.style.display = "flex";
+                variantCell.style.alignItems = "center";
+                variantCell.style.gap = "10px";
+
+                const thumbWrapper = document.createElement("div");
+                thumbWrapper.style.position = "relative";
+                thumbWrapper.style.width = "40px";
+                thumbWrapper.style.height = "40px";
+                thumbWrapper.style.flexShrink = "0";
+
+                const thumb = document.createElement("div");
+                thumb.className = "blanxer-variant-thumb";
+                thumb.style.width = "40px";
+                thumb.style.height = "40px";
+                thumb.style.borderRadius = "8px";
+                thumb.style.border = combo.image ? "1.5px solid #883FFF" : "1.5px dashed #D1D5DB";
+                thumb.style.background = combo.image ? "#FFFFFF" : "#F9FAFB";
+                thumb.style.display = "flex";
+                thumb.style.alignItems = "center";
+                thumb.style.justifyContent = "center";
+                thumb.style.cursor = "pointer";
+                thumb.style.overflow = "hidden";
+                thumb.style.position = "relative";
+                thumb.title = combo.image ? "Click to change variant image" : "Click to upload image for this variant";
+
+                const fileInput = document.createElement("input");
+                fileInput.type = "file";
+                fileInput.accept = "image/*";
+                fileInput.style.display = "none";
+                fileInput.onchange = function() {
+                    window.blanxerHandleVariantImageUpload(idx, fileInput);
+                };
+
+                thumb.onclick = function() {
+                    fileInput.click();
+                };
+
+                if (combo.image) {
+                    const img = document.createElement("img");
+                    img.src = combo.image;
+                    img.style.width = "100%";
+                    img.style.height = "100%";
+                    img.style.objectFit = "cover";
+                    thumb.appendChild(img);
+
+                    const removeBtn = document.createElement("button");
+                    removeBtn.type = "button";
+                    removeBtn.title = "Remove image";
+                    removeBtn.innerHTML = "&times;";
+                    removeBtn.style.position = "absolute";
+                    removeBtn.style.top = "-5px";
+                    removeBtn.style.right = "-5px";
+                    removeBtn.style.width = "16px";
+                    removeBtn.style.height = "16px";
+                    removeBtn.style.borderRadius = "50%";
+                    removeBtn.style.background = "#EF4444";
+                    removeBtn.style.color = "#FFFFFF";
+                    removeBtn.style.fontSize = "12px";
+                    removeBtn.style.lineHeight = "1";
+                    removeBtn.style.display = "flex";
+                    removeBtn.style.alignItems = "center";
+                    removeBtn.style.justifyContent = "center";
+                    removeBtn.style.border = "1.5px solid #FFFFFF";
+                    removeBtn.style.cursor = "pointer";
+                    removeBtn.style.padding = "0";
+                    removeBtn.onclick = function(e) {
+                        e.stopPropagation();
+                        window.blanxerRemoveVariantImage(idx);
+                    };
+                    thumbWrapper.appendChild(removeBtn);
+                } else {
+                    thumb.innerHTML = 
+                        '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+                            '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>' +
+                            '<circle cx="8.5" cy="8.5" r="1.5"></circle>' +
+                            '<polyline points="21 15 16 10 5 21"></polyline>' +
+                        '</svg>' +
+                        '<span style="position: absolute; bottom: 1px; right: 2px; font-size: 11px; font-weight: 800; color: #883FFF; line-height: 1;">+</span>';
+                }
+
+                thumbWrapper.appendChild(thumb);
+                thumbWrapper.appendChild(fileInput);
+                variantCell.appendChild(thumbWrapper);
+
+                const titleSpan = document.createElement("span");
+                titleSpan.className = "blanxer-variant-title";
+                titleSpan.textContent = combo.variant;
+                titleSpan.style.fontWeight = "600";
+                titleSpan.style.fontSize = "13px";
+                titleSpan.style.color = "#111827";
+                variantCell.appendChild(titleSpan);
+
+                tdVariant.appendChild(variantCell);
                 tr.appendChild(tdVariant);
 
                 // Helper for numeric inputs
@@ -1661,6 +1793,175 @@
             syncCombinationsToHidden();
         };
 
+        // Master Flush Function: Guarantees every single field is synced before form submit
+        window.flushAllBlanxerDataToForm = function() {
+            const uiEnable = document.getElementById("blanxerUiEnableVariants");
+            const isVariants = uiEnable ? uiEnable.checked : false;
+
+            const nativeEnable = document.getElementById("id_enable_variants");
+            if (nativeEnable) nativeEnable.checked = isVariants;
+
+            if (isVariants) {
+                // Harvest latest values from DOM table inputs directly
+                const rows = document.querySelectorAll("#blanxerSkuTableBody tr");
+                if (rows.length > 0 && skuCombinations.length === rows.length) {
+                    rows.forEach(function(tr, idx) {
+                        const inputs = tr.querySelectorAll("input[type='number'], input[type='text']");
+                        if (inputs.length >= 6) {
+                            skuCombinations[idx].crossed_price = parseFloat(inputs[0].value) || 0;
+                            skuCombinations[idx].selling_price = parseFloat(inputs[1].value) || 0;
+                            skuCombinations[idx].cost_price = parseFloat(inputs[2].value) || 0;
+                            skuCombinations[idx].weight = parseFloat(inputs[3].value) || 0;
+                            skuCombinations[idx].quantity = parseInt(inputs[4].value) || 0;
+                            skuCombinations[idx].sku = inputs[5].value.trim();
+                        }
+                    });
+                }
+
+                // 1. Sync custom_sizes with full combinations JSON
+                const hiddenSizes = document.getElementById("id_custom_sizes");
+                if (hiddenSizes) {
+                    hiddenSizes.value = JSON.stringify(skuCombinations);
+                }
+
+                // 2. Primary Selling Price (id_price)
+                const nativePrice = document.getElementById("id_price");
+                const firstPrice = skuCombinations.find(function(c) { return (parseFloat(c.selling_price) || 0) > 0; });
+                if (nativePrice) {
+                    if (firstPrice) {
+                        nativePrice.value = Math.round(parseFloat(firstPrice.selling_price));
+                    } else {
+                        const uiSp = document.getElementById("blanxerUiSellingPrice");
+                        if (uiSp && uiSp.value) nativePrice.value = uiSp.value;
+                    }
+                }
+
+                // 3. Crossed Price (id_original_price)
+                const nativeOriginal = document.getElementById("id_original_price");
+                const firstCrossed = skuCombinations.find(function(c) { return (parseFloat(c.crossed_price) || 0) > 0; });
+                if (nativeOriginal) {
+                    if (firstCrossed) {
+                        nativeOriginal.value = Math.round(parseFloat(firstCrossed.crossed_price));
+                    } else {
+                        const uiCp = document.getElementById("blanxerUiCrossedPrice");
+                        if (uiCp && uiCp.value) nativeOriginal.value = uiCp.value;
+                    }
+                }
+
+                // 4. Cost Price (id_cost_price)
+                const nativeCost = document.getElementById("id_cost_price");
+                const firstCost = skuCombinations.find(function(c) { return (parseFloat(c.cost_price) || 0) > 0; });
+                if (nativeCost) {
+                    if (firstCost) {
+                        nativeCost.value = Math.round(parseFloat(firstCost.cost_price));
+                    } else {
+                        const uiCost = document.getElementById("blanxerUiCostPrice");
+                        if (uiCost && uiCost.value) nativeCost.value = uiCost.value;
+                    }
+                }
+
+                // 5. Weight (id_weight)
+                const nativeWeight = document.getElementById("id_weight");
+                const firstWeight = skuCombinations.find(function(c) { return (parseFloat(c.weight) || 0) > 0; });
+                if (nativeWeight) {
+                    if (firstWeight) {
+                        nativeWeight.value = parseFloat(firstWeight.weight);
+                    } else {
+                        const uiW = document.getElementById("blanxerUiWeight");
+                        if (uiW && uiW.value) nativeWeight.value = uiW.value;
+                    }
+                }
+
+                // 6. Total Quantity (id_quantity)
+                const nativeQty = document.getElementById("id_quantity");
+                const totalQty = skuCombinations.reduce(function(sum, c) { return sum + (parseInt(c.quantity) || 0); }, 0);
+                if (nativeQty) {
+                    nativeQty.value = totalQty;
+                }
+
+                // 7. Size Stock Fields: stock_xs through stock_free
+                const sizeStockMap = {
+                    'xs': 0, 's': 0, 'm': 0, 'l': 0, 'xl': 0, 'xxl': 0, 'xxxl': 0, 'free': 0
+                };
+                skuCombinations.forEach(function(c) {
+                    const s = (c.size || '').toLowerCase().trim();
+                    const q = parseInt(c.quantity) || 0;
+                    if (s === 'xs') sizeStockMap.xs += q;
+                    else if (s === 's') sizeStockMap.s += q;
+                    else if (s === 'm') sizeStockMap.m += q;
+                    else if (s === 'l') sizeStockMap.l += q;
+                    else if (s === 'xl') sizeStockMap.xl += q;
+                    else if (s === 'xxl' || s === '2xl') sizeStockMap.xxl += q;
+                    else if (s === 'xxxl' || s === '3xl') sizeStockMap.xxxl += q;
+                    else if (s === 'free' || s === 'free size') sizeStockMap.free += q;
+                });
+
+                for (const key in sizeStockMap) {
+                    const el = document.getElementById("id_stock_" + key);
+                    if (el) el.value = sizeStockMap[key];
+                }
+
+                // 8. Colors and Sizes strings
+                const nativeColors = document.getElementById("id_colors");
+                if (nativeColors) nativeColors.value = variantTags.join(", ");
+
+                const nativeSizes = document.getElementById("id_sizes");
+                if (nativeSizes) nativeSizes.value = sizeTags.join(", ");
+
+                // 9. Alt Barcode & HS Code from Variants UI
+                const uiAltV = document.getElementById("blanxerUiAltBarcodeVariants");
+                const nativeAlt = document.getElementById("id_alt_barcode");
+                if (uiAltV && nativeAlt && uiAltV.value) nativeAlt.value = uiAltV.value;
+
+                const uiHsV = document.getElementById("blanxerUiHsCodeVariants");
+                const nativeHs = document.getElementById("id_hs_code");
+                if (uiHsV && nativeHs && uiHsV.value) nativeHs.value = uiHsV.value;
+
+            } else {
+                // Simple Product (Variants OFF)
+                const uiSp = document.getElementById("blanxerUiSellingPrice");
+                const nativePrice = document.getElementById("id_price");
+                if (uiSp && nativePrice) nativePrice.value = uiSp.value || 0;
+
+                const uiCp = document.getElementById("blanxerUiCrossedPrice");
+                const nativeOriginal = document.getElementById("id_original_price");
+                if (uiCp && nativeOriginal) nativeOriginal.value = uiCp.value || 0;
+
+                const uiCost = document.getElementById("blanxerUiCostPrice");
+                const nativeCost = document.getElementById("id_cost_price");
+                if (uiCost && nativeCost) nativeCost.value = uiCost.value || 0;
+
+                const uiQty = document.getElementById("blanxerUiQuantity");
+                const nativeQty = document.getElementById("id_quantity");
+                if (uiQty && nativeQty) nativeQty.value = uiQty.value || 0;
+
+                const uiW = document.getElementById("blanxerUiWeight");
+                const nativeWeight = document.getElementById("id_weight");
+                if (uiW && nativeWeight) nativeWeight.value = uiW.value || 0;
+
+                const uiSku = document.getElementById("blanxerUiSku");
+                const nativeSku = document.getElementById("id_product_id");
+                if (uiSku && nativeSku && uiSku.value.trim()) nativeSku.value = uiSku.value.trim();
+
+                const uiAlt = document.getElementById("blanxerUiAltBarcode");
+                const nativeAlt = document.getElementById("id_alt_barcode");
+                if (uiAlt && nativeAlt) nativeAlt.value = uiAlt.value;
+
+                const uiHs = document.getElementById("blanxerUiHsCode");
+                const nativeHs = document.getElementById("id_hs_code");
+                if (uiHs && nativeHs) nativeHs.value = uiHs.value;
+            }
+
+            // Checkboxes
+            const uiContinue = document.getElementById("blanxerUiContinueSelling");
+            const nativeContinue = document.getElementById("id_continue_selling");
+            if (uiContinue && nativeContinue) nativeContinue.checked = uiContinue.checked;
+
+            const uiShowColor = document.getElementById("blanxerUiShowColorPreview");
+            const nativeShowColor = document.getElementById("id_show_color_preview");
+            if (uiShowColor && nativeShowColor) nativeShowColor.checked = uiShowColor.checked;
+        };
+
         function escapeHtml(str) {
             return String(str || '').replace(/[&<>'"/]/g, function (s) {
                 return ({
@@ -1674,64 +1975,64 @@
             });
         }
 
-        // ── Initialization and Two-Way Synchronization ──
+        // Initialize on DOM load
         document.addEventListener("DOMContentLoaded", function() {
-            // ── Disable Automatic Form Submission on Enter Key Across All Sections ──
             const productForm = document.getElementById("product_form") || document.querySelector("form");
             let isLegitSubmitAction = false;
 
-            // Only allow form submit if user explicitly clicked a Save / Submit button
-            document.querySelectorAll('button[type="submit"], input[type="submit"], .blanxer-footer-btn-next').forEach(function(btn) {
+            // Intercept Save & Submit buttons
+            document.querySelectorAll('button[type="submit"], input[type="submit"], button[name="_save"], button[name="_continue"], button[name="_addanother"], .blanxer-footer-btn-next').forEach(function(btn) {
                 btn.addEventListener("click", function() {
                     isLegitSubmitAction = true;
+                    if (window.flushAllBlanxerDataToForm) {
+                        window.flushAllBlanxerDataToForm();
+                    }
                 });
             });
 
-            // Global capture handler: completely block Enter key from submitting form in any input
+            // Global capture handler: block Enter key from submitting form in any input
             document.addEventListener("keydown", function(e) {
                 if (e.key === "Enter" || e.keyCode === 13) {
-                    const target = e.target;
+                    const tag = (e.target.tagName || '').toLowerCase();
+                    if (tag === "textarea") return;
+                    if (tag === "button" || e.target.type === "submit") return;
 
-                    // 1. Allow Enter inside <textarea> for multiline text (e.g. description)
-                    if (target && target.tagName === "TEXTAREA") {
-                        return;
-                    }
-
-                    // 2. Allow Enter if user is explicitly focused on a button
-                    if (target && target.tagName === "BUTTON") {
-                        return;
-                    }
-
-                    // 3. For variant/size tag inputs: add tag and prevent form submit
-                    if (target && target.id === "blanxerVariantTextInput") {
+                    // Tag inputs: add tag and prevent form submit
+                    if (e.target.id === "blanxerVariantTextInput") {
                         e.preventDefault();
                         e.stopPropagation();
-                        if (target.value.trim()) {
-                            window.blanxerAddVariantTag(target.value);
-                            target.value = "";
+                        e.stopImmediatePropagation();
+                        if (e.target.value.trim()) {
+                            window.blanxerAddVariantTag(e.target.value);
+                            e.target.value = "";
                         }
                         return false;
                     }
-                    if (target && target.id === "blanxerSizeTextInput") {
+                    if (e.target.id === "blanxerSizeTextInput") {
                         e.preventDefault();
                         e.stopPropagation();
-                        if (target.value.trim()) {
-                            window.blanxerAddSizeTag(target.value);
-                            target.value = "";
+                        e.stopImmediatePropagation();
+                        if (e.target.value.trim()) {
+                            window.blanxerAddSizeTag(e.target.value);
+                            e.target.value = "";
                         }
                         return false;
                     }
 
-                    // 4. For any other input / select in Step 1, Step 2, Step 3: block form submission
+                    // Any other input: prevent form submit
                     e.preventDefault();
                     e.stopPropagation();
+                    e.stopImmediatePropagation();
                     return false;
                 }
-            }, true); // Capture phase ensures it stops before browser default form submit
+            }, true);
 
             // Guard the form submit event
             if (productForm) {
                 productForm.addEventListener("submit", function(e) {
+                    if (window.flushAllBlanxerDataToForm) {
+                        window.flushAllBlanxerDataToForm();
+                    }
                     if (e.submitter && (e.submitter.type === "submit" || e.submitter.tagName === "BUTTON")) {
                         isLegitSubmitAction = false;
                         return true;
@@ -1801,7 +2102,10 @@
             const hiddenSizes = document.getElementById("id_custom_sizes");
             if (hiddenSizes && hiddenSizes.value) {
                 try {
-                    const parsed = JSON.parse(hiddenSizes.value);
+                    let parsed = hiddenSizes.value;
+                    if (typeof parsed === "string") {
+                        parsed = JSON.parse(parsed);
+                    }
                     if (Array.isArray(parsed) && parsed.length > 0) {
                         skuCombinations = parsed;
                         renderCombinationsTable();
@@ -1834,7 +2138,6 @@
                     }
                     uiEl.addEventListener("input", function() {
                         nativeEl.value = uiEl.value;
-                        // keep barcode / hs code pairs in sync between simple & variants
                         if (pair.ui === "blanxerUiAltBarcode") {
                             const other = document.getElementById("blanxerUiAltBarcodeVariants");
                             if (other) other.value = uiEl.value;
@@ -1884,10 +2187,9 @@
                 });
             }
 
-            // Live Image Preview on Step 0
-            const fileInput = document.querySelector('input[type="file"][name="image"]');
-            if (fileInput) {
-                fileInput.addEventListener('change', function(e) {
+            // Live Image Preview on Step 0 (delegated on document for complete reliability)
+            document.addEventListener('change', function(e) {
+                if (e.target && (e.target.name === 'image' || e.target.id === 'id_image')) {
                     const file = e.target.files && e.target.files[0];
                     const previewImg = document.getElementById('product-preview-img');
                     const previewBox = document.getElementById('product-preview-container');
@@ -1902,8 +2204,8 @@
                         };
                         reader.readAsDataURL(file);
                     }
-                });
-            }
+                }
+            });
         });
     })();
     </script>

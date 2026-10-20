@@ -212,6 +212,16 @@ class Product(models.Model):
                     result[str(sz)] = int(qty)
                 except (ValueError, TypeError):
                     pass
+        elif isinstance(self.custom_sizes, list):
+            for item in self.custom_sizes:
+                if isinstance(item, dict):
+                    sz = item.get('size') or item.get('variant')
+                    qty = item.get('quantity', 0)
+                    if sz:
+                        try:
+                            result[str(sz)] = result.get(str(sz), 0) + int(qty)
+                        except (ValueError, TypeError):
+                            pass
 
         for name, qty in all_sizes:
             if qty > 0 or name in ['M', 'L', 'XL', 'XXL', 'XXXL']:
@@ -219,6 +229,10 @@ class Product(models.Model):
         return result
 
     def total_stock(self):
+        if self.enable_variants and isinstance(self.custom_sizes, list) and len(self.custom_sizes) > 0:
+            return sum(int(c.get('quantity', 0) or 0) for c in self.custom_sizes if isinstance(c, dict))
+        if self.quantity and self.quantity > 0:
+            return self.quantity
         tot = (
             (self.stock_xs or 0) +
             (self.stock_s or 0) +

@@ -343,6 +343,67 @@ class ProductAdmin(ModelAdmin):
         }),
     )
 
+    def save_model(self, request, obj, form, change):
+        if obj.enable_variants and obj.custom_sizes:
+            combos = obj.custom_sizes
+            if isinstance(combos, str):
+                import json
+                try:
+                    combos = json.loads(combos)
+                except Exception:
+                    combos = []
+
+            if isinstance(combos, list) and len(combos) > 0:
+                prices = [int(float(c.get('selling_price', 0))) for c in combos if float(c.get('selling_price', 0) or 0) > 0]
+                if prices:
+                    obj.price = prices[0]
+
+                crossed = [int(float(c.get('crossed_price', 0))) for c in combos if float(c.get('crossed_price', 0) or 0) > 0]
+                if crossed:
+                    obj.original_price = crossed[0]
+
+                costs = [int(float(c.get('cost_price', 0))) for c in combos if float(c.get('cost_price', 0) or 0) > 0]
+                if costs:
+                    obj.cost_price = costs[0]
+
+                weights = [float(c.get('weight', 0)) for c in combos if float(c.get('weight', 0) or 0) > 0]
+                if weights:
+                    obj.weight = weights[0]
+
+                total_qty = sum(int(c.get('quantity', 0) or 0) for c in combos)
+                obj.quantity = total_qty
+
+                size_map = {'xs': 0, 's': 0, 'm': 0, 'l': 0, 'xl': 0, 'xxl': 0, 'xxxl': 0, 'free': 0}
+                for c in combos:
+                    sz = str(c.get('size', '')).lower().strip()
+                    q = int(c.get('quantity', 0) or 0)
+                    if sz == 'xs': size_map['xs'] += q
+                    elif sz == 's': size_map['s'] += q
+                    elif sz == 'm': size_map['m'] += q
+                    elif sz == 'l': size_map['l'] += q
+                    elif sz == 'xl': size_map['xl'] += q
+                    elif sz in ('xxl', '2xl'): size_map['xxl'] += q
+                    elif sz in ('xxxl', '3xl'): size_map['xxxl'] += q
+                    elif sz in ('free', 'free size'): size_map['free'] += q
+
+                obj.stock_xs = size_map['xs']
+                obj.stock_s = size_map['s']
+                obj.stock_m = size_map['m']
+                obj.stock_l = size_map['l']
+                obj.stock_xl = size_map['xl']
+                obj.stock_xxl = size_map['xxl']
+                obj.stock_xxxl = size_map['xxxl']
+                obj.stock_free = size_map['free']
+
+                colors = list(dict.fromkeys(c.get('color') for c in combos if c.get('color')))
+                sizes = list(dict.fromkeys(c.get('size') for c in combos if c.get('size')))
+                if colors:
+                    obj.colors = ', '.join(colors)
+                if sizes:
+                    obj.sizes = ', '.join(sizes)
+
+        super().save_model(request, obj, form, change)
+
     def changelist_view(self, request, extra_context=None):
         response = super().changelist_view(request, extra_context=extra_context)
         if hasattr(response, 'context_data') and response.context_data and 'cl' in response.context_data:

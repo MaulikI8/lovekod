@@ -277,6 +277,13 @@ class ProductAdmin(ModelAdmin):
     actions_on_top = True
     actions_on_bottom = True
 
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
+        if db_field.name == 'category' and hasattr(formfield.widget, 'widget'):
+            # Replace popup action buttons with clean dropdown select
+            formfield.widget = formfield.widget.widget
+        return formfield
+
     fieldsets = (
         ('Garment Identification', {
             'fields': (

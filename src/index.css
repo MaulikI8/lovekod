@@ -1132,6 +1132,7 @@ img {
 .filter-pill-bar {
   display: flex;
   justify-content: center;
+  align-items: center;
   gap: 10px;
   flex-wrap: wrap;
 }
@@ -1146,6 +1147,7 @@ img {
   font-weight: 600;
   cursor: pointer;
   transition: var(--transition);
+  white-space: nowrap;
 }
 
 .filter-btn:hover {
@@ -1155,9 +1157,81 @@ img {
 
 .filter-btn.active {
   background: var(--marigold);
-  color: #120a04;
+  color: #ffffff;
   border-color: var(--marigold);
   box-shadow: 0 4px 12px var(--marigold-glow);
+}
+
+/* ── Mobile Horizontal Category Filter Swipe Track (Daraz Nepal Style) ── */
+@media (max-width: 768px) {
+  .collection-section {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  .section-header-editorial {
+    margin-bottom: 20px !important;
+  }
+
+  .filter-pill-bar {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+    gap: 8px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    scroll-behavior: smooth !important;
+    scrollbar-width: none !important; /* Firefox */
+    -ms-overflow-style: none !important; /* IE/Edge */
+    margin-left: -16px !important;
+    margin-right: -16px !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    padding-top: 4px !important;
+    padding-bottom: 10px !important;
+    width: calc(100% + 32px) !important;
+    max-width: none !important;
+  }
+
+  .filter-pill-bar::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  .filter-btn {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+    padding: 7px 16px !important;
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.4px !important;
+    border-radius: 9999px !important;
+    user-select: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  }
+
+  .filter-btn:active {
+    transform: scale(0.96) !important;
+  }
+
+  .filter-btn.active {
+    background: var(--marigold) !important;
+    color: #ffffff !important;
+    border-color: var(--marigold) !important;
+    box-shadow: 0 4px 12px var(--marigold-glow) !important;
+  }
+
+  .filter-result-count {
+    margin-top: 4px !important;
+    text-align: center !important;
+    font-size: 0.8rem !important;
+    color: var(--text-muted) !important;
+  }
 }
 
 /* Product Editorial Grid */

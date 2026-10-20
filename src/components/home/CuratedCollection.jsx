@@ -30,8 +30,8 @@ export default function CuratedCollection({
           Festive kurtha sets in georgette, silk blend and cotton silk. Each style is made in small batches.
         </p>
 
-        {/* Rectangular Tab Row (NO pills) */}
-        <div className="filter-pill-bar" role="tablist">
+        {/* Horizontal Category Tab Bar (Daraz Nepal Mobile Swipe Track) */}
+        <div className="filter-pill-bar" role="tablist" aria-label="Festive categories">
           {categories.map((cat) => (
             <button
               key={cat.id || cat.slug}
@@ -39,7 +39,12 @@ export default function CuratedCollection({
               role="tab"
               aria-selected={activeCategorySlug === cat.slug}
               className={`filter-btn ${activeCategorySlug === cat.slug ? 'active' : ''}`}
-              onClick={() => setActiveCategorySlug(cat.slug)}
+              onClick={(e) => {
+                setActiveCategorySlug(cat.slug);
+                try {
+                  e.currentTarget.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                } catch {}
+              }}
             >
               <span>{cat.name}</span>
             </button>

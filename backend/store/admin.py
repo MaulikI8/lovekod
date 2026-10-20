@@ -178,7 +178,7 @@ class ProductAdmin(ModelAdmin):
     list_before_template = "admin/store/product/change_list_header.html"
     list_filter = ('status', 'category', 'fabric_type', 'is_featured', TrashStatusFilter)
     search_fields = ('name', 'product_id', 'fabric_type')
-    readonly_fields = ('image_display',)
+    readonly_fields = ('image_display', 'google_preview_snippet')
     actions = COMMON_ACTIONS
     actions_on_top = True
     actions_on_bottom = True
@@ -216,6 +216,16 @@ class ProductAdmin(ModelAdmin):
                 'custom_sizes',
             ),
             'description': 'Enter available units for each size. Items with 0 units will automatically show as Sold Out on the storefront. Use custom sizes JSON for extra sizes (e.g. {"4XL": 5}).'
+        }),
+        ('🔍 Search Engine Optimization (SEO & Social Sharing)', {
+            'fields': (
+                'meta_title',
+                'meta_description',
+                ('focus_keyword', 'canonical_url'),
+                'meta_keywords',
+                'google_preview_snippet',
+            ),
+            'description': 'Configure how this outfit appears in Google Search, WhatsApp, Instagram, and Facebook link cards. Leave blank to automatically generate optimized meta tags.'
         }),
     )
 
@@ -329,6 +339,32 @@ class ProductAdmin(ModelAdmin):
             edit_url
         )
     actions_button.short_description = "ACTIONS"
+
+    def google_preview_snippet(self, obj):
+        if not obj or not obj.id:
+            return format_html('<span class="text-xs text-gray-400">Save this product first to preview Google SERP.</span>')
+        title = obj.get_meta_title()
+        desc = obj.get_meta_description()
+        url = f"https://lovekod.com/product/{obj.product_id or obj.id}"
+        return format_html(
+            '<div style="max-width: 620px; padding: 16px; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 12px; font-family: arial, sans-serif; box-shadow: 0 1px 4px rgba(0,0,0,0.06);">'
+            '<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">'
+            '<span style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #7C3AED;">Google Search Snippet Preview</span>'
+            '<span style="font-size: 11px; color: #10B981; font-weight: 600; background: #ECFDF5; padding: 2px 8px; border-radius: 9999px;">● Dynamic SEO Active</span>'
+            '</div>'
+            '<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">'
+            '<div style="width: 22px; height: 22px; border-radius: 50%; background: #7C3AED; display: flex; align-items: center; justify-content: center; color: #FFFFFF; font-size: 10px; font-weight: bold; flex-shrink: 0;">LK</div>'
+            '<div style="display: flex; flex-direction: column; overflow: hidden;">'
+            '<span style="font-size: 12px; font-weight: 600; color: #202124; line-height: 1.2;">LoveKod (लभकोड) Boutique</span>'
+            '<span style="font-size: 11px; color: #5F6368; line-height: 1.2; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">{}</span>'
+            '</div>'
+            '</div>'
+            '<a href="{}" target="_blank" style="font-size: 18px; line-height: 1.3; color: #1A0DAB; text-decoration: none; font-weight: 500; display: block; margin-top: 4px;">{}</a>'
+            '<div style="font-size: 13px; line-height: 1.5; color: #4D5156; margin-top: 5px;">{}</div>'
+            '</div>',
+            url, url, title, desc
+        )
+    google_preview_snippet.short_description = "Live Google Search Snippet"
 
     def image_display(self, obj):
         img_url = obj.get_image_url()

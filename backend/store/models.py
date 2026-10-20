@@ -66,9 +66,31 @@ class Product(models.Model):
     stock_xxxl = models.IntegerField(default=0, help_text="XXXL / 3XL Size stock")
     stock_free = models.IntegerField(default=0, help_text="Free Size stock")
     custom_sizes = models.JSONField(default=dict, blank=True, help_text='Additional custom sizes in JSON (e.g. {"4XL": 3, "Custom": 1})')
+    # Search Engine Optimization (SEO & Social Sharing)
+    meta_title = models.CharField(max_length=255, blank=True, default='', help_text="Google SERP & Social Title (recommended 50-60 chars). Leave blank to auto-generate.")
+    meta_description = models.TextField(blank=True, default='', help_text="Google SERP & Social Snippet Description (recommended 140-160 chars). Leave blank to auto-generate.")
+    meta_keywords = models.CharField(max_length=255, blank=True, default='', help_text="Target SEO keywords separated by commas (e.g. kurtha nepal, tihar dress).")
+    focus_keyword = models.CharField(max_length=100, blank=True, default='', help_text="Primary search keyword to rank for on Google.")
+    canonical_url = models.CharField(max_length=255, blank=True, default='', help_text="Canonical URL (defaults to https://lovekod.com/product/<id>).")
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def get_meta_title(self):
+        if self.meta_title:
+            return self.meta_title
+        return f"{self.name} | Buy Online in Nepal - LoveKod Boutique"
+
+    def get_meta_description(self):
+        if self.meta_description:
+            return self.meta_description
+        desc = (self.description[:130] + '...') if len(self.description) > 130 else (self.description or f"Handcrafted {self.fabric_type} {self.pieces}")
+        return f"Shop {self.name} at LoveKod. {desc}. Available across XS-3XL with express delivery across all 77 districts of Nepal."
+
+    def get_meta_keywords(self):
+        if self.meta_keywords:
+            return self.meta_keywords
+        return f"{self.name}, {self.fabric_type} kurtha, buy kurtha online nepal, tihar boutique fashion, lovekod"
 
     def get_image_url(self):
         if self.image:
@@ -146,6 +168,14 @@ class Product(models.Model):
             'rating': self.rating,
             'reviewsCount': self.reviews_count,
             'sizes': self.get_sizes_dict(),
+            'seo': {
+                'title': self.get_meta_title(),
+                'description': self.get_meta_description(),
+                'keywords': self.get_meta_keywords(),
+                'focusKeyword': self.focus_keyword,
+                'canonicalUrl': self.canonical_url or f"https://lovekod.com/product/{self.product_id}",
+                'ogImage': self.get_image_url(),
+            },
         }
 
     def __str__(self):

@@ -25,17 +25,66 @@ export default function ProductDetail() {
   useEffect(() => {
     window.scrollTo(0, 0);
     if (product) {
-      document.title = `${product.name} (${product.pieces || "3-Piece"}) | LoveKod Atelier`;
-      const metaDesc = document.querySelector("meta[name=\"description\"]");
-      if (metaDesc) {
-        metaDesc.setAttribute(
-          "content",
-          `${product.description} Price: Rs. ${product.price.toLocaleString()}. Handcrafted festive kurtha set with express delivery across all 77 districts of Nepal.`
-        );
+      const seoTitle = product.seo?.title || `${product.name} | LoveKod Boutique Nepal`;
+      const seoDesc = product.seo?.description || product.description || `Shop ${product.name} at LoveKod Boutique Nepal. Handcrafted festive kurtha set with delivery across Nepal.`;
+      const seoKeywords = product.seo?.keywords || `${product.name}, kurtha nepal, tihar wear, lovekod`;
+      const canonical = product.seo?.canonicalUrl || window.location.href;
+      const ogImg = product.seo?.ogImage || product.image;
+
+      document.title = seoTitle;
+
+      const setMeta = (name, content, isProperty = false) => {
+        const selector = isProperty ? `meta[property="${name}"]` : `meta[name="${name}"]`;
+        let el = document.querySelector(selector);
+        if (!el) {
+          el = document.createElement('meta');
+          if (isProperty) el.setAttribute('property', name);
+          else el.setAttribute('name', name);
+          document.head.appendChild(el);
+        }
+        el.setAttribute('content', content);
+      };
+
+      setMeta('description', seoDesc);
+      setMeta('keywords', seoKeywords);
+      setMeta('og:title', seoTitle, true);
+      setMeta('og:description', seoDesc, true);
+      setMeta('og:image', ogImg, true);
+      setMeta('og:url', canonical, true);
+      setMeta('og:type', 'product', true);
+      setMeta('twitter:card', 'summary_large_image');
+      setMeta('twitter:title', seoTitle);
+      setMeta('twitter:description', seoDesc);
+      setMeta('twitter:image', ogImg);
+
+      // Google Schema.org JSON-LD Structured Data
+      let ldJson = document.querySelector('#product-ld-json');
+      if (!ldJson) {
+        ldJson = document.createElement('script');
+        ldJson.id = 'product-ld-json';
+        ldJson.type = 'application/ld+json';
+        document.head.appendChild(ldJson);
       }
+      ldJson.text = JSON.stringify({
+        '@context': 'https://schema.org/',
+        '@type': 'Product',
+        'name': product.name,
+        'image': [ogImg],
+        'description': seoDesc,
+        'sku': product.id,
+        'offers': {
+          '@type': 'Offer',
+          'url': canonical,
+          'priceCurrency': 'NPR',
+          'price': product.price,
+          'availability': 'https://schema.org/InStock',
+        },
+      });
     }
     return () => {
       document.title = "LoveKod (लभकोड) | Handcrafted Tihar Kurtha Sets & Festive Atelier Nepal";
+      const ldJson = document.querySelector('#product-ld-json');
+      if (ldJson) ldJson.remove();
     };
   }, [id, product]);
 

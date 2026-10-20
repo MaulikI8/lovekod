@@ -1440,6 +1440,75 @@
 
         // ── Initialization and Two-Way Synchronization ──
         document.addEventListener("DOMContentLoaded", function() {
+            // ── Disable Automatic Form Submission on Enter Key Across All Sections ──
+            const productForm = document.getElementById("product_form") || document.querySelector("form");
+            let isLegitSubmitAction = false;
+
+            // Only allow form submit if user explicitly clicked a Save / Submit button
+            document.querySelectorAll('button[type="submit"], input[type="submit"], .blanxer-footer-btn-next').forEach(function(btn) {
+                btn.addEventListener("click", function() {
+                    isLegitSubmitAction = true;
+                });
+            });
+
+            // Global capture handler: completely block Enter key from submitting form in any input
+            document.addEventListener("keydown", function(e) {
+                if (e.key === "Enter" || e.keyCode === 13) {
+                    const target = e.target;
+
+                    // 1. Allow Enter inside <textarea> for multiline text (e.g. description)
+                    if (target && target.tagName === "TEXTAREA") {
+                        return;
+                    }
+
+                    // 2. Allow Enter if user is explicitly focused on a button
+                    if (target && target.tagName === "BUTTON") {
+                        return;
+                    }
+
+                    // 3. For variant/size tag inputs: add tag and prevent form submit
+                    if (target && target.id === "blanxerVariantTextInput") {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (target.value.trim()) {
+                            window.blanxerAddVariantTag(target.value);
+                            target.value = "";
+                        }
+                        return false;
+                    }
+                    if (target && target.id === "blanxerSizeTextInput") {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (target.value.trim()) {
+                            window.blanxerAddSizeTag(target.value);
+                            target.value = "";
+                        }
+                        return false;
+                    }
+
+                    // 4. For any other input / select in Step 1, Step 2, Step 3: block form submission
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+            }, true); // Capture phase ensures it stops before browser default form submit
+
+            // Guard the form submit event
+            if (productForm) {
+                productForm.addEventListener("submit", function(e) {
+                    if (e.submitter && (e.submitter.type === "submit" || e.submitter.tagName === "BUTTON")) {
+                        isLegitSubmitAction = false;
+                        return true;
+                    }
+                    if (!isLegitSubmitAction) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return false;
+                    }
+                    isLegitSubmitAction = false;
+                });
+            }
+
             // Setup Variant Tags Input
             const varInput = document.getElementById("blanxerVariantTextInput");
             if (varInput) {

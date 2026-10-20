@@ -26,16 +26,16 @@ class Category(models.Model):
         ordering = ['order', 'id']
         verbose_name_plural = 'Categories'
 
-    def get_seo_image_url(self):
-        if self.seo_image:
-            try:
-                url = self.seo_image.url
-                if url: return url
-            except Exception: pass
-            name = str(self.seo_image)
-            if name.startswith('http') or name.startswith('/'): return name
-            return f'/media/{name}'
-        return self.get_image_url()
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            from django.db import connection
+            if connection.vendor == 'postgresql':
+                try:
+                    with connection.cursor() as cursor:
+                        cursor.execute("SELECT setval(pg_get_serial_sequence('store_category', 'id'), COALESCE((SELECT MAX(id) FROM store_category), 1));")
+                except Exception:
+                    pass
+        super().save(*args, **kwargs)
 
     def get_image_url(self):
         if self.image:
@@ -153,17 +153,6 @@ class Product(models.Model):
         if self.meta_keywords:
             return self.meta_keywords
         return f"{self.name}, {self.fabric_type} kurtha, buy kurtha online nepal, tihar boutique fashion, lovekod"
-
-    def get_seo_image_url(self):
-        if self.seo_image:
-            try:
-                url = self.seo_image.url
-                if url: return url
-            except Exception: pass
-            name = str(self.seo_image)
-            if name.startswith('http') or name.startswith('/'): return name
-            return f'/media/{name}'
-        return self.get_image_url()
 
     def get_image_url(self):
         if self.image:
@@ -726,6 +715,14 @@ class Coupon(models.Model):
     def save(self, *args, **kwargs):
         if self.code:
             self.code = self.code.strip().upper()
+        if not self.pk:
+            from django.db import connection
+            if connection.vendor == 'postgresql':
+                try:
+                    with connection.cursor() as cursor:
+                        cursor.execute("SELECT setval(pg_get_serial_sequence('store_coupon', 'id'), COALESCE((SELECT MAX(id) FROM store_coupon), 1));")
+                except Exception:
+                    pass
         super().save(*args, **kwargs)
 
     def is_valid(self, subtotal=0):

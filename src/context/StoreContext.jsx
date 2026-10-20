@@ -104,7 +104,7 @@ function saveState(key, value) {
 
 export function StoreProvider({ children }) {
   // Dynamic catalog state strictly in-memory (synced live with Django backend)
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState(() => defaultProducts);
   const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
   const [siteSettings, setSiteSettings] = useState(DEFAULT_SETTINGS);
   const [festivalMoments, setFestivalMoments] = useState([]);
@@ -149,8 +149,13 @@ export function StoreProvider({ children }) {
           const activeOnly = data.filter(p => !p.isDeleted && !p.is_deleted);
           setProducts(activeOnly);
         }
+      } else {
+        // Fallback to default products if server returns error or 500
+        setProducts(prev => prev.length ? prev : defaultProducts);
       }
-    } catch { /* offline fallback */ }
+    } catch {
+      setProducts(prev => prev.length ? prev : defaultProducts);
+    }
 
     // 2. Categories (Exclude soft deleted)
     try {

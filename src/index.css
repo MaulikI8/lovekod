@@ -1232,6 +1232,20 @@ img {
     font-size: 0.8rem !important;
     color: var(--text-muted) !important;
   }
+
+  /* Completely remove hover lift & drop shadow on mobile and touch devices */
+  .editorial-product-card,
+  .editorial-product-card:hover,
+  .editorial-product-card:focus,
+  .editorial-product-card:active,
+  .editorial-product-card:focus-within {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  .editorial-product-card:hover .card-product-img {
+    transform: none !important;
+  }
 }
 
 /* Product Editorial Grid */
@@ -1254,9 +1268,16 @@ img {
 }
 
 .editorial-product-card:hover {
-  transform: translateY(-6px);
-  border-color: rgba(232, 119, 23, 0.35);
-  box-shadow: var(--shadow-hover);
+  transform: none;
+  border-color: var(--line);
+  box-shadow: none;
+}
+
+.editorial-product-card:active,
+.editorial-product-card:focus,
+.editorial-product-card:focus-within {
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 /* Cut-Corner Badge (NOT rounded pills) */
@@ -5980,5 +6001,21 @@ img {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* Remove hover effects on touch screens */
+@media (hover: none) {
+  .editorial-product-card,
+  .editorial-product-card:hover,
+  .editorial-product-card:focus,
+  .editorial-product-card:active,
+  .editorial-product-card:focus-within {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  .editorial-product-card:hover .card-product-img {
+    transform: none !important;
   }
 }

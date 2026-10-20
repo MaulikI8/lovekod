@@ -365,10 +365,13 @@ body, html {
   transition: border-color 0.2s ease;
 }
 
-.editorial-product-card:hover {
-  transform: none;
+.editorial-product-card:hover,
+.editorial-product-card:focus,
+.editorial-product-card:active,
+.editorial-product-card:focus-within {
+  transform: none !important;
   border-color: #704237;
-  box-shadow: none;
+  box-shadow: none !important;
 }
 
 /* Cut-corner Tag: Solid --paper background, --ink text, 11px uppercase */
@@ -660,6 +663,21 @@ body, html {
     overflow: hidden !important;
     position: relative !important;
     min-height: 180px !important;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  .editorial-product-card,
+  .editorial-product-card:hover,
+  .editorial-product-card:focus,
+  .editorial-product-card:active,
+  .editorial-product-card:focus-within {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  .editorial-product-card:hover .card-product-img {
+    transform: none !important;
   }
 
   .editorial-product-card .card-media-wrapper {

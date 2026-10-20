@@ -102,7 +102,7 @@ class CategoryAdmin(ModelAdmin):
     list_filter = (TrashStatusFilter, 'is_active')
     search_fields = ('name', 'slug', 'seo_tags')
     prepopulated_fields = {'slug': ('name',)}
-    readonly_fields = ('image_display', 'seo_image_display', 'google_preview_snippet')
+    readonly_fields = ('image_display', 'google_preview_snippet')
     actions = COMMON_ACTIONS
     actions_on_top = True
     actions_on_bottom = True
@@ -144,22 +144,18 @@ class CategoryAdmin(ModelAdmin):
         )
     image_preview.short_description = "Image"
 
-    def seo_image_display(self, obj):
-        img_url = obj.get_seo_image_url()
-        return format_html(
-            '<div style="margin-top: 8px;">'
-            '<img src="{}" style="max-width: 220px; max-height: 160px; object-fit: cover; border-radius: 8px; border: 1px solid #E5E7EB; box-shadow: 0 2px 6px rgba(0,0,0,0.06);" />'
-            '<div style="font-size: 11px; color: #6B7280; margin-top: 4px;">Preview of social sharing card (WhatsApp / Facebook / Google)</div>'
-            '</div>',
-            img_url
-        )
-    seo_image_display.short_description = "Social Card Image Preview"
-
     def image_display(self, obj):
+        if not obj or not obj.image:
+            return format_html(
+                '<div style="margin-top: 6px; padding: 16px; background: #F9FAFB; border: 1.5px dashed #D1D5DB; border-radius: 8px; max-width: 360px; text-align: center; color: #6B7280; font-size: 12px;">'
+                '<span style="font-size: 20px; display: block; margin-bottom: 4px;">🖼️</span>'
+                'No banner uploaded yet. Choose an image file above.'
+                '</div>'
+            )
         img_url = obj.get_image_url()
         return format_html(
             '<div style="margin-top: 8px;">'
-            '<img src="{}" onerror="this.onerror=null; this.src=&quot;/images/hero-banner.jpg&quot;;" style="max-width: 320px; max-height: 180px; object-fit: cover; border-radius: 8px; border: 1px solid #E5E7EB; box-shadow: 0 2px 8px rgba(0,0,0,0.06);" />'
+            '<img src="{}" style="max-width: 320px; max-height: 180px; object-fit: cover; border-radius: 8px; border: 1px solid #E5E7EB; box-shadow: 0 2px 8px rgba(0,0,0,0.06);" />'
             '</div>',
             img_url
         )
@@ -468,6 +464,12 @@ class ProductAdmin(ModelAdmin):
     google_preview_snippet.short_description = "Live Google Search Snippet"
 
     def seo_image_display(self, obj):
+        if not obj or not getattr(obj, 'seo_image', None):
+            return format_html(
+                '<div style="margin-top: 6px; padding: 10px 14px; background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 8px; max-width: 440px; color: #6B7280; font-size: 11px;">'
+                'ℹ️ No custom SEO card uploaded. Will automatically use the main outfit photo above for social sharing.'
+                '</div>'
+            )
         img_url = obj.get_seo_image_url()
         return format_html(
             '<div style="margin-top: 8px;">'
@@ -479,11 +481,17 @@ class ProductAdmin(ModelAdmin):
     seo_image_display.short_description = "Social Card Image Preview"
 
     def image_display(self, obj):
+        if not obj or not obj.image:
+            return format_html(
+                '<div style="margin-top: 6px; padding: 20px; background: #F9FAFB; border: 1.5px dashed #D1D5DB; border-radius: 8px; max-width: 300px; text-align: center; color: #6B7280; font-size: 12px;">'
+                '<span style="font-size: 22px; display: block; margin-bottom: 4px;">📷</span>'
+                "No photo uploaded yet. Choose an image file above to set this outfit's photo."
+                '</div>'
+            )
         img_url = obj.get_image_url()
-        placeholder = '/images/kurtha-charcoal.jpg'
         return format_html(
             '<div style="margin-top: 8px;">'
-            '<img src="{}" onerror="this.onerror=null; this.src='' + placeholder + '';" style="max-width: 260px; max-height: 340px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 4px 16px rgba(0,0,0,0.08);" />'
+            '<img src="{}" style="max-width: 220px; max-height: 280px; object-fit: cover; border-radius: 8px; border: 1px solid #E5E7EB; box-shadow: 0 2px 8px rgba(0,0,0,0.06);" />'
             '</div>',
             img_url
         )

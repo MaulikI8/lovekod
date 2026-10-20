@@ -723,6 +723,73 @@
 .blanxer-step-pane.is-visible {
     display: block;
 }
+
+/* Quick Add Chips below Variant & Size inputs */
+.blanxer-quick-chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+}
+.blanxer-quick-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #4B5563;
+    background: #F3F4F6;
+    border: 1px solid #E5E7EB;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+}
+.blanxer-quick-chip:hover {
+    background: #EDE9FE;
+    border-color: #C4B5FD;
+    color: #7C3AED;
+    transform: translateY(-1px);
+}
+.blanxer-quick-chip:active {
+    transform: translateY(0);
+}
+
+/* Validation Toast */
+.blanxer-toast {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 999999;
+    padding: 12px 18px;
+    background: #DC2626;
+    color: #FFFFFF;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px -3px rgba(220, 38, 38, 0.4);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: blanxerSlideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+@keyframes blanxerSlideDown {
+    from { opacity: 0; transform: translateY(-14px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.blanxer-input-error {
+    border-color: #EF4444 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25) !important;
+    animation: blanxerShake 0.35s ease-in-out;
+}
+@keyframes blanxerShake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-4px); }
+    40%, 80% { transform: translateX(4px); }
+}
 </style>
 {% endblock %}
 
@@ -888,6 +955,17 @@
                             <input type="text" id="blanxerVariantTextInput" class="blanxer-tag-text-input" placeholder="eg. Red, Green" autocomplete="off" onkeydown="if(event.key==='Enter'||event.keyCode===13||event.key===','){event.preventDefault();event.stopPropagation();if(this.value.trim()){window.blanxerAddVariantTag(this.value);this.value='';}return false;}">
                         </div>
                         <input type="hidden" id="blanxerUiChooseVariant">
+                        <div class="blanxer-quick-chips">
+                            <span style="font-size: 11px; font-weight: 700; color: #9CA3AF; margin-right: 2px;">Quick Add:</span>
+                            <button type="button" class="blanxer-quick-chip" onclick="window.blanxerAddVariantTag('Red')">+ Red</button>
+                            <button type="button" class="blanxer-quick-chip" onclick="window.blanxerAddVariantTag('Black')">+ Black</button>
+                            <button type="button" class="blanxer-quick-chip" onclick="window.blanxerAddVariantTag('Pink')">+ Pink</button>
+                            <button type="button" class="blanxer-quick-chip" onclick="window.blanxerAddVariantTag('Green')">+ Green</button>
+                            <button type="button" class="blanxer-quick-chip" onclick="window.blanxerAddVariantTag('Blue')">+ Blue</button>
+                            <button type="button" class="blanxer-quick-chip" onclick="window.blanxerAddVariantTag('White')">+ White</button>
+                            <button type="button" class="blanxer-quick-chip" onclick="window.blanxerAddVariantTag('Maroon')">+ Maroon</button>
+                            <button type="button" class="blanxer-quick-chip" onclick="window.blanxerAddVariantTag('Yellow')">+ Yellow</button>
+                        </div>
                     </div>
 
                     <!-- Show color preview toggle -->
@@ -917,6 +995,17 @@
                             <input type="text" id="blanxerSizeTextInput" class="blanxer-tag-text-input" placeholder="eg. M, X, XL" autocomplete="off" onkeydown="if(event.key==='Enter'||event.keyCode===13||event.key===','){event.preventDefault();event.stopPropagation();if(this.value.trim()){window.blanxerAddSizeTag(this.value);this.value='';}return false;}">
                         </div>
                         <input type="hidden" id="blanxerUiChooseSize">
+                        <div class="blanxer-quick-chips">
+                            <span style="font-size: 11px; font-weight: 700; color: #9CA3AF; margin-right: 2px;">Quick Add:</span>
+                            <button type="button" class="blanxer-quick-chip" onclick="window.blanxerAddSizeTag('XS')">+ XS</button>
+                            <button type="button" class="blanxer-quick-chip" onclick="window.blanxerAddSizeTag('S')">+ S</button>
+                            <button type="button" class="blanxer-quick-chip" onclick="window.blanxerAddSizeTag('M')">+ M</button>
+                            <button type="button" class="blanxer-quick-chip" onclick="window.blanxerAddSizeTag('L')">+ L</button>
+                            <button type="button" class="blanxer-quick-chip" onclick="window.blanxerAddSizeTag('XL')">+ XL</button>
+                            <button type="button" class="blanxer-quick-chip" onclick="window.blanxerAddSizeTag('XXL')">+ XXL</button>
+                            <button type="button" class="blanxer-quick-chip" onclick="window.blanxerAddSizeTag('3XL')">+ 3XL</button>
+                            <button type="button" class="blanxer-quick-chip" onclick="window.blanxerAddSizeTag('Free Size')">+ Free Size</button>
+                        </div>
                     </div>
 
                     <!-- Generate SKUs Button -->
@@ -959,8 +1048,7 @@
                                         <th style="min-width: 90px;">COST PRICE</th>
                                         <th style="min-width: 80px;">WEIGHT</th>
                                         <th style="min-width: 80px;">QUANTITY</th>
-                                        <th style="min-width: 110px;">SKU</th>
-                                        <th style="width: 36px;"></th>
+                                        <th style="min-width: 130px;">SKU</th>
                                     </tr>
                                 </thead>
                                 <tbody id="blanxerSkuTableBody">
@@ -1080,8 +1168,113 @@
         let sizeTags = [];
         let variantColors = {}; // { 'red': { primary: '#EF4444', secondary: '#ffffff', hasSecond: true } }
 
+        // ── Validation Toasts & Error Highlighting ──
+        function showBlanxerToast(message, type) {
+            const existing = document.getElementById("blanxerToast");
+            if (existing) existing.remove();
+
+            const toast = document.createElement("div");
+            toast.id = "blanxerToast";
+            toast.className = "blanxer-toast " + (type || "error");
+            toast.innerHTML = 
+                '<span style="font-size:16px;">⚠️</span>' +
+                '<span>' + escapeHtml(message) + '</span>' +
+                '<button type="button" onclick="this.parentElement.remove()" style="margin-left:auto; background:none; border:none; color:#fff; font-size:16px; cursor:pointer; padding:0 4px;">&times;</button>';
+            document.body.appendChild(toast);
+
+            setTimeout(function() {
+                if (toast && toast.parentElement) {
+                    toast.style.opacity = "0";
+                    toast.style.transform = "translateY(-14px)";
+                    setTimeout(function() { if (toast.parentElement) toast.remove(); }, 300);
+                }
+            }, 4500);
+        }
+
+        function highlightErrorField(el) {
+            if (!el) return;
+            el.classList.add("blanxer-input-error");
+            el.focus();
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+
+            const clearHandler = function() {
+                el.classList.remove("blanxer-input-error");
+                el.removeEventListener("input", clearHandler);
+                el.removeEventListener("change", clearHandler);
+            };
+            el.addEventListener("input", clearHandler);
+            el.addEventListener("change", clearHandler);
+        }
+
+        window.blanxerValidateStep = function(stepIdx) {
+            // STEP 0: General Information
+            if (stepIdx === 0) {
+                const nameInput = document.getElementById("id_name");
+                if (!nameInput || !nameInput.value.trim()) {
+                    showBlanxerToast("Product Name is mandatory. Please enter a product name first.", "error");
+                    highlightErrorField(nameInput);
+                    return false;
+                }
+
+                const catInput = document.getElementById("id_category");
+                if (catInput && (!catInput.value || catInput.value === "")) {
+                    showBlanxerToast("Please select a Category before proceeding.", "error");
+                    highlightErrorField(catInput);
+                    return false;
+                }
+            }
+
+            // STEP 1: Variants & Inventory
+            if (stepIdx === 1) {
+                const uiVariants = document.getElementById("blanxerUiEnableVariants");
+                const isVariants = uiVariants ? uiVariants.checked : false;
+
+                if (!isVariants) {
+                    const sp = document.getElementById("blanxerUiSellingPrice");
+                    const spVal = sp ? (parseFloat(sp.value) || 0) : 0;
+                    if (spVal <= 0) {
+                        showBlanxerToast("Selling Price is required. Please enter a valid price.", "error");
+                        highlightErrorField(sp);
+                        return false;
+                    }
+                } else {
+                    if (skuCombinations.length === 0) {
+                        showBlanxerToast("Please add at least one color variant or size.", "error");
+                        const vInput = document.getElementById("blanxerVariantTextInput");
+                        highlightErrorField(vInput);
+                        return false;
+                    }
+
+                    // Check if any combination row is missing a selling price
+                    for (let i = 0; i < skuCombinations.length; i++) {
+                        const p = parseFloat(skuCombinations[i].selling_price) || 0;
+                        if (p <= 0) {
+                            const comboName = skuCombinations[i] ? skuCombinations[i].variant : ("row " + (i + 1));
+                            showBlanxerToast("Please specify a Selling Price for variant: " + comboName, "error");
+                            const rows = document.querySelectorAll("#blanxerSkuTableBody tr");
+                            if (rows[i]) {
+                                const spInput = rows[i].querySelectorAll("input")[1];
+                                if (spInput) highlightErrorField(spInput);
+                            }
+                            return false;
+                        }
+                    }
+                }
+            }
+
+            return true;
+        };
+
         window.blanxerGoToStep = function(stepIdx) {
-            currentStep = Math.max(0, Math.min(2, stepIdx));
+            const target = Math.max(0, Math.min(2, stepIdx));
+            if (target > currentStep) {
+                for (let s = currentStep; s < target; s++) {
+                    if (!window.blanxerValidateStep(s)) {
+                        return false;
+                    }
+                }
+            }
+            currentStep = target;
 
             for (let i = 0; i < 3; i++) {
                 const pane = document.getElementById("stepPane" + i);
@@ -1138,9 +1331,13 @@
             if (wizardRoot) {
                 wizardRoot.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
+            return true;
         };
 
         window.blanxerNextStep = function() {
+            if (!window.blanxerValidateStep(currentStep)) {
+                return false;
+            }
             if (currentStep < 2) {
                 window.blanxerGoToStep(currentStep + 1);
             }
@@ -1164,6 +1361,9 @@
             if (nativeToggle) {
                 nativeToggle.checked = isOn;
                 nativeToggle.dispatchEvent(new Event('change'));
+            }
+            if (isOn && skuCombinations.length === 0) {
+                window.blanxerUpdateCombinationsTable();
             }
         };
 
@@ -1234,7 +1434,8 @@
 
         window.blanxerAddVariantTag = function(val) {
             if (!val) return;
-            const parts = val.split(new RegExp("[,\r\n]+"));
+            const parts = val.split(new RegExp("[,
+]+"));
             let added = false;
             parts.forEach(function(part) {
                 const clean = part.trim();
@@ -1252,13 +1453,17 @@
                     added = true;
                 }
             });
-            if (added) renderVariantTags(); window.blanxerUpdateCombinationsTable();
+            if (added) {
+                renderVariantTags();
+                window.blanxerUpdateCombinationsTable();
+            }
         };
 
         window.blanxerRemoveVariantTag = function(tag) {
-            variantTags = variantTags.filter(function(t) { return t !== tag; });
+            variantTags = variantTags.filter(function(t) { return t.toLowerCase() !== tag.toLowerCase(); });
             delete variantColors[tag];
             renderVariantTags();
+            window.blanxerUpdateCombinationsTable();
         };
 
         // ── Tag Chip Management for Choose Size ──
@@ -1305,7 +1510,8 @@
 
         window.blanxerAddSizeTag = function(val) {
             if (!val) return;
-            const parts = val.split(new RegExp("[,\r\n]+"));
+            const parts = val.split(new RegExp("[,
+]+"));
             let added = false;
             parts.forEach(function(part) {
                 const clean = part.trim().toUpperCase();
@@ -1314,12 +1520,16 @@
                     added = true;
                 }
             });
-            if (added) renderSizeTags(); window.blanxerUpdateCombinationsTable();
+            if (added) {
+                renderSizeTags();
+                window.blanxerUpdateCombinationsTable();
+            }
         };
 
         window.blanxerRemoveSizeTag = function(tag) {
-            sizeTags = sizeTags.filter(function(t) { return t !== tag; });
+            sizeTags = sizeTags.filter(function(t) { return t.toUpperCase() !== tag.toUpperCase(); });
             renderSizeTags();
+            window.blanxerUpdateCombinationsTable();
         };
 
         // ── Color Preview Toggle & Pickers ──
@@ -1468,7 +1678,7 @@
             });
         }
 
-                // ── 7-Column Combinations Table matching Blanxer Step 2 ──
+        // ── Dynamic 7-Column Combinations Table matching Blanxer Step 2 ──
         let skuCombinations = [];
 
         function syncCombinationsToHidden() {
@@ -1482,14 +1692,6 @@
         window.blanxerUpdateCombo = function(idx, field, val) {
             if (skuCombinations[idx]) {
                 skuCombinations[idx][field] = val;
-                syncCombinationsToHidden();
-            }
-        };
-
-        window.blanxerRemoveCombo = function(idx) {
-            if (idx >= 0 && idx < skuCombinations.length) {
-                skuCombinations.splice(idx, 1);
-                renderCombinationsTable();
                 syncCombinationsToHidden();
             }
         };
@@ -1540,6 +1742,7 @@
             }
         };
 
+        // Fully Dynamic Combinations Matrix (Red -> Red M -> Red M, Red L, Red XL)
         window.blanxerUpdateCombinationsTable = function() {
             const vList = variantTags.length > 0 ? variantTags : [];
             const sList = sizeTags.length > 0 ? sizeTags : [];
@@ -1575,8 +1778,12 @@
             const defaultQty = document.getElementById("blanxerUiQuantity") ? (document.getElementById("blanxerUiQuantity").value || 0) : 0;
 
             const updated = targetItems.map(function(item) {
-                const existing = skuCombinations.find(function(c) { return c.variant === item.variant; });
-                if (existing) return existing;
+                const existing = skuCombinations.find(function(c) { 
+                    return c.variant.toLowerCase() === item.variant.toLowerCase(); 
+                });
+                if (existing) {
+                    return existing;
+                }
                 return {
                     variant: item.variant,
                     color: item.color,
@@ -1748,26 +1955,7 @@
                 tdSku.appendChild(inputSku);
                 tr.appendChild(tdSku);
 
-                // Trash button cell
-                const tdTrash = document.createElement("td");
-                tdTrash.style.textAlign = "center";
-                const btnTrash = document.createElement("button");
-                btnTrash.type = "button";
-                btnTrash.className = "blanxer-trash-btn";
-                btnTrash.title = "Delete row";
-                btnTrash.innerHTML = 
-                    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
-                        '<polyline points="3 6 5 6 21 6"></polyline>' +
-                        '<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>' +
-                        '<line x1="10" y1="11" x2="10" y2="17"></line>' +
-                        '<line x1="14" y1="11" x2="14" y2="17"></line>' +
-                    '</svg>';
-                btnTrash.onclick = function() {
-                    window.blanxerRemoveCombo(idx);
-                };
-                tdTrash.appendChild(btnTrash);
-                tr.appendChild(tdTrash);
-
+                // NOTE: No trash button column (rows are 100% dynamically controlled by color & size tags)
                 tbody.appendChild(tr);
             });
         }
@@ -1963,14 +2151,13 @@
         };
 
         function escapeHtml(str) {
-            return String(str || '').replace(/[&<>'"/]/g, function (s) {
+            return String(str || '').replace(/[&<>'"]/g, function (s) {
                 return ({
                     '&': '&amp;',
                     '<': '&lt;',
                     '>': '&gt;',
                     '"': '&quot;',
-                    "'": '&#39;',
-                    '/': '&#x2F;'
+                    "'": '&#39;'
                 })[s];
             });
         }
@@ -1982,7 +2169,20 @@
 
             // Intercept Save & Submit buttons
             document.querySelectorAll('button[type="submit"], input[type="submit"], button[name="_save"], button[name="_continue"], button[name="_addanother"], .blanxer-footer-btn-next').forEach(function(btn) {
-                btn.addEventListener("click", function() {
+                btn.addEventListener("click", function(e) {
+                    if (!window.blanxerValidateStep(0)) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        window.blanxerGoToStep(0);
+                        return false;
+                    }
+                    if (!window.blanxerValidateStep(1)) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        window.blanxerGoToStep(1);
+                        return false;
+                    }
+
                     isLegitSubmitAction = true;
                     if (window.flushAllBlanxerDataToForm) {
                         window.flushAllBlanxerDataToForm();
@@ -2030,6 +2230,19 @@
             // Guard the form submit event
             if (productForm) {
                 productForm.addEventListener("submit", function(e) {
+                    if (!window.blanxerValidateStep(0)) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        window.blanxerGoToStep(0);
+                        return false;
+                    }
+                    if (!window.blanxerValidateStep(1)) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        window.blanxerGoToStep(1);
+                        return false;
+                    }
+
                     if (window.flushAllBlanxerDataToForm) {
                         window.flushAllBlanxerDataToForm();
                     }
@@ -2050,10 +2263,12 @@
             const varInput = document.getElementById("blanxerVariantTextInput");
             if (varInput) {
                 varInput.addEventListener("keydown", function(e) {
-                    if (e.key === "Enter" || e.key === ",") {
+                    if (e.key === "Enter" || e.key === "," || e.key === "Tab") {
                         e.preventDefault();
-                        window.blanxerAddVariantTag(varInput.value);
-                        varInput.value = "";
+                        if (varInput.value.trim()) {
+                            window.blanxerAddVariantTag(varInput.value);
+                            varInput.value = "";
+                        }
                     } else if (e.key === "Backspace" && varInput.value === "" && variantTags.length > 0) {
                         window.blanxerRemoveVariantTag(variantTags[variantTags.length - 1]);
                     }
@@ -2070,10 +2285,12 @@
             const sizeInput = document.getElementById("blanxerSizeTextInput");
             if (sizeInput) {
                 sizeInput.addEventListener("keydown", function(e) {
-                    if (e.key === "Enter" || e.key === ",") {
+                    if (e.key === "Enter" || e.key === "," || e.key === "Tab") {
                         e.preventDefault();
-                        window.blanxerAddSizeTag(sizeInput.value);
-                        sizeInput.value = "";
+                        if (sizeInput.value.trim()) {
+                            window.blanxerAddSizeTag(sizeInput.value);
+                            sizeInput.value = "";
+                        }
                     } else if (e.key === "Backspace" && sizeInput.value === "" && sizeTags.length > 0) {
                         window.blanxerRemoveSizeTag(sizeTags[sizeTags.length - 1]);
                     }

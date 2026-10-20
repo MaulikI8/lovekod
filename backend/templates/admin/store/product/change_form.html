@@ -167,8 +167,8 @@
     position: relative;
     display: inline-flex;
     align-items: center;
-    width: 68px;
-    height: 32px;
+    width: 64px;
+    height: 30px;
     user-select: none;
     cursor: pointer;
 }
@@ -182,7 +182,7 @@
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
     background-color: #E5E7EB;
-    border-radius: 34px;
+    border-radius: 30px;
     transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     align-items: center;
@@ -191,14 +191,14 @@
 .blanxer-switch-slider:before {
     position: absolute;
     content: "";
-    height: 26px;
-    width: 26px;
+    height: 24px;
+    width: 24px;
     left: 3px;
     bottom: 3px;
     background-color: white;
     border-radius: 50%;
     transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.25);
 }
 .blanxer-switch-label-text {
     font-size: 0.72rem;
@@ -209,15 +209,36 @@
     transition: all 0.2s ease;
 }
 .blanxer-switch input:checked + .blanxer-switch-slider {
-    background-color: #059669;
+    background-color: #10B981;
 }
 .blanxer-switch input:checked + .blanxer-switch-slider:before {
-    transform: translateX(36px);
+    transform: translateX(34px);
 }
 .blanxer-switch input:checked + .blanxer-switch-slider .blanxer-switch-label-text {
     left: 8px;
     right: auto;
     color: #FFFFFF;
+}
+
+/* Small toggle for Show color preview */
+.blanxer-small-switch {
+    width: 48px;
+    height: 24px;
+}
+.blanxer-small-switch .blanxer-switch-slider {
+    border-radius: 24px;
+}
+.blanxer-small-switch .blanxer-switch-slider:before {
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+}
+.blanxer-small-switch input:checked + .blanxer-switch-slider {
+    background-color: #10B981;
+}
+.blanxer-small-switch input:checked + .blanxer-switch-slider:before {
+    transform: translateX(24px);
 }
 
 /* Variants Box when ON */
@@ -294,6 +315,74 @@
     background: #F3F4F6;
 }
 
+/* ── Tags / Chips Input (Choose Variant & Choose Size) ── */
+.blanxer-tags-input-container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    min-height: 42px;
+    padding: 5px 12px;
+    background: #FFFFFF;
+    border: 1px solid #D1D5DB;
+    border-radius: 8px;
+    cursor: text;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.blanxer-tags-input-container:focus-within {
+    border-color: #883FFF;
+    box-shadow: 0 0 0 3px rgba(136, 63, 255, 0.12);
+}
+
+.blanxer-tags-list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+}
+
+.blanxer-tag-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #F3F4F6;
+    border: 1px solid #E5E7EB;
+    color: #1F2937;
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 3px 8px 3px 10px;
+    border-radius: 6px;
+    user-select: none;
+}
+.blanxer-tag-chip .remove-tag-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    color: #9CA3AF;
+    border: none;
+    background: transparent;
+    padding: 0;
+    transition: color 0.15s ease;
+}
+.blanxer-tag-chip .remove-tag-btn:hover {
+    color: #EF4444;
+}
+
+.blanxer-tag-text-input {
+    flex: 1 1 120px;
+    min-width: 80px;
+    border: none !important;
+    outline: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 4px 0 !important;
+    font-size: 0.9rem !important;
+    color: #111827 !important;
+}
+
 /* Color Preview toggle in variants box */
 .blanxer-color-preview-row {
     display: flex;
@@ -303,11 +392,177 @@
 .blanxer-color-preview-header {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
 }
 .blanxer-color-preview-desc {
     font-size: 0.8rem;
     color: #6B7280;
+}
+
+/* ── Color Pickers per Variant ── */
+.blanxer-color-codes-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 6px 0;
+}
+
+.blanxer-color-code-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.blanxer-color-code-label {
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: #374151;
+}
+.blanxer-color-pickers-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.blanxer-color-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    padding: 4px 10px;
+    height: 38px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    position: relative;
+}
+
+.blanxer-color-swatch {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 1.5px solid #D1D5DB;
+    display: inline-block;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    transition: transform 0.1s ease;
+}
+.blanxer-color-swatch:hover {
+    transform: scale(1.12);
+}
+
+.blanxer-color-input-hidden {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+.blanxer-color-pill-text {
+    font-size: 0.8rem;
+    color: #9CA3AF;
+    font-weight: 500;
+}
+
+.blanxer-color-pill-close {
+    border: none;
+    background: transparent;
+    color: #9CA3AF;
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 2px;
+    transition: color 0.15s ease;
+}
+.blanxer-color-pill-close:hover {
+    color: #EF4444;
+}
+
+.blanxer-add-color-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1.5px solid #D1D5DB;
+    background: #FFFFFF;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.blanxer-add-color-circle:hover {
+    border-color: #883FFF;
+    background: #FAF5FF;
+}
+.blanxer-circle-dot {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1px dashed #D1D5DB;
+    background: #F9FAFB;
+}
+
+/* ── Generate SKUs Button ── */
+.blanxer-btn-generate-skus {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #FAF5FF;
+    color: #7C3AED;
+    border: 1px solid #DDD6FE;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 0.86rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.blanxer-btn-generate-skus:hover {
+    background: #F3E8FF;
+    border-color: #C4B5FD;
+}
+
+/* ── Generated SKUs Table ── */
+.blanxer-sku-table-card {
+    background: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 10px;
+}
+.blanxer-sku-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.86rem;
+}
+.blanxer-sku-table th {
+    background: #F9FAFB;
+    color: #4B5563;
+    font-weight: 600;
+    text-align: left;
+    padding: 10px 14px;
+    border-bottom: 1px solid #E5E7EB;
+}
+.blanxer-sku-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid #F3F4F6;
+    color: #111827;
+}
+.blanxer-sku-table tr:last-child td {
+    border-bottom: none;
+}
+.blanxer-sku-cell-input {
+    height: 34px;
+    padding: 0 10px;
+    border: 1px solid #D1D5DB;
+    border-radius: 6px;
+    font-size: 0.84rem;
+    width: 100%;
+    outline: none;
+}
+.blanxer-sku-cell-input:focus {
+    border-color: #883FFF;
 }
 
 /* Collapsible Barcode & HS Code */
@@ -320,7 +575,7 @@
     color: #883FFF;
     cursor: pointer;
     user-select: none;
-    margin: 8px 0 16px 0;
+    margin: 8px 0 12px 0;
 }
 .blanxer-collapsible-trigger:hover {
     color: #7A1EE3;
@@ -556,13 +811,13 @@
                     </div>
                 </div>
 
-                <!-- Collapsible Barcode & HS Code -->
+                <!-- Collapsible Barcode & HS Code (Simple mode) -->
                 <div>
-                    <div class="blanxer-collapsible-trigger" onclick="window.blanxerToggleBarcodeDropdown()">
+                    <div class="blanxer-collapsible-trigger" onclick="window.blanxerToggleBarcodeDropdown('simple')">
                         <span>Barcode &amp; HS code (optional)</span>
-                        <svg id="blanxerBarcodeCaret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+                        <svg id="blanxerBarcodeCaretSimple" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
                     </div>
-                    <div id="blanxerBarcodeDropdown" class="blanxer-collapsible-content">
+                    <div id="blanxerBarcodeDropdownSimple" class="blanxer-collapsible-content">
                         <div class="blanxer-field-group">
                             <label class="blanxer-field-label" for="blanxerUiAltBarcode">Alternative Barcode</label>
                             <input type="text" id="blanxerUiAltBarcode" class="blanxer-input" placeholder="eg: 890123456789">
@@ -578,19 +833,23 @@
             <!-- Variants Container (Shown when Variants = ON) -->
             <div id="blanxerVariantsOnContainer" style="display:none;">
                 <div class="blanxer-variants-box">
-                    <!-- Choose Variant -->
+                    <!-- Choose Variant (Tag/Chip Input) -->
                     <div class="blanxer-field-group">
-                        <label class="blanxer-field-label" for="blanxerUiChooseVariant">Choose Variant</label>
-                        <input type="text" id="blanxerUiChooseVariant" class="blanxer-input" placeholder="eg. Red, Green">
+                        <label class="blanxer-field-label" for="blanxerVariantTextInput">Choose Variant</label>
+                        <div class="blanxer-tags-input-container" id="blanxerVariantTagsContainer" onclick="document.getElementById('blanxerVariantTextInput').focus()">
+                            <div class="blanxer-tags-list" id="blanxerVariantTagsList"></div>
+                            <input type="text" id="blanxerVariantTextInput" class="blanxer-tag-text-input" placeholder="eg. Red, Green" autocomplete="off">
+                        </div>
+                        <input type="hidden" id="blanxerUiChooseVariant">
                     </div>
 
                     <!-- Show color preview toggle -->
                     <div class="blanxer-color-preview-row">
                         <div class="blanxer-color-preview-header">
                             <span class="blanxer-field-label" style="margin:0;">Show color preview</span>
-                            <label class="blanxer-switch" style="width:52px; height:26px;">
-                                <input type="checkbox" id="blanxerUiShowColorPreview">
-                                <span class="blanxer-switch-slider" style="border-radius:26px;"></span>
+                            <label class="blanxer-switch blanxer-small-switch">
+                                <input type="checkbox" id="blanxerUiShowColorPreview" onchange="window.blanxerToggleColorPreview(this.checked)">
+                                <span class="blanxer-switch-slider"></span>
                             </label>
                         </div>
                         <span class="blanxer-color-preview-desc">
@@ -598,10 +857,65 @@
                         </span>
                     </div>
 
-                    <!-- Choose Size -->
+                    <!-- Dynamic Color Code Rows per Variant (Rendered when Show color preview = ON) -->
+                    <div id="blanxerColorCodesSection" style="display:none;" class="blanxer-color-codes-wrapper">
+                        <!-- Populated dynamically per variant -->
+                    </div>
+
+                    <!-- Choose Size (Tag/Chip Input) -->
                     <div class="blanxer-field-group">
-                        <label class="blanxer-field-label" for="blanxerUiChooseSize">Choose Size</label>
-                        <input type="text" id="blanxerUiChooseSize" class="blanxer-input" placeholder="eg. M, X, XL">
+                        <label class="blanxer-field-label" for="blanxerSizeTextInput">Choose Size</label>
+                        <div class="blanxer-tags-input-container" id="blanxerSizeTagsContainer" onclick="document.getElementById('blanxerSizeTextInput').focus()">
+                            <div class="blanxer-tags-list" id="blanxerSizeTagsList"></div>
+                            <input type="text" id="blanxerSizeTextInput" class="blanxer-tag-text-input" placeholder="eg. M, X, XL" autocomplete="off">
+                        </div>
+                        <input type="hidden" id="blanxerUiChooseSize">
+                    </div>
+
+                    <!-- Generate SKUs Button -->
+                    <div>
+                        <button type="button" class="blanxer-btn-generate-skus" id="blanxerBtnGenerateSkus" onclick="window.blanxerGenerateSkus()">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/>
+                            </svg>
+                            <span>Generate SKUs</span>
+                        </button>
+                    </div>
+
+                    <!-- Generated SKUs Table / Combinations -->
+                    <div id="blanxerGeneratedSkusContainer" style="display:none;">
+                        <div class="blanxer-sku-table-card">
+                            <table class="blanxer-sku-table">
+                                <thead>
+                                    <tr>
+                                        <th>Variant / Size</th>
+                                        <th>SKU</th>
+                                        <th>Selling Price</th>
+                                        <th>Quantity</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="blanxerSkuTableBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Collapsible Barcode & HS Code (Inside Variants Box) -->
+                    <div>
+                        <div class="blanxer-collapsible-trigger" onclick="window.blanxerToggleBarcodeDropdown('variants')">
+                            <span>Barcode &amp; HS code (optional)</span>
+                            <svg id="blanxerBarcodeCaretVariants" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+                        </div>
+                        <div id="blanxerBarcodeDropdownVariants" class="blanxer-collapsible-content">
+                            <div class="blanxer-field-group">
+                                <label class="blanxer-field-label" for="blanxerUiAltBarcodeVariants">Alternative Barcode</label>
+                                <input type="text" id="blanxerUiAltBarcodeVariants" class="blanxer-input" placeholder="eg: 890123456789">
+                            </div>
+                            <div class="blanxer-field-group">
+                                <label class="blanxer-field-label" for="blanxerUiHsCodeVariants">HS Code</label>
+                                <input type="text" id="blanxerUiHsCodeVariants" class="blanxer-input" placeholder="eg: 8471300000">
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -651,6 +965,35 @@
             "Next: Custom Fields",
             "Save Product"
         ];
+
+        // Known CSS colors mapping for smart defaults
+        const colorNameMap = {
+            'red': '#EF4444',
+            'blue': '#3B82F6',
+            'green': '#10B981',
+            'black': '#111827',
+            'white': '#FFFFFF',
+            'pink': '#EC4899',
+            'yellow': '#F59E0B',
+            'purple': '#8B5CF6',
+            'orange': '#F97316',
+            'gray': '#6B7280',
+            'grey': '#6B7280',
+            'brown': '#78350F',
+            'navy': '#1E3A8A',
+            'maroon': '#831843',
+            'rani pink': '#BE185D',
+            'bottle green': '#064E3B',
+            'mustard': '#D97706',
+            'cream': '#FEF3C7',
+            'gold': '#EAB308',
+            'silver': '#E5E7EB'
+        };
+
+        // State for variants and sizes
+        let variantTags = [];
+        let sizeTags = [];
+        let variantColors = {}; // { 'red': { primary: '#EF4444', secondary: '#ffffff', hasSecond: true } }
 
         window.blanxerGoToStep = function(stepIdx) {
             currentStep = Math.max(0, Math.min(2, stepIdx));
@@ -739,9 +1082,10 @@
             }
         };
 
-        window.blanxerToggleBarcodeDropdown = function() {
-            const dropdown = document.getElementById("blanxerBarcodeDropdown");
-            const caret = document.getElementById("blanxerBarcodeCaret");
+        window.blanxerToggleBarcodeDropdown = function(mode) {
+            const isVariants = mode === 'variants';
+            const dropdown = document.getElementById(isVariants ? "blanxerBarcodeDropdownVariants" : "blanxerBarcodeDropdownSimple");
+            const caret = document.getElementById(isVariants ? "blanxerBarcodeCaretVariants" : "blanxerBarcodeCaretSimple");
             if (!dropdown) return;
             const isOpen = dropdown.classList.toggle("is-open");
             if (caret) caret.style.transform = isOpen ? "rotate(180deg)" : "rotate(0deg)";
@@ -759,8 +1103,396 @@
             }
         };
 
-        // Two-way synchronization between Blanxer Step 2 UI and native Django hidden fields
+        // ── Tag Chip Management for Choose Variant ──
+        function renderVariantTags() {
+            const list = document.getElementById("blanxerVariantTagsList");
+            const input = document.getElementById("blanxerVariantTextInput");
+            const hiddenNative = document.getElementById("id_colors");
+            const uiBridge = document.getElementById("blanxerUiChooseVariant");
+
+            if (!list) return;
+            list.innerHTML = "";
+
+            variantTags.forEach(function(tag) {
+                const chip = document.createElement("span");
+                chip.className = "blanxer-tag-chip";
+                
+                const labelSpan = document.createElement("span");
+                labelSpan.textContent = tag;
+                chip.appendChild(labelSpan);
+
+                const removeBtn = document.createElement("button");
+                removeBtn.type = "button";
+                removeBtn.className = "remove-tag-btn";
+                removeBtn.innerHTML = "&times;";
+                removeBtn.onclick = function() {
+                    window.blanxerRemoveVariantTag(tag);
+                };
+                chip.appendChild(removeBtn);
+
+                list.appendChild(chip);
+            });
+
+            const joined = variantTags.join(", ");
+            if (hiddenNative) {
+                hiddenNative.value = joined;
+                hiddenNative.dispatchEvent(new Event('input'));
+            }
+            if (uiBridge) uiBridge.value = joined;
+
+            if (input) {
+                input.placeholder = variantTags.length > 0 ? "" : "eg. Red, Green";
+            }
+
+            renderColorCodePickers();
+        }
+
+        window.blanxerAddVariantTag = function(val) {
+            if (!val) return;
+            const parts = val.split(/[,
+]/);
+            let added = false;
+            parts.forEach(function(part) {
+                const clean = part.trim();
+                if (clean && !variantTags.some(function(t) { return t.toLowerCase() === clean.toLowerCase(); })) {
+                    variantTags.push(clean);
+                    const low = clean.toLowerCase();
+                    const defaultHex = colorNameMap[low] || '#EF4444';
+                    if (!variantColors[clean]) {
+                        variantColors[clean] = {
+                            primary: defaultHex,
+                            secondary: '#FFFFFF',
+                            hasSecond: true
+                        };
+                    }
+                    added = true;
+                }
+            });
+            if (added) renderVariantTags();
+        };
+
+        window.blanxerRemoveVariantTag = function(tag) {
+            variantTags = variantTags.filter(function(t) { return t !== tag; });
+            delete variantColors[tag];
+            renderVariantTags();
+        };
+
+        // ── Tag Chip Management for Choose Size ──
+        function renderSizeTags() {
+            const list = document.getElementById("blanxerSizeTagsList");
+            const input = document.getElementById("blanxerSizeTextInput");
+            const hiddenNative = document.getElementById("id_sizes");
+            const uiBridge = document.getElementById("blanxerUiChooseSize");
+
+            if (!list) return;
+            list.innerHTML = "";
+
+            sizeTags.forEach(function(tag) {
+                const chip = document.createElement("span");
+                chip.className = "blanxer-tag-chip";
+                
+                const labelSpan = document.createElement("span");
+                labelSpan.textContent = tag;
+                chip.appendChild(labelSpan);
+
+                const removeBtn = document.createElement("button");
+                removeBtn.type = "button";
+                removeBtn.className = "remove-tag-btn";
+                removeBtn.innerHTML = "&times;";
+                removeBtn.onclick = function() {
+                    window.blanxerRemoveSizeTag(tag);
+                };
+                chip.appendChild(removeBtn);
+
+                list.appendChild(chip);
+            });
+
+            const joined = sizeTags.join(", ");
+            if (hiddenNative) {
+                hiddenNative.value = joined;
+                hiddenNative.dispatchEvent(new Event('input'));
+            }
+            if (uiBridge) uiBridge.value = joined;
+
+            if (input) {
+                input.placeholder = sizeTags.length > 0 ? "" : "eg. M, X, XL";
+            }
+        }
+
+        window.blanxerAddSizeTag = function(val) {
+            if (!val) return;
+            const parts = val.split(/[,
+]/);
+            let added = false;
+            parts.forEach(function(part) {
+                const clean = part.trim().toUpperCase();
+                if (clean && !sizeTags.some(function(t) { return t.toUpperCase() === clean; })) {
+                    sizeTags.push(clean);
+                    added = true;
+                }
+            });
+            if (added) renderSizeTags();
+        };
+
+        window.blanxerRemoveSizeTag = function(tag) {
+            sizeTags = sizeTags.filter(function(t) { return t !== tag; });
+            renderSizeTags();
+        };
+
+        // ── Color Preview Toggle & Pickers ──
+        window.blanxerToggleColorPreview = function(isOn) {
+            const section = document.getElementById("blanxerColorCodesSection");
+            const nativePreview = document.getElementById("id_show_color_preview");
+            if (section) section.style.display = isOn ? "flex" : "none";
+            if (nativePreview) {
+                nativePreview.checked = isOn;
+                nativePreview.dispatchEvent(new Event('change'));
+            }
+            if (isOn) {
+                renderColorCodePickers();
+            }
+        };
+
+        function renderColorCodePickers() {
+            const container = document.getElementById("blanxerColorCodesSection");
+            const toggle = document.getElementById("blanxerUiShowColorPreview");
+            if (!container) return;
+
+            if (!toggle || !toggle.checked) {
+                container.style.display = "none";
+                return;
+            }
+
+            container.style.display = "flex";
+            container.innerHTML = "";
+
+            variantTags.forEach(function(variant) {
+                if (!variantColors[variant]) {
+                    const low = variant.toLowerCase();
+                    variantColors[variant] = {
+                        primary: colorNameMap[low] || '#EF4444',
+                        secondary: '#FFFFFF',
+                        hasSecond: true
+                    };
+                }
+                const data = variantColors[variant];
+
+                const item = document.createElement("div");
+                item.className = "blanxer-color-code-item";
+
+                const labelDiv = document.createElement("div");
+                labelDiv.className = "blanxer-color-code-label";
+                labelDiv.textContent = "Color code for " + variant;
+                item.appendChild(labelDiv);
+
+                const rowDiv = document.createElement("div");
+                rowDiv.className = "blanxer-color-pickers-row";
+
+                // Pill 1: Primary Color
+                const pill1 = document.createElement("div");
+                pill1.className = "blanxer-color-pill";
+
+                const swatch1 = document.createElement("span");
+                swatch1.className = "blanxer-color-swatch";
+                swatch1.style.backgroundColor = data.primary;
+
+                const input1 = document.createElement("input");
+                input1.type = "color";
+                input1.className = "blanxer-color-input-hidden";
+                input1.value = data.primary;
+                input1.onchange = function() {
+                    data.primary = input1.value;
+                    swatch1.style.backgroundColor = input1.value;
+                };
+
+                swatch1.onclick = function() { input1.click(); };
+
+                const close1 = document.createElement("button");
+                close1.type = "button";
+                close1.className = "blanxer-color-pill-close";
+                close1.innerHTML = "&times;";
+                close1.title = "Reset color";
+                close1.onclick = function() {
+                    const low = variant.toLowerCase();
+                    const resetColor = colorNameMap[low] || '#EF4444';
+                    data.primary = resetColor;
+                    input1.value = resetColor;
+                    swatch1.style.backgroundColor = resetColor;
+                };
+
+                pill1.appendChild(swatch1);
+                pill1.appendChild(input1);
+                pill1.appendChild(close1);
+                rowDiv.appendChild(pill1);
+
+                // Pill 2: 2nd (optional)
+                const pill2 = document.createElement("div");
+                pill2.className = "blanxer-color-pill";
+                pill2.style.display = data.hasSecond ? "inline-flex" : "none";
+
+                const swatch2 = document.createElement("span");
+                swatch2.className = "blanxer-color-swatch";
+                swatch2.style.backgroundColor = data.secondary;
+
+                const input2 = document.createElement("input");
+                input2.type = "color";
+                input2.className = "blanxer-color-input-hidden";
+                input2.value = data.secondary;
+                input2.onchange = function() {
+                    data.secondary = input2.value;
+                    swatch2.style.backgroundColor = input2.value;
+                };
+
+                swatch2.onclick = function() { input2.click(); };
+
+                const optText = document.createElement("span");
+                optText.className = "blanxer-color-pill-text";
+                optText.textContent = "2nd (optional)";
+
+                const addBtn = document.createElement("button");
+                addBtn.type = "button";
+                addBtn.className = "blanxer-add-color-circle";
+                addBtn.title = "Add optional color";
+                addBtn.style.display = data.hasSecond ? "none" : "inline-flex";
+                addBtn.innerHTML = '<span class="blanxer-circle-dot"></span>';
+
+                const close2 = document.createElement("button");
+                close2.type = "button";
+                close2.className = "blanxer-color-pill-close";
+                close2.innerHTML = "&times;";
+                close2.title = "Remove 2nd color";
+                close2.onclick = function() {
+                    data.hasSecond = false;
+                    pill2.style.display = "none";
+                    addBtn.style.display = "inline-flex";
+                };
+
+                addBtn.onclick = function() {
+                    data.hasSecond = true;
+                    pill2.style.display = "inline-flex";
+                    addBtn.style.display = "none";
+                };
+
+                pill2.appendChild(swatch2);
+                pill2.appendChild(input2);
+                pill2.appendChild(optText);
+                pill2.appendChild(close2);
+                rowDiv.appendChild(pill2);
+                rowDiv.appendChild(addBtn);
+
+                item.appendChild(rowDiv);
+                container.appendChild(item);
+            });
+        }
+
+        // ── Generate SKUs Table combinations ──
+        window.blanxerGenerateSkus = function() {
+            const tableContainer = document.getElementById("blanxerGeneratedSkusContainer");
+            const tbody = document.getElementById("blanxerSkuTableBody");
+            const nativeSku = document.getElementById("id_product_id");
+            const defaultSellingPrice = document.getElementById("blanxerUiSellingPrice").value || document.getElementById("id_price").value || 0;
+            const defaultQuantity = document.getElementById("blanxerUiQuantity").value || document.getElementById("id_quantity").value || 10;
+
+            const baseSku = (nativeSku && nativeSku.value) ? nativeSku.value.trim() : ("PROD-NP-" + Math.floor(100 + Math.random() * 900));
+            if (nativeSku && !nativeSku.value) nativeSku.value = baseSku;
+
+            const vList = variantTags.length > 0 ? variantTags : ["Default"];
+            const sList = sizeTags.length > 0 ? sizeTags : ["Standard"];
+
+            if (!tbody || !tableContainer) return;
+            tbody.innerHTML = "";
+
+            vList.forEach(function(v) {
+                sList.forEach(function(s) {
+                    const row = document.createElement("tr");
+                    const comboName = (vList.length === 1 && vList[0] === "Default" && sList.length === 1 && sList[0] === "Standard")
+                        ? "Default Variant"
+                        : (v + " / " + s);
+
+                    const vCode = v.substring(0, 3).toUpperCase();
+                    const sCode = s.substring(0, 3).toUpperCase();
+                    const rowSku = (baseSku + "-" + vCode + "-" + sCode).replace(/--+/g, '-');
+
+                    row.innerHTML = 
+                        '<td style="font-weight:600;">' + escapeHtml(comboName) + '</td>' +
+                        '<td><input type="text" class="blanxer-sku-cell-input" value="' + escapeHtml(rowSku) + '"></td>' +
+                        '<td><input type="number" class="blanxer-sku-cell-input" value="' + defaultSellingPrice + '"></td>' +
+                        '<td><input type="number" class="blanxer-sku-cell-input" value="' + defaultQuantity + '"></td>';
+                    tbody.appendChild(row);
+                });
+            });
+
+            tableContainer.style.display = "block";
+        };
+
+        function escapeHtml(str) {
+            return String(str || '').replace(/[&<>'"/]/g, function (s) {
+                return ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;',
+                    '/': '&#x2F;'
+                })[s];
+            });
+        }
+
+        // ── Initialization and Two-Way Synchronization ──
         document.addEventListener("DOMContentLoaded", function() {
+            // Setup Variant Tags Input
+            const varInput = document.getElementById("blanxerVariantTextInput");
+            if (varInput) {
+                varInput.addEventListener("keydown", function(e) {
+                    if (e.key === "Enter" || e.key === ",") {
+                        e.preventDefault();
+                        window.blanxerAddVariantTag(varInput.value);
+                        varInput.value = "";
+                    } else if (e.key === "Backspace" && varInput.value === "" && variantTags.length > 0) {
+                        window.blanxerRemoveVariantTag(variantTags[variantTags.length - 1]);
+                    }
+                });
+                varInput.addEventListener("blur", function() {
+                    if (varInput.value.trim()) {
+                        window.blanxerAddVariantTag(varInput.value);
+                        varInput.value = "";
+                    }
+                });
+            }
+
+            // Setup Size Tags Input
+            const sizeInput = document.getElementById("blanxerSizeTextInput");
+            if (sizeInput) {
+                sizeInput.addEventListener("keydown", function(e) {
+                    if (e.key === "Enter" || e.key === ",") {
+                        e.preventDefault();
+                        window.blanxerAddSizeTag(sizeInput.value);
+                        sizeInput.value = "";
+                    } else if (e.key === "Backspace" && sizeInput.value === "" && sizeTags.length > 0) {
+                        window.blanxerRemoveSizeTag(sizeTags[sizeTags.length - 1]);
+                    }
+                });
+                sizeInput.addEventListener("blur", function() {
+                    if (sizeInput.value.trim()) {
+                        window.blanxerAddSizeTag(sizeInput.value);
+                        sizeInput.value = "";
+                    }
+                });
+            }
+
+            // Initialize existing colors from native field
+            const nativeColors = document.getElementById("id_colors");
+            if (nativeColors && nativeColors.value) {
+                window.blanxerAddVariantTag(nativeColors.value);
+            }
+
+            // Initialize existing sizes from native field
+            const nativeSizes = document.getElementById("id_sizes");
+            if (nativeSizes && nativeSizes.value) {
+                window.blanxerAddSizeTag(nativeSizes.value);
+            }
+
+            // Simple fields two-way synchronization
             const pairs = [
                 { ui: "blanxerUiCrossedPrice", native: "id_original_price" },
                 { ui: "blanxerUiSellingPrice", native: "id_price" },
@@ -770,11 +1502,11 @@
                 { ui: "blanxerUiSku", native: "id_product_id" },
                 { ui: "blanxerUiAltBarcode", native: "id_alt_barcode" },
                 { ui: "blanxerUiHsCode", native: "id_hs_code" },
-                { ui: "blanxerUiChooseVariant", native: "id_colors" },
-                { ui: "blanxerUiChooseSize", native: "id_sizes" }
+                { ui: "blanxerUiAltBarcodeVariants", native: "id_alt_barcode" },
+                { ui: "blanxerUiHsCodeVariants", native: "id_hs_code" }
             ];
 
-            pairs.forEach(pair => {
+            pairs.forEach(function(pair) {
                 const uiEl = document.getElementById(pair.ui);
                 const nativeEl = document.getElementById(pair.native);
                 if (uiEl && nativeEl) {
@@ -783,6 +1515,20 @@
                     }
                     uiEl.addEventListener("input", function() {
                         nativeEl.value = uiEl.value;
+                        // keep barcode / hs code pairs in sync between simple & variants
+                        if (pair.ui === "blanxerUiAltBarcode") {
+                            const other = document.getElementById("blanxerUiAltBarcodeVariants");
+                            if (other) other.value = uiEl.value;
+                        } else if (pair.ui === "blanxerUiAltBarcodeVariants") {
+                            const other = document.getElementById("blanxerUiAltBarcode");
+                            if (other) other.value = uiEl.value;
+                        } else if (pair.ui === "blanxerUiHsCode") {
+                            const other = document.getElementById("blanxerUiHsCodeVariants");
+                            if (other) other.value = uiEl.value;
+                        } else if (pair.ui === "blanxerUiHsCodeVariants") {
+                            const other = document.getElementById("blanxerUiHsCode");
+                            if (other) other.value = uiEl.value;
+                        }
                     });
                 }
             });
@@ -803,6 +1549,7 @@
             const nativePreview = document.getElementById("id_show_color_preview");
             if (uiPreview && nativePreview) {
                 uiPreview.checked = nativePreview.checked;
+                window.blanxerToggleColorPreview(uiPreview.checked);
                 uiPreview.addEventListener("change", function() {
                     nativePreview.checked = uiPreview.checked;
                 });

@@ -170,6 +170,20 @@ class Product(models.Model):
             return f'/media/{name}'
         return '/images/kurtha-charcoal.jpg'
 
+    def get_seo_image_url(self):
+        if self.seo_image:
+            try:
+                url = self.seo_image.url
+                if url:
+                    return url
+            except Exception:
+                pass
+            name = str(self.seo_image)
+            if name.startswith('http') or name.startswith('/'):
+                return name
+            return f'/media/{name}'
+        return self.get_image_url()
+
     def get_sizes_dict(self):
         result = {}
         all_sizes = [

@@ -1216,12 +1216,8 @@
                     return false;
                 }
 
-                const catInput = document.getElementById("id_category");
-                if (catInput && (!catInput.value || catInput.value === "")) {
-                    showBlanxerToast("Please select a Category before proceeding.", "error");
-                    highlightErrorField(catInput);
-                    return false;
-                }
+                // Category is optional on product model, so only validate Name for Step 0
+                // Note: user can pick category anytime without blocking Wizard progression
             }
 
             // STEP 1: Variants & Inventory
@@ -1434,8 +1430,7 @@
 
         window.blanxerAddVariantTag = function(val) {
             if (!val) return;
-            const parts = val.split(new RegExp("[,
-]+"));
+            const parts = val.split(/[,\s\n\r]+/);
             let added = false;
             parts.forEach(function(part) {
                 const clean = part.trim();
@@ -1510,8 +1505,7 @@
 
         window.blanxerAddSizeTag = function(val) {
             if (!val) return;
-            const parts = val.split(new RegExp("[,
-]+"));
+            const parts = val.split(/[,\s\n\r]+/);
             let added = false;
             parts.forEach(function(part) {
                 const clean = part.trim().toUpperCase();
@@ -2168,7 +2162,7 @@
             let isLegitSubmitAction = false;
 
             // Intercept Save & Submit buttons
-            document.querySelectorAll('button[type="submit"], input[type="submit"], button[name="_save"], button[name="_continue"], button[name="_addanother"], .blanxer-footer-btn-next').forEach(function(btn) {
+            document.querySelectorAll('button[type="submit"], input[type="submit"], button[name="_save"], button[name="_continue"], button[name="_addanother"], #blanxerBtnSave').forEach(function(btn) {
                 btn.addEventListener("click", function(e) {
                     if (!window.blanxerValidateStep(0)) {
                         e.preventDefault();
@@ -2404,25 +2398,64 @@
                 });
             }
 
-            // Live Image Preview on Step 0 (delegated on document for complete reliability)
-            document.addEventListener('change', function(e) {
-                if (e.target && (e.target.name === 'image' || e.target.id === 'id_image')) {
-                    const file = e.target.files && e.target.files[0];
-                    const previewImg = document.getElementById('product-preview-img');
-                    const previewBox = document.getElementById('product-preview-container');
-                    const emptyBox = document.getElementById('product-preview-empty');
+            // Live Image Preview on Step 0 (Instant ObjectURL + FileReader fallback)
+            function updateProductLivePreview(file) {
+                if (!file) return;
+                const previewImg = document.getElementById("product-preview-img");
+                const previewBox = document.getElementById("product-preview-container");
+                const emptyBox = document.getElementById("product-preview-empty");
 
-                    if (file && file.type.startsWith('image/')) {
-                        const reader = new FileReader();
-                        reader.onload = function(evt) {
-                            if (previewImg) previewImg.src = evt.target.result;
-                            if (previewBox) previewBox.style.display = 'block';
-                            if (emptyBox) emptyBox.style.display = 'none';
-                        };
-                        reader.readAsDataURL(file);
-                    }
+                // 1. Instant preview via ObjectURL
+                try {
+                    const objUrl = URL.createObjectURL(file);
+                    if (previewImg) previewImg.src = objUrl;
+                    if (previewBox) previewBox.style.display = "block";
+                    if (emptyBox) emptyBox.style.display = "none";
+                } catch(err) {}
+
+                // 2. Persistent fallback via FileReader
+                try {
+                    const reader = new FileReader();
+                    reader.onload = function(evt) {
+                        if (previewImg && evt.target && evt.target.result) {
+                            previewImg.src = evt.target.result;
+                        }
+                        if (previewBox) previewBox.style.display = "block";
+                        if (emptyBox) emptyBox.style.display = "none";
+                    };
+                    reader.readAsDataURL(file);
+                } catch(err) {}
+            }
+
+            document.addEventListener("change", function(e) {
+                const t = e.target;
+                if (!t) return;
+                const isImageInput = t.name === "image" || t.id === "id_image" || (t.type === "file" && t.closest && (t.closest(".field-image") || t.closest("[data-field='image']")));
+                if (isImageInput && t.files && t.files[0]) {
+                    updateProductLivePreview(t.files[0]);
                 }
             });
+
+            document.addEventListener("input", function(e) {
+                const t = e.target;
+                if (!t) return;
+                const isImageInput = t.name === "image" || t.id === "id_image" || (t.type === "file" && t.closest && (t.closest(".field-image") || t.closest("[data-field='image']")));
+                if (isImageInput && t.files && t.files[0]) {
+                    updateProductLivePreview(t.files[0]);
+                }
+            });
+
+            const nativeImgInput = document.getElementById("id_image");
+            if (nativeImgInput) {
+                nativeImgInput.addEventListener("change", function() {
+                    if (nativeImgInput.files && nativeImgInput.files[0]) {
+                        updateProductLivePreview(nativeImgInput.files[0]);
+                    }
+                });
+                if (nativeImgInput.files && nativeImgInput.files[0]) {
+                    updateProductLivePreview(nativeImgInput.files[0]);
+                }
+            }
         });
     })();
     </script>

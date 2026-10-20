@@ -1,0 +1,355 @@
+{% extends "admin/change_form.html" %}
+{% load i18n admin_urls static admin_modify unfold %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+/* ── Blanxer Step Wizard & Header Styling ── */
+.blanxer-wizard-container {
+    background: #FFFFFF;
+    border-radius: 12px;
+    border: 1px solid #E5E7EB;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.blanxer-header-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.blanxer-back-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: 1px solid #E5E7EB;
+    background: #FFFFFF;
+    color: #4B5563;
+    transition: all 0.15s ease;
+}
+.blanxer-back-btn:hover {
+    background: #F3F4F6;
+    color: #111827;
+}
+
+.blanxer-page-title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+}
+
+/* Step Bar */
+.blanxer-stepper {
+    margin-top: 10px;
+}
+
+.blanxer-step-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+}
+
+.blanxer-step-num {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #6B7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.blanxer-step-active-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #883FFF;
+}
+
+.blanxer-track {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.blanxer-step-item {
+    cursor: pointer;
+    position: relative;
+    user-select: none;
+}
+
+.blanxer-step-bar {
+    height: 4px;
+    border-radius: 9999px;
+    background: #E5E7EB;
+    transition: background 0.2s ease;
+    margin-bottom: 6px;
+}
+
+.blanxer-step-item.is-active .blanxer-step-bar {
+    background: #883FFF;
+}
+
+.blanxer-step-item.is-done .blanxer-step-bar {
+    background: #10B981;
+}
+
+.blanxer-step-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #6B7280;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: color 0.15s ease;
+}
+
+.blanxer-step-item.is-active .blanxer-step-label {
+    color: #883FFF;
+    font-weight: 700;
+}
+
+.blanxer-step-item.is-done .blanxer-step-label {
+    color: #10B981;
+}
+
+/* Step Navigation Footer Controls */
+.blanxer-wizard-nav-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: #F9FAFB;
+    border-top: 1px solid #E5E7EB;
+    border-radius: 0 0 12px 12px;
+    margin-top: 24px;
+}
+
+.blanxer-btn-step {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 18px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.blanxer-btn-prev {
+    background: #FFFFFF;
+    color: #374151;
+    border: 1px solid #D1D5DB;
+}
+.blanxer-btn-prev:hover {
+    background: #F3F4F6;
+}
+
+.blanxer-btn-next {
+    background: #883FFF;
+    color: #FFFFFF;
+    border: 1px solid #7A1EE3;
+    box-shadow: 0 1px 2px rgba(136, 63, 255, 0.2);
+}
+.blanxer-btn-next:hover {
+    background: #7A1EE3;
+}
+
+/* Hide inactive fieldsets based on current step */
+.blanxer-step-pane {
+    display: none;
+}
+.blanxer-step-pane.is-visible {
+    display: block;
+}
+</style>
+{% endblock %}
+
+{% block form_before %}
+<div class="blanxer-wizard-container" id="blanxerWizardRoot">
+    <!-- Header with Back Button -->
+    <div class="blanxer-header-row">
+        <a href="{% url 'admin:store_product_changelist' %}" class="blanxer-back-btn" title="Back to products">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+        </a>
+        <h1 class="blanxer-page-title">
+            {% if original %}Edit Product — {{ original.name }}{% else %}Add Product{% endif %}
+        </h1>
+    </div>
+
+    <!-- Stepper Navigation Track -->
+    <div class="blanxer-stepper">
+        <div class="blanxer-step-meta">
+            <span class="blanxer-step-num" id="blanxerStepMetaText">Step 1 of 3</span>
+            <span class="blanxer-step-active-title" id="blanxerStepTitleText">General Information</span>
+        </div>
+        <ol class="blanxer-track" aria-label="Steps">
+            <li class="blanxer-step-item is-active" id="blanxerTab0" onclick="window.blanxerGoToStep(0)">
+                <div class="blanxer-step-bar"></div>
+                <div class="blanxer-step-label">
+                    <span class="step-check" style="display:none;">✓</span>
+                    <span>1. Details</span>
+                </div>
+            </li>
+            <li class="blanxer-step-item" id="blanxerTab1" onclick="window.blanxerGoToStep(1)">
+                <div class="blanxer-step-bar"></div>
+                <div class="blanxer-step-label">
+                    <span class="step-check" style="display:none;">✓</span>
+                    <span>2. Variants & Stock</span>
+                </div>
+            </li>
+            <li class="blanxer-step-item" id="blanxerTab2" onclick="window.blanxerGoToStep(2)">
+                <div class="blanxer-step-bar"></div>
+                <div class="blanxer-step-label">
+                    <span class="step-check" style="display:none;">✓</span>
+                    <span>3. SEO & Tags</span>
+                </div>
+            </li>
+        </ol>
+    </div>
+</div>
+{% endblock %}
+
+{% block field_sets %}
+    {# Render fieldsets into wizard step wrappers #}
+    <div id="stepPane0" class="blanxer-step-pane is-visible flex flex-col gap-6">
+        {% for fieldset in adminform %}
+            {% if forloop.counter <= 3 %}
+                {% include 'admin/includes/fieldset.html' %}
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <div id="stepPane1" class="blanxer-step-pane flex flex-col gap-6">
+        {% for fieldset in adminform %}
+            {% if forloop.counter == 4 %}
+                {% include 'admin/includes/fieldset.html' %}
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <div id="stepPane2" class="blanxer-step-pane flex flex-col gap-6">
+        {% for fieldset in adminform %}
+            {% if forloop.counter >= 5 %}
+                {% include 'admin/includes/fieldset.html' %}
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <!-- Wizard Step Navigation Action Bar -->
+    <div class="blanxer-wizard-nav-footer">
+        <div>
+            <button type="button" class="blanxer-btn-step blanxer-btn-prev" id="blanxerBtnPrev" style="display:none;" onclick="window.blanxerPrevStep()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+                <span>Previous Step</span>
+            </button>
+        </div>
+        <div class="flex items-center gap-3">
+            <button type="button" class="blanxer-btn-step blanxer-btn-next" id="blanxerBtnNext" onclick="window.blanxerNextStep()">
+                <span>Next: Variants & Stock</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+            <button type="submit" name="_save" class="blanxer-btn-step blanxer-btn-next" id="blanxerBtnSave" style="display:none; background:#10B981; border-color:#059669;">
+                <span>Save Product</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        const stepTitles = [
+            "General Information & Media",
+            "Variants & Inventory by Size",
+            "SEO, Tags & Social Card"
+        ];
+        const nextLabels = [
+            "Next: Variants & Stock",
+            "Next: SEO & Tags",
+            "Save Product"
+        ];
+        let currentStep = 0;
+
+        window.blanxerGoToStep = function(stepIdx) {
+            currentStep = Math.max(0, Math.min(2, stepIdx));
+            
+            // Panes
+            for (let i = 0; i < 3; i++) {
+                const pane = document.getElementById("stepPane" + i);
+                const tab = document.getElementById("blanxerTab" + i);
+                if (!pane || !tab) continue;
+
+                if (i === currentStep) {
+                    pane.classList.add("is-visible");
+                    tab.className = "blanxer-step-item is-active";
+                    const check = tab.querySelector(".step-check");
+                    if (check) check.style.display = "none";
+                } else if (i < currentStep) {
+                    pane.classList.remove("is-visible");
+                    tab.className = "blanxer-step-item is-done";
+                    const check = tab.querySelector(".step-check");
+                    if (check) check.style.display = "inline";
+                } else {
+                    pane.classList.remove("is-visible");
+                    tab.className = "blanxer-step-item";
+                    const check = tab.querySelector(".step-check");
+                    if (check) check.style.display = "none";
+                }
+            }
+
+            // Meta titles
+            const metaText = document.getElementById("blanxerStepMetaText");
+            const titleText = document.getElementById("blanxerStepTitleText");
+            if (metaText) metaText.innerText = "Step " + (currentStep + 1) + " of 3";
+            if (titleText) titleText.innerText = stepTitles[currentStep];
+
+            // Buttons
+            const btnPrev = document.getElementById("blanxerBtnPrev");
+            const btnNext = document.getElementById("blanxerBtnNext");
+            const btnSave = document.getElementById("blanxerBtnSave");
+
+            if (btnPrev) btnPrev.style.display = currentStep > 0 ? "inline-flex" : "none";
+            if (btnNext) {
+                if (currentStep < 2) {
+                    btnNext.style.display = "inline-flex";
+                    btnNext.querySelector("span").innerText = nextLabels[currentStep];
+                } else {
+                    btnNext.style.display = "none";
+                }
+            }
+            if (btnSave) {
+                btnSave.style.display = currentStep === 2 ? "inline-flex" : "none";
+            }
+
+            // Smooth scroll up to wizard container
+            const wizardRoot = document.getElementById("blanxerWizardRoot");
+            if (wizardRoot) {
+                wizardRoot.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        };
+
+        window.blanxerNextStep = function() {
+            if (currentStep < 2) {
+                window.blanxerGoToStep(currentStep + 1);
+            }
+        };
+
+        window.blanxerPrevStep = function() {
+            if (currentStep > 0) {
+                window.blanxerGoToStep(currentStep - 1);
+            }
+        };
+    })();
+    </script>
+{% endblock %}

@@ -523,46 +523,93 @@
     border-color: #C4B5FD;
 }
 
-/* ── Generated SKUs Table ── */
+/* ── Generated SKUs Table matching Blanxer Step 2 ── */
 .blanxer-sku-table-card {
     background: #FFFFFF;
     border: 1px solid #E5E7EB;
     border-radius: 8px;
+    margin-top: 16px;
+    margin-bottom: 8px;
     overflow: hidden;
-    margin-top: 10px;
 }
 .blanxer-sku-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.86rem;
+    font-size: 0.85rem;
 }
 .blanxer-sku-table th {
-    background: #F9FAFB;
-    color: #4B5563;
-    font-weight: 600;
+    background: #FFFFFF;
+    color: #6B7280;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
     text-align: left;
-    padding: 10px 14px;
+    padding: 12px 14px;
     border-bottom: 1px solid #E5E7EB;
+    white-space: nowrap;
 }
 .blanxer-sku-table td {
-    padding: 10px 14px;
+    padding: 8px 12px;
     border-bottom: 1px solid #F3F4F6;
-    color: #111827;
+    vertical-align: middle;
 }
 .blanxer-sku-table tr:last-child td {
     border-bottom: none;
 }
-.blanxer-sku-cell-input {
-    height: 34px;
-    padding: 0 10px;
-    border: 1px solid #D1D5DB;
-    border-radius: 6px;
-    font-size: 0.84rem;
-    width: 100%;
-    outline: none;
+.blanxer-variant-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
-.blanxer-sku-cell-input:focus {
+.blanxer-variant-thumb {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid #E5E7EB;
+    background: #F9FAFB;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9CA3AF;
+    flex-shrink: 0;
+}
+.blanxer-variant-title {
+    font-weight: 600;
+    color: #111827;
+    font-size: 0.86rem;
+}
+.blanxer-cell-input {
+    width: 100%;
+    height: 36px;
+    border: 1px solid #E5E7EB;
+    border-radius: 6px;
+    background: #FFFFFF;
+    padding: 0 10px;
+    font-size: 0.84rem;
+    color: #111827;
+    outline: none;
+    transition: border-color 0.15s ease;
+}
+.blanxer-cell-input:focus {
     border-color: #883FFF;
+}
+.blanxer-trash-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    color: #EF4444;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.blanxer-trash-btn:hover {
+    background: #FEF2F2;
+    color: #DC2626;
 }
 
 /* Collapsible Barcode & HS Code */
@@ -882,24 +929,6 @@
                         </button>
                     </div>
 
-                    <!-- Generated SKUs Table / Combinations -->
-                    <div id="blanxerGeneratedSkusContainer" style="display:none;">
-                        <div class="blanxer-sku-table-card">
-                            <table class="blanxer-sku-table">
-                                <thead>
-                                    <tr>
-                                        <th>Variant / Size</th>
-                                        <th>SKU</th>
-                                        <th>Selling Price</th>
-                                        <th>Quantity</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="blanxerSkuTableBody">
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
                     <!-- Collapsible Barcode & HS Code (Inside Variants Box) -->
                     <div>
                         <div class="blanxer-collapsible-trigger" onclick="window.blanxerToggleBarcodeDropdown('variants')">
@@ -915,6 +944,28 @@
                                 <label class="blanxer-field-label" for="blanxerUiHsCodeVariants">HS Code</label>
                                 <input type="text" id="blanxerUiHsCodeVariants" class="blanxer-input" placeholder="eg: 8471300000">
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Generated SKUs Table / Combinations (Exactly as in Blanxer Step 2) -->
+                    <div id="blanxerGeneratedSkusContainer" style="display:none;" class="blanxer-sku-table-card">
+                        <div style="overflow-x: auto;">
+                            <table class="blanxer-sku-table">
+                                <thead>
+                                    <tr>
+                                        <th style="min-width: 140px;">VARIANT</th>
+                                        <th style="min-width: 90px;">CROSSED PRICE</th>
+                                        <th style="min-width: 90px;">SELLING PRICE</th>
+                                        <th style="min-width: 90px;">COST PRICE</th>
+                                        <th style="min-width: 80px;">WEIGHT</th>
+                                        <th style="min-width: 80px;">QUANTITY</th>
+                                        <th style="min-width: 110px;">SKU</th>
+                                        <th style="width: 36px;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="blanxerSkuTableBody">
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -1201,7 +1252,7 @@
                     added = true;
                 }
             });
-            if (added) renderVariantTags();
+            if (added) renderVariantTags(); window.blanxerUpdateCombinationsTable();
         };
 
         window.blanxerRemoveVariantTag = function(tag) {
@@ -1263,7 +1314,7 @@
                     added = true;
                 }
             });
-            if (added) renderSizeTags();
+            if (added) renderSizeTags(); window.blanxerUpdateCombinationsTable();
         };
 
         window.blanxerRemoveSizeTag = function(tag) {
@@ -1417,44 +1468,197 @@
             });
         }
 
-        // ── Generate SKUs Table combinations ──
-        window.blanxerGenerateSkus = function() {
+        // ── 7-Column Combinations Table matching Blanxer Step 2 ──
+        let skuCombinations = [];
+
+        function syncCombinationsToHidden() {
+            const hiddenSizes = document.getElementById("id_custom_sizes");
+            if (hiddenSizes) {
+                hiddenSizes.value = JSON.stringify(skuCombinations);
+                hiddenSizes.dispatchEvent(new Event('input'));
+            }
+        }
+
+        window.blanxerUpdateCombo = function(idx, field, val) {
+            if (skuCombinations[idx]) {
+                skuCombinations[idx][field] = val;
+                syncCombinationsToHidden();
+            }
+        };
+
+        window.blanxerRemoveCombo = function(idx) {
+            if (idx >= 0 && idx < skuCombinations.length) {
+                skuCombinations.splice(idx, 1);
+                renderCombinationsTable();
+                syncCombinationsToHidden();
+            }
+        };
+
+        window.blanxerUpdateCombinationsTable = function() {
+            const vList = variantTags.length > 0 ? variantTags : [];
+            const sList = sizeTags.length > 0 ? sizeTags : [];
+
+            if (vList.length === 0 && sList.length === 0) {
+                skuCombinations = [];
+                renderCombinationsTable();
+                syncCombinationsToHidden();
+                return;
+            }
+
+            let targetItems = [];
+            if (vList.length > 0 && sList.length > 0) {
+                vList.forEach(function(v) {
+                    sList.forEach(function(s) {
+                        targetItems.push({ variant: v + "/" + s, color: v, size: s });
+                    });
+                });
+            } else if (vList.length > 0) {
+                vList.forEach(function(v) {
+                    targetItems.push({ variant: v, color: v, size: "" });
+                });
+            } else {
+                sList.forEach(function(s) {
+                    targetItems.push({ variant: s, color: "", size: s });
+                });
+            }
+
+            const defaultCrossed = document.getElementById("blanxerUiCrossedPrice") ? (document.getElementById("blanxerUiCrossedPrice").value || 0) : 0;
+            const defaultSelling = document.getElementById("blanxerUiSellingPrice") ? (document.getElementById("blanxerUiSellingPrice").value || 0) : 0;
+            const defaultCost = document.getElementById("blanxerUiCostPrice") ? (document.getElementById("blanxerUiCostPrice").value || 0) : 0;
+            const defaultWeight = document.getElementById("blanxerUiWeight") ? (document.getElementById("blanxerUiWeight").value || 0) : 0;
+            const defaultQty = document.getElementById("blanxerUiQuantity") ? (document.getElementById("blanxerUiQuantity").value || 0) : 0;
+
+            const updated = targetItems.map(function(item) {
+                const existing = skuCombinations.find(function(c) { return c.variant === item.variant; });
+                if (existing) return existing;
+                return {
+                    variant: item.variant,
+                    color: item.color,
+                    size: item.size,
+                    crossed_price: defaultCrossed,
+                    selling_price: defaultSelling,
+                    cost_price: defaultCost,
+                    weight: defaultWeight,
+                    quantity: defaultQty,
+                    sku: ""
+                };
+            });
+
+            skuCombinations = updated;
+            renderCombinationsTable();
+            syncCombinationsToHidden();
+        };
+
+        function renderCombinationsTable() {
             const tableContainer = document.getElementById("blanxerGeneratedSkusContainer");
             const tbody = document.getElementById("blanxerSkuTableBody");
-            const nativeSku = document.getElementById("id_product_id");
-            const defaultSellingPrice = document.getElementById("blanxerUiSellingPrice").value || document.getElementById("id_price").value || 0;
-            const defaultQuantity = document.getElementById("blanxerUiQuantity").value || document.getElementById("id_quantity").value || 10;
+            if (!tableContainer || !tbody) return;
 
+            if (skuCombinations.length === 0) {
+                tableContainer.style.display = "none";
+                tbody.innerHTML = "";
+                return;
+            }
+
+            tableContainer.style.display = "block";
+            tbody.innerHTML = "";
+
+            skuCombinations.forEach(function(combo, idx) {
+                const tr = document.createElement("tr");
+
+                // 1. Variant cell
+                const tdVariant = document.createElement("td");
+                tdVariant.innerHTML = 
+                    '<div class="blanxer-variant-cell">' +
+                        '<div class="blanxer-variant-thumb">' +
+                            '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+                                '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>' +
+                                '<circle cx="8.5" cy="8.5" r="1.5"></circle>' +
+                                '<polyline points="21 15 16 10 5 21"></polyline>' +
+                            '</svg>' +
+                        '</div>' +
+                        '<span class="blanxer-variant-title">' + escapeHtml(combo.variant) + '</span>' +
+                    '</div>';
+                tr.appendChild(tdVariant);
+
+                // Helper for numeric inputs
+                function addInputCell(field, defaultVal, isFloat) {
+                    const td = document.createElement("td");
+                    const input = document.createElement("input");
+                    input.type = "number";
+                    if (isFloat) input.step = "0.01";
+                    input.className = "blanxer-cell-input";
+                    input.value = (combo[field] !== undefined && combo[field] !== null && combo[field] !== "") ? combo[field] : defaultVal;
+                    input.min = "0";
+                    input.oninput = function() {
+                        window.blanxerUpdateCombo(idx, field, input.value);
+                    };
+                    td.appendChild(input);
+                    tr.appendChild(td);
+                }
+
+                addInputCell("crossed_price", 0, false);
+                addInputCell("selling_price", 0, false);
+                addInputCell("cost_price", 0, false);
+                addInputCell("weight", 0, true);
+                addInputCell("quantity", 0, false);
+
+                // SKU input
+                const tdSku = document.createElement("td");
+                const inputSku = document.createElement("input");
+                inputSku.type = "text";
+                inputSku.className = "blanxer-cell-input";
+                inputSku.value = combo.sku || "";
+                inputSku.placeholder = "";
+                inputSku.oninput = function() {
+                    window.blanxerUpdateCombo(idx, "sku", inputSku.value);
+                };
+                tdSku.appendChild(inputSku);
+                tr.appendChild(tdSku);
+
+                // Trash button cell
+                const tdTrash = document.createElement("td");
+                tdTrash.style.textAlign = "center";
+                const btnTrash = document.createElement("button");
+                btnTrash.type = "button";
+                btnTrash.className = "blanxer-trash-btn";
+                btnTrash.title = "Delete row";
+                btnTrash.innerHTML = 
+                    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+                        '<polyline points="3 6 5 6 21 6"></polyline>' +
+                        '<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>' +
+                        '<line x1="10" y1="11" x2="10" y2="17"></line>' +
+                        '<line x1="14" y1="11" x2="14" y2="17"></line>' +
+                    '</svg>';
+                btnTrash.onclick = function() {
+                    window.blanxerRemoveCombo(idx);
+                };
+                tdTrash.appendChild(btnTrash);
+                tr.appendChild(tdTrash);
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        // ── Generate SKUs Button ──
+        window.blanxerGenerateSkus = function() {
+            const nativeSku = document.getElementById("id_product_id");
             const baseSku = (nativeSku && nativeSku.value) ? nativeSku.value.trim() : ("PROD-NP-" + Math.floor(100 + Math.random() * 900));
             if (nativeSku && !nativeSku.value) nativeSku.value = baseSku;
 
-            const vList = variantTags.length > 0 ? variantTags : ["Default"];
-            const sList = sizeTags.length > 0 ? sizeTags : ["Standard"];
+            if (skuCombinations.length === 0) {
+                window.blanxerUpdateCombinationsTable();
+            }
 
-            if (!tbody || !tableContainer) return;
-            tbody.innerHTML = "";
-
-            vList.forEach(function(v) {
-                sList.forEach(function(s) {
-                    const row = document.createElement("tr");
-                    const comboName = (vList.length === 1 && vList[0] === "Default" && sList.length === 1 && sList[0] === "Standard")
-                        ? "Default Variant"
-                        : (v + " / " + s);
-
-                    const vCode = v.substring(0, 3).toUpperCase();
-                    const sCode = s.substring(0, 3).toUpperCase();
-                    const rowSku = (baseSku + "-" + vCode + "-" + sCode).replace(/--+/g, '-');
-
-                    row.innerHTML = 
-                        '<td style="font-weight:600;">' + escapeHtml(comboName) + '</td>' +
-                        '<td><input type="text" class="blanxer-sku-cell-input" value="' + escapeHtml(rowSku) + '"></td>' +
-                        '<td><input type="number" class="blanxer-sku-cell-input" value="' + defaultSellingPrice + '"></td>' +
-                        '<td><input type="number" class="blanxer-sku-cell-input" value="' + defaultQuantity + '"></td>';
-                    tbody.appendChild(row);
-                });
+            skuCombinations.forEach(function(combo) {
+                const cCode = combo.color ? combo.color.substring(0, 3).toUpperCase() : "";
+                const sCode = combo.size ? combo.size.substring(0, 3).toUpperCase() : "";
+                const parts = [baseSku, cCode, sCode].filter(Boolean);
+                combo.sku = parts.join("-").replace(/--+/g, "-");
             });
 
-            tableContainer.style.display = "block";
+            renderCombinationsTable();
+            syncCombinationsToHidden();
         };
 
         function escapeHtml(str) {
@@ -1591,6 +1795,20 @@
             const nativeSizes = document.getElementById("id_sizes");
             if (nativeSizes && nativeSizes.value) {
                 window.blanxerAddSizeTag(nativeSizes.value);
+            }
+
+            // Initialize existing combinations if available
+            const hiddenSizes = document.getElementById("id_custom_sizes");
+            if (hiddenSizes && hiddenSizes.value) {
+                try {
+                    const parsed = JSON.parse(hiddenSizes.value);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        skuCombinations = parsed;
+                        renderCombinationsTable();
+                    }
+                } catch(e) {}
+            } else if (variantTags.length > 0 || sizeTags.length > 0) {
+                window.blanxerUpdateCombinationsTable();
             }
 
             // Simple fields two-way synchronization

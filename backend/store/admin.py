@@ -1,3 +1,5 @@
+import threading
+_thread_locals = threading.local()
 from django import forms
 from django.contrib import admin, messages
 from django.shortcuts import redirect
@@ -272,6 +274,7 @@ class ProductAdmin(ModelAdmin):
     list_before_template = "admin/store/product/change_list_header.html"
     list_filter = ('status', 'category', 'fabric_type', 'is_featured', TrashStatusFilter)
     search_fields = ('name', 'product_id', 'fabric_type')
+    ordering = ('-created_at', '-id')
     readonly_fields = ('image_display', 'seo_image_display', 'google_preview_snippet')
     actions = COMMON_ACTIONS
     actions_on_top = True
@@ -340,14 +343,41 @@ class ProductAdmin(ModelAdmin):
         }),
     )
 
+    def changelist_view(self, request, extra_context=None):
+        response = super().changelist_view(request, extra_context=extra_context)
+        if hasattr(response, 'context_data') and response.context_data and 'cl' in response.context_data:
+            cl = response.context_data['cl']
+            try:
+                start = 1
+                if cl.paginator and cl.page_num:
+                    page = cl.paginator.page(cl.page_num)
+                    start = page.start_index()
+            except Exception:
+                start = 1
+
+            row_map = {}
+            for i, item in enumerate(cl.result_list):
+                row_map[item.id] = start + i
+            _thread_locals.product_row_map = row_map
+        return response
+
     def row_number(self, obj):
-        return format_html('<span class="text-xs font-semibold text-gray-500">{}</span>', obj.id)
+        row_map = getattr(_thread_locals, 'product_row_map', {})
+        num = row_map.get(obj.id)
+        if num is None:
+            num = getattr(obj, '_row_number', obj.id)
+        return format_html('<span class="text-xs font-semibold text-gray-500">{}</span>', num)
     row_number.short_description = "#"
     row_number.admin_order_field = "id"
 
     def blanxer_name(self, obj):
         img_url = obj.get_image_url()
         edit_url = reverse('admin:store_product_change', args=[obj.id])
+        sku_val = obj.product_id
+        if not sku_val:
+            sku_val = f"lk-{obj.id:03d}"
+        elif str(sku_val).isdigit():
+            sku_val = f"lk-{int(sku_val):03d}"
         return format_html(
             '<div style="display: flex; align-items: center; gap: 12px; padding: 2px 0;">'
             '<div style="width: 44px; min-width: 44px; max-width: 44px; height: 56px; min-height: 56px; max-height: 56px; border-radius: 8px; overflow: hidden; border: 1px solid #E5E7EB; background: #F9FAFB; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">'
@@ -358,7 +388,7 @@ class ProductAdmin(ModelAdmin):
             '<span style="font-size: 11px; color: #9CA3AF; font-family: monospace;">SKU: {}</span>'
             '</div>'
             '</div>',
-            img_url, obj.name, edit_url, obj.name, obj.product_id
+            img_url, obj.name, edit_url, obj.name, sku_val
         )
     blanxer_name.short_description = "NAME"
     blanxer_name.admin_order_field = "name"

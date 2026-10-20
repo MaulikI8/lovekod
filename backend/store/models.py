@@ -294,7 +294,8 @@ class Product(models.Model):
                         num_part = val_str[3:]
                         if num_part.isdigit():
                             max_id = max(max_id, int(num_part))
-            self.product_id = str(max_id + 1)
+            next_num = max_id + 1
+            self.product_id = f"lk-{next_num:03d}"
         super().save(*args, **kwargs)
 
     def __str__(self):

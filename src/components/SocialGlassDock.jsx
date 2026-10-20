@@ -73,7 +73,7 @@ export function SocialGlassDock({ className = "" }) {
       href: `tel:+${cleanPhone}`,
     },
     {
-      title: 'Boutique Atelier',
+      title: 'Store Atelier',
       icon: MapPin,
       href: '/#about',
     },

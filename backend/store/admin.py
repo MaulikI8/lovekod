@@ -7,7 +7,7 @@ from unfold.decorators import action
 from .models import Category, Product, SiteSettings, FestivalMoment, Testimonial, Order, OrderItem, Coupon
 from django.urls import reverse
 
-admin.site.site_header = "LoveKod Boutique Administration"
+admin.site.site_header = "LoveKod Administration"
 admin.site.site_title = "LoveKod Admin"
 admin.site.index_title = "Storefront Control Center"
 
@@ -263,7 +263,6 @@ class ProductAdmin(ModelAdmin):
     list_display = (
         'row_number',
         'blanxer_name',
-        'avg_rating_display',
         'price_display',
         'inventory_pill',
         'status_pill',
@@ -283,7 +282,7 @@ class ProductAdmin(ModelAdmin):
             'fields': (
                 ('product_id', 'category'),
                 ('name', 'fabric_type'),
-                ('status', 'pieces'),
+                'status',
             ),
             'description': 'Leave Product ID blank to automatically assign the next serial ID (1, 2, 3...).'
         }),
@@ -294,24 +293,24 @@ class ProductAdmin(ModelAdmin):
             ),
             'description': 'Choose an image file directly from your computer to replace or set the product photo.'
         }),
-        ('Pricing & Curation Badges', {
+        ('Pricing & Details', {
             'fields': (
                 ('price', 'original_price'),
-                ('badge', 'is_featured'),
-                ('rating', 'reviews_count'),
+                'is_featured',
                 'is_deleted',
                 'description',
             )
         }),
-        ('Inventory by Size (Units)', {
+        ('Variants & Colors (Inventory)', {
             'fields': (
+                'colors',
                 ('stock_xs', 'stock_s'),
                 ('stock_m', 'stock_l'),
                 ('stock_xl', 'stock_xxl'),
                 ('stock_xxxl', 'stock_free'),
                 'custom_sizes',
             ),
-            'description': 'Enter available units for each size. Items with 0 units will automatically show as Sold Out on the storefront. Use custom sizes JSON for extra sizes (e.g. {"4XL": 5}).'
+            'description': 'Specify color options separated by commas (e.g. Red, Bottle Green, Mustard Yellow), and enter available units for each size. Items with 0 units automatically show as Sold Out.'
         }),
         ('🔍 Search Engine Optimization (SEO, Tags & Social Card)', {
             'fields': (
@@ -453,7 +452,7 @@ class ProductAdmin(ModelAdmin):
             '<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">'
             '<div style="width: 22px; height: 22px; border-radius: 50%; background: #7C3AED; display: flex; align-items: center; justify-content: center; color: #FFFFFF; font-size: 10px; font-weight: bold; flex-shrink: 0;">LK</div>'
             '<div style="display: flex; flex-direction: column; overflow: hidden;">'
-            '<span style="font-size: 12px; font-weight: 600; color: #202124; line-height: 1.2;">LoveKod (लभकोड) Boutique</span>'
+            '<span style="font-size: 12px; font-weight: 600; color: #202124; line-height: 1.2;">LoveKod (लभकोड)</span>'
             '<span style="font-size: 11px; color: #5F6368; line-height: 1.2; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">{}</span>'
             '</div>'
             '</div>'

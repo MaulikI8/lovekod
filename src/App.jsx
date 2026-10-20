@@ -11,7 +11,7 @@ import Checkout from './pages/Checkout';
 import OrderSuccess from './pages/OrderSuccess';
 import NotFound from './pages/NotFound';
 
-// Boutique Merchant Admin Portal
+// Store Merchant Admin Portal
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';

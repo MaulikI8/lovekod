@@ -25,8 +25,8 @@ export default function ProductDetail() {
   useEffect(() => {
     window.scrollTo(0, 0);
     if (product) {
-      const seoTitle = product.seo?.title || `${product.name} | LoveKod Boutique Nepal`;
-      const seoDesc = product.seo?.description || product.description || `Shop ${product.name} at LoveKod Boutique Nepal. Handcrafted festive kurtha set with delivery across Nepal.`;
+      const seoTitle = product.seo?.title || `${product.name} | LoveKod Store Nepal`;
+      const seoDesc = product.seo?.description || product.description || `Shop ${product.name} at LoveKod Store Nepal. Handcrafted festive kurtha set with delivery across Nepal.`;
       const seoKeywords = product.seo?.keywords || `${product.name}, kurtha nepal, tihar wear, lovekod`;
       const canonical = product.seo?.canonicalUrl || window.location.href;
       const ogImg = product.seo?.ogImage || product.image;

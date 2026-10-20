@@ -50,7 +50,7 @@ class Category(models.Model):
 
     def get_meta_title(self):
         if self.meta_title: return self.meta_title
-        return f"{self.name} Collection | Buy Online in Nepal - LoveKod Boutique"
+        return f"{self.name} Collection | Buy Online in Nepal - LoveKod Store"
 
     def get_meta_description(self):
         if self.meta_description: return self.meta_description
@@ -121,6 +121,8 @@ class Product(models.Model):
     stock_xxxl = models.IntegerField(default=0, help_text="XXXL / 3XL Size stock")
     stock_free = models.IntegerField(default=0, help_text="Free Size stock")
     custom_sizes = models.JSONField(default=dict, blank=True, help_text='Additional custom sizes in JSON (e.g. {"4XL": 3, "Custom": 1})')
+    # Color options (e.g. "Red, Green, Rani Pink" or JSON [{"name": "Red", "code": "#E53E3E"}])
+    colors = models.CharField(max_length=255, blank=True, default='', help_text='Available color options separated by commas (e.g. Red, Bottle Green, Mustard Yellow)')
     # Search Engine Optimization (SEO & Social Sharing)
     seo_image = models.ImageField(
         upload_to='',
@@ -141,7 +143,7 @@ class Product(models.Model):
     def get_meta_title(self):
         if self.meta_title:
             return self.meta_title
-        return f"{self.name} | Buy Online in Nepal - LoveKod Boutique"
+        return f"{self.name} | Buy Online in Nepal - LoveKod Store"
 
     def get_meta_description(self):
         if self.meta_description:
@@ -216,6 +218,7 @@ class Product(models.Model):
             'id': self.product_id,
             'categoryId': self.category_id,
             'categoryName': self.category.name if self.category else '',
+            'categorySlug': self.category.slug if self.category else '',
             'name': self.name,
             'fabricType': self.fabric_type,
             'pieces': self.pieces,
@@ -230,6 +233,7 @@ class Product(models.Model):
             'rating': self.rating,
             'reviewsCount': self.reviews_count,
             'sizes': self.get_sizes_dict(),
+            'colors': [c.strip() for c in self.colors.split(',') if c.strip()] if self.colors else [],
             'seo': {
                 'title': self.get_meta_title(),
                 'description': self.get_meta_description(),

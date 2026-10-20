@@ -59,7 +59,7 @@ export default function AdminAnalytics() {
       <div className="stat-grid" style={{ marginBottom: '28px' }}>
         <div className="stat-card">
           <div className="num tabular-num">Rs. {totalRevenue.toLocaleString()}</div>
-          <div className="label">Total Boutique Revenue</div>
+          <div className="label">Total Store Revenue</div>
         </div>
         <div className="stat-card">
           <div className="num tabular-num">{totalOrders}</div>

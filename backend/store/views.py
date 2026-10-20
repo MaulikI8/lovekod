@@ -480,7 +480,12 @@ def product_list_create(request):
         if not include_deleted:
             products = products.filter(is_deleted=False)
         if category_slug and category_slug != 'all':
-            products = products.filter(category__slug=category_slug)
+            # Support filtering by slug, category name or fabric match
+            cat = Category.objects.filter(slug=category_slug).first()
+            if cat:
+                products = products.filter(category=cat)
+            else:
+                products = products.filter(category__slug=category_slug)
         return JsonResponse([p.to_dict() for p in products], safe=False)
 
     elif request.method == 'POST':
@@ -506,6 +511,7 @@ def product_list_create(request):
                 image=data.get('image', '/images/kurtha-charcoal.jpg'),
                 badge=data.get('badge', ''),
                 is_featured=bool(data.get('isFeatured', False)),
+                colors=data.get('colors', ''),
                 stock_m=int(sizes.get('M', 5)),
                 stock_l=int(sizes.get('L', 5)),
                 stock_xl=int(sizes.get('XL', 5)),

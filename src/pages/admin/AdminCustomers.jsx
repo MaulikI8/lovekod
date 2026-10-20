@@ -51,7 +51,7 @@ export default function AdminCustomers() {
     const raw = customer.whatsapp || customer.phone;
     const clean = raw.replace(/[^\d]/g, '').replace(/^0+/, '').replace(/^977/, '');
     const text = encodeURIComponent(
-      `Namaste ${customer.fullName}! This is LoveKod Boutique reaching out to you. Thank you for celebrating with us!`
+      `Namaste ${customer.fullName}! This is LoveKod Store reaching out to you. Thank you for celebrating with us!`
     );
     return `https://wa.me/977${clean}?text=${text}`;
   };

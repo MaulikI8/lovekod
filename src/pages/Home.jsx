@@ -22,12 +22,20 @@ export default function Home() {
     if (activeCategorySlug === 'all') return true;
     const cat = categories.find((c) => c.slug === activeCategorySlug);
     if (!cat) return true;
+    // Check direct foreign key relations
     if (p.categoryId && (p.categoryId === cat.id || p.categoryId === cat.id.toString())) {
+      return true;
+    }
+    if (p.categorySlug && p.categorySlug === activeCategorySlug) {
       return true;
     }
     if (p.category && (p.category.slug === activeCategorySlug || p.category.id === cat.id)) {
       return true;
     }
+    if (p.categoryName && cat.name && p.categoryName.toLowerCase() === cat.name.toLowerCase()) {
+      return true;
+    }
+    // Fallback: check fabric name or category keywords
     const term = cat.name.toLowerCase();
     if (term.includes('georgette') && p.fabricType?.toLowerCase().includes('georgette')) return true;
     if (term.includes('silk') && p.fabricType?.toLowerCase().includes('silk')) return true;

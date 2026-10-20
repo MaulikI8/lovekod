@@ -12,7 +12,7 @@ export default function CustomerReviews({ testimonials = [] }) {
       <div className="section-header-editorial">
         <div className="section-eyebrow">
           <StarIcon size={15} filled={true} />
-          <span>Boutique Experiences</span>
+          <span>Store Experiences</span>
         </div>
         <h2 className="section-main-title">Worn with Love for Tihar</h2>
         <p className="section-main-desc">

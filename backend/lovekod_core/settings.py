@@ -180,7 +180,7 @@ from django.urls import reverse_lazy
 
 UNFOLD = {
     "SITE_TITLE": "LoveKod - Blanxer Vendor",
-    "SITE_HEADER": "LoveKod (लभकोण) Boutique",
+    "SITE_HEADER": "LoveKod (लभकोण)",
     "SITE_URL": "https://lovekod.com",
     "THEME": "light",
     "DASHBOARD_CALLBACK": "store.admin.blanxer_dashboard_callback",

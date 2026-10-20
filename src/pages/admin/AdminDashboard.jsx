@@ -50,7 +50,7 @@ export default function AdminDashboard() {
       {/* ── TOP GREETING & DATE HEADER (Styled like modern dashboard) ── */}
       <div style={{ marginBottom: '28px' }}>
         <h1 style={{ fontFamily: 'var(--font-serif)', color: '#fff', fontSize: '1.85rem', margin: 0, fontWeight: 700 }}>
-          {greeting}, {siteSettings?.contactPhone ? 'LoveKod Boutique' : 'Store Concierge'}
+          {greeting}, {siteSettings?.contactPhone ? 'LoveKod Store' : 'Store Concierge'}
         </h1>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginTop: '6px' }}>
           Here are your boutique stats for today <strong style={{ color: 'var(--marigold)', fontWeight: 600 }}>{todayDateStr}</strong>

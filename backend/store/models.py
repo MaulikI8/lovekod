@@ -84,14 +84,14 @@ class Category(models.Model):
 
 
 class Product(models.Model):
-    product_id = models.CharField(max_length=50, unique=True, db_index=True, blank=True, help_text='Optional. Automatically assigned serially (1, 2, 3...) if left blank.')
+    product_id = models.CharField(max_length=50, unique=True, db_index=True, blank=True, verbose_name='SKU', help_text='SKU (e.g. PROD-NP-101). Automatically assigned serially if left blank.')
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='products')
     name = models.CharField(max_length=255)
     nepali_name = models.CharField(max_length=255, blank=True, default='')
     fabric_type = models.CharField(max_length=100, default='Georgette')
     pieces = models.CharField(max_length=100, default='3 Piece Set')
-    price = models.IntegerField(default=2999)
-    original_price = models.IntegerField(null=True, blank=True, default=4999)
+    price = models.IntegerField(default=0, verbose_name='Selling Price', help_text='Selling Price (e.g. 600)')
+    original_price = models.IntegerField(null=True, blank=True, default=0, verbose_name='Crossed Price', help_text='Crossed Price (e.g. 800)')
     description = models.TextField(blank=True, default='')
     image = models.ImageField(
         upload_to='',
@@ -122,7 +122,17 @@ class Product(models.Model):
     stock_free = models.IntegerField(default=0, help_text="Free Size stock")
     custom_sizes = models.JSONField(default=dict, blank=True, help_text='Additional custom sizes in JSON (e.g. {"4XL": 3, "Custom": 1})')
     # Color options (e.g. "Red, Green, Rani Pink" or JSON [{"name": "Red", "code": "#E53E3E"}])
-    colors = models.CharField(max_length=255, blank=True, default='', help_text='Available color options separated by commas (e.g. Red, Bottle Green, Mustard Yellow)')
+    colors = models.CharField(max_length=255, blank=True, default='', verbose_name='Choose Variant', help_text='eg. Red, Green')
+    # Blanxer Step 2 Variant & Pricing fields
+    enable_variants = models.BooleanField(default=False, verbose_name='Enable Product Variants', help_text='Whenever you have multiple color/sizes/specs for any product')
+    cost_price = models.IntegerField(default=0, blank=True, null=True, verbose_name='Cost Price', help_text='Cost price per item (e.g. 300)')
+    weight = models.DecimalField(max_digits=6, decimal_places=2, default=0.0, blank=True, null=True, verbose_name='Weight (per unit, in KG)', help_text='Weight in KG (e.g. 3)')
+    quantity = models.IntegerField(default=0, blank=True, null=True, verbose_name='Quantity', help_text='Simple product inventory quantity')
+    continue_selling = models.BooleanField(default=True, verbose_name='Continue selling even after product is out of stock', help_text='Continue selling even after product is out of stock')
+    alt_barcode = models.CharField(max_length=100, blank=True, default='', verbose_name='Alternative Barcode', help_text='Alternative Barcode')
+    hs_code = models.CharField(max_length=100, blank=True, default='', verbose_name='HS Code', help_text='HS Code (eg: 8471300000)')
+    show_color_preview = models.BooleanField(default=False, verbose_name='Show color preview', help_text='Enable this to display the color as a visual preview instead of text (e.g. Black, Pink).')
+    sizes = models.CharField(max_length=255, blank=True, default='', verbose_name='Choose Size', help_text='eg. M, X, XL')
     # Search Engine Optimization (SEO & Social Sharing)
     seo_image = models.ImageField(
         upload_to='',
@@ -248,6 +258,14 @@ class Product(models.Model):
             'reviewsCount': self.reviews_count,
             'sizes': self.get_sizes_dict(),
             'colors': [c.strip() for c in self.colors.split(',') if c.strip()] if self.colors else [],
+            'enableVariants': self.enable_variants,
+            'costPrice': self.cost_price,
+            'weight': float(self.weight or 0),
+            'continueSelling': self.continue_selling,
+            'altBarcode': self.alt_barcode,
+            'hsCode': self.hs_code,
+            'variantSizes': [s.strip() for s in self.sizes.split(',') if s.strip()] if self.sizes else [],
+            'showColorPreview': self.show_color_preview,
             'seo': {
                 'title': self.get_meta_title(),
                 'description': self.get_meta_description(),

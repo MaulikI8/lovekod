@@ -4,38 +4,21 @@
 {% block extrahead %}
 {{ block.super }}
 <style>
-/* ── Blanxer Step Wizard & Header Styling ── */
+/* ── Blanxer Step Wizard Modal-like Card Styling ── */
 .blanxer-wizard-container {
     background: #FFFFFF;
     border-radius: 12px;
     border: 1px solid #E5E7EB;
-    padding: 20px 24px;
+    padding: 24px;
     margin-bottom: 24px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
 }
 
 .blanxer-header-row {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 16px;
-}
-
-.blanxer-back-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 34px;
-    height: 34px;
-    border-radius: 8px;
-    border: 1px solid #E5E7EB;
-    background: #FFFFFF;
-    color: #4B5563;
-    transition: all 0.15s ease;
-}
-.blanxer-back-btn:hover {
-    background: #F3F4F6;
-    color: #111827;
+    justify-content: space-between;
+    margin-bottom: 24px;
 }
 
 .blanxer-page-title {
@@ -45,126 +28,393 @@
     margin: 0;
 }
 
-/* Step Bar */
-.blanxer-stepper {
-    margin-top: 10px;
-}
-
-.blanxer-step-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin-bottom: 8px;
-}
-
-.blanxer-step-num {
-    font-size: 0.78rem;
-    font-weight: 600;
+.blanxer-close-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
     color: #6B7280;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    transition: all 0.15s ease;
+}
+.blanxer-close-btn:hover {
+    background: #F3F4F6;
+    color: #111827;
 }
 
-.blanxer-step-active-title {
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: #883FFF;
+/* 3-Step Pill Bar matching Blanxer Header */
+.blanxer-modal-stepper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #F4F0FD;
+    border-radius: 12px;
+    padding: 16px 24px;
+    margin-bottom: 28px;
 }
 
-.blanxer-track {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
+.blanxer-step-node {
+    display: flex;
+    align-items: center;
     gap: 12px;
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.blanxer-step-item {
     cursor: pointer;
-    position: relative;
     user-select: none;
 }
 
-.blanxer-step-bar {
-    height: 4px;
-    border-radius: 9999px;
-    background: #E5E7EB;
-    transition: background 0.2s ease;
-    margin-bottom: 6px;
+.blanxer-step-circle {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.88rem;
+    font-weight: 700;
+    border: 2px solid #D1D5DB;
+    background: #FFFFFF;
+    color: #4B5563;
+    transition: all 0.2s ease;
 }
 
-.blanxer-step-item.is-active .blanxer-step-bar {
+.blanxer-step-node.is-active .blanxer-step-circle {
+    border-color: #883FFF;
+    color: #883FFF;
+    background: #FFFFFF;
+}
+
+.blanxer-step-node.is-done .blanxer-step-circle {
+    border-color: #883FFF;
+    background: #883FFF;
+    color: #FFFFFF;
+}
+
+.blanxer-step-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.blanxer-step-text-num {
+    font-size: 0.76rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #111827;
+}
+
+.blanxer-step-text-sub {
+    font-size: 0.8rem;
+    color: #6B7280;
+}
+
+.blanxer-step-divider {
+    flex: 1;
+    height: 2px;
+    background: #E5E7EB;
+    margin: 0 16px;
+    position: relative;
+}
+
+.blanxer-step-divider.is-active {
     background: #883FFF;
 }
 
-.blanxer-step-item.is-done .blanxer-step-bar {
-    background: #10B981;
+/* Step 2 Blanxer Component Styles */
+#stepPane1 fieldset.module {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
 }
 
-.blanxer-step-label {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #6B7280;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    transition: color 0.15s ease;
+#stepPane1 fieldset.module > h2,
+#stepPane1 fieldset.module > .leading-relaxed {
+    display: none !important;
 }
 
-.blanxer-step-item.is-active .blanxer-step-label {
-    color: #883FFF;
-    font-weight: 700;
+#stepPane1 .form-rows {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
 }
 
-.blanxer-step-item.is-done .blanxer-step-label {
-    color: #10B981;
-}
-
-/* Step Navigation Footer Controls */
-.blanxer-wizard-nav-footer {
+/* Enable Product Variants Card */
+.blanxer-variants-toggle-card {
+    background: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+    padding: 16px 20px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 20px;
-    background: #F9FAFB;
-    border-top: 1px solid #E5E7EB;
-    border-radius: 0 0 12px 12px;
-    margin-top: 24px;
+    margin-bottom: 24px;
 }
 
-.blanxer-btn-step {
+.blanxer-variants-toggle-card .title {
+    font-size: 0.96rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 2px;
+}
+
+.blanxer-variants-toggle-card .desc {
+    font-size: 0.82rem;
+    color: #6B7280;
+}
+
+/* Custom iOS/Blanxer Toggle Switch */
+.blanxer-switch {
+    position: relative;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 9px 18px;
-    font-size: 0.84rem;
-    font-weight: 600;
-    border-radius: 8px;
+    width: 68px;
+    height: 32px;
+    user-select: none;
     cursor: pointer;
-    transition: all 0.15s ease;
+}
+.blanxer-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+.blanxer-switch-slider {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #E5E7EB;
+    border-radius: 34px;
+    transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+}
+.blanxer-switch-slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    border-radius: 50%;
+    transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.blanxer-switch-label-text {
+    font-size: 0.72rem;
+    font-weight: 800;
+    position: absolute;
+    right: 8px;
+    color: #6B7280;
+    transition: all 0.2s ease;
+}
+.blanxer-switch input:checked + .blanxer-switch-slider {
+    background-color: #059669;
+}
+.blanxer-switch input:checked + .blanxer-switch-slider:before {
+    transform: translateX(36px);
+}
+.blanxer-switch input:checked + .blanxer-switch-slider .blanxer-switch-label-text {
+    left: 8px;
+    right: auto;
+    color: #FFFFFF;
 }
 
-.blanxer-btn-prev {
-    background: #FFFFFF;
-    color: #374151;
-    border: 1px solid #D1D5DB;
+/* Variants Box when ON */
+.blanxer-variants-box {
+    background: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
 }
-.blanxer-btn-prev:hover {
+
+.blanxer-field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.blanxer-field-label {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #111827;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.blanxer-req-star {
+    color: #EF4444;
+}
+
+.blanxer-input {
+    width: 100%;
+    height: 42px;
+    border-radius: 8px;
+    border: 1px solid #D1D5DB;
+    background: #FFFFFF;
+    padding: 0 14px;
+    font-size: 0.9rem;
+    color: #111827;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.blanxer-input:focus {
+    border-color: #883FFF;
+    box-shadow: 0 0 0 3px rgba(136, 63, 255, 0.12);
+}
+
+.blanxer-input-with-action {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+.blanxer-input-with-action .blanxer-input {
+    padding-right: 42px;
+}
+.blanxer-input-action-btn {
+    position: absolute;
+    right: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    color: #883FFF;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+.blanxer-input-action-btn:hover {
     background: #F3F4F6;
 }
 
-.blanxer-btn-next {
-    background: #883FFF;
-    color: #FFFFFF;
-    border: 1px solid #7A1EE3;
-    box-shadow: 0 1px 2px rgba(136, 63, 255, 0.2);
+/* Color Preview toggle in variants box */
+.blanxer-color-preview-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
-.blanxer-btn-next:hover {
-    background: #7A1EE3;
+.blanxer-color-preview-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.blanxer-color-preview-desc {
+    font-size: 0.8rem;
+    color: #6B7280;
 }
 
-/* Hide inactive fieldsets based on current step */
+/* Collapsible Barcode & HS Code */
+.blanxer-collapsible-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #883FFF;
+    cursor: pointer;
+    user-select: none;
+    margin: 8px 0 16px 0;
+}
+.blanxer-collapsible-trigger:hover {
+    color: #7A1EE3;
+}
+
+.blanxer-collapsible-content {
+    display: none;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+    padding: 16px;
+    background: #F9FAFB;
+    border-radius: 8px;
+    border: 1px solid #E5E7EB;
+}
+.blanxer-collapsible-content.is-open {
+    display: grid;
+}
+
+/* Continue selling checkbox */
+.blanxer-checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 16px 0;
+    cursor: pointer;
+    user-select: none;
+}
+.blanxer-custom-checkbox {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    accent-color: #883FFF;
+    cursor: pointer;
+}
+.blanxer-checkbox-label {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #1F2937;
+}
+
+/* Navigation Footer */
+.blanxer-wizard-nav-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    padding-top: 24px;
+    margin-top: 28px;
+    border-top: 1px solid #E5E7EB;
+}
+
+.blanxer-footer-btn-prev {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 0.86rem;
+    font-weight: 600;
+    background: #FFFFFF;
+    color: #883FFF;
+    border: 1.5px solid #883FFF;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.blanxer-footer-btn-prev:hover {
+    background: #F4F0FD;
+}
+
+.blanxer-footer-btn-next {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 22px;
+    border-radius: 8px;
+    font-size: 0.86rem;
+    font-weight: 600;
+    background: #883FFF;
+    color: #FFFFFF;
+    border: 1.5px solid #883FFF;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(136, 63, 255, 0.2);
+    transition: all 0.15s ease;
+}
+.blanxer-footer-btn-next:hover {
+    background: #7A1EE3;
+    border-color: #7A1EE3;
+}
+
+/* Hide default unfolded form controls in stepPane1 */
+#stepPane1 .field-row {
+    display: none !important;
+}
+
+/* Visibility of Step Panes */
 .blanxer-step-pane {
     display: none;
 }
@@ -176,53 +426,56 @@
 
 {% block form_before %}
 <div class="blanxer-wizard-container" id="blanxerWizardRoot">
-    <!-- Header with Back Button -->
+    <!-- Blanxer Modal Header with Close 'X' -->
     <div class="blanxer-header-row">
-        <a href="{% url 'admin:store_product_changelist' %}" class="blanxer-back-btn" title="Back to products">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M19 12H5M12 19l-7-7 7-7"/>
-            </svg>
-        </a>
         <h1 class="blanxer-page-title">
             {% if original %}Edit Product — {{ original.name }}{% else %}Add Product{% endif %}
         </h1>
+        <a href="{% url 'admin:store_product_changelist' %}" class="blanxer-close-btn" title="Close">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </a>
     </div>
 
-    <!-- Stepper Navigation Track -->
-    <div class="blanxer-stepper">
-        <div class="blanxer-step-meta">
-            <span class="blanxer-step-num" id="blanxerStepMetaText">Step 1 of 3</span>
-            <span class="blanxer-step-active-title" id="blanxerStepTitleText">General Information</span>
+    <!-- Stepper Navigation Track matching Blanxer -->
+    <div class="blanxer-modal-stepper">
+        <div class="blanxer-step-node is-done" id="blanxerStepNode0" onclick="window.blanxerGoToStep(0)">
+            <div class="blanxer-step-circle">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>
+            <div class="blanxer-step-text">
+                <span class="blanxer-step-text-num">STEP 1</span>
+                <span class="blanxer-step-text-sub">General Information</span>
+            </div>
         </div>
-        <ol class="blanxer-track" aria-label="Steps">
-            <li class="blanxer-step-item is-active" id="blanxerTab0" onclick="window.blanxerGoToStep(0)">
-                <div class="blanxer-step-bar"></div>
-                <div class="blanxer-step-label">
-                    <span class="step-check" style="display:none;">✓</span>
-                    <span>1. Details</span>
-                </div>
-            </li>
-            <li class="blanxer-step-item" id="blanxerTab1" onclick="window.blanxerGoToStep(1)">
-                <div class="blanxer-step-bar"></div>
-                <div class="blanxer-step-label">
-                    <span class="step-check" style="display:none;">✓</span>
-                    <span>2. Variants, Colors & Stock</span>
-                </div>
-            </li>
-            <li class="blanxer-step-item" id="blanxerTab2" onclick="window.blanxerGoToStep(2)">
-                <div class="blanxer-step-bar"></div>
-                <div class="blanxer-step-label">
-                    <span class="step-check" style="display:none;">✓</span>
-                    <span>3. SEO & Tags</span>
-                </div>
-            </li>
-        </ol>
+
+        <div class="blanxer-step-divider is-active" id="blanxerStepDiv0"></div>
+
+        <div class="blanxer-step-node is-active" id="blanxerStepNode1" onclick="window.blanxerGoToStep(1)">
+            <div class="blanxer-step-circle">2</div>
+            <div class="blanxer-step-text">
+                <span class="blanxer-step-text-num">STEP 2</span>
+                <span class="blanxer-step-text-sub">Variants &amp; Inventory</span>
+            </div>
+        </div>
+
+        <div class="blanxer-step-divider" id="blanxerStepDiv1"></div>
+
+        <div class="blanxer-step-node" id="blanxerStepNode2" onclick="window.blanxerGoToStep(2)">
+            <div class="blanxer-step-circle">3</div>
+            <div class="blanxer-step-text">
+                <span class="blanxer-step-text-num">STEP 3</span>
+                <span class="blanxer-step-text-sub">Custom Fields</span>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block field_sets %}
-    {# Render fieldsets into wizard step wrappers #}
+    {# Render Step 0: General Information #}
     <div id="stepPane0" class="blanxer-step-pane is-visible flex flex-col gap-6">
         {% for fieldset in adminform %}
             {% if forloop.counter <= 3 %}
@@ -231,14 +484,137 @@
         {% endfor %}
     </div>
 
+    {# Render Step 1: Variants & Inventory (1:1 with Blanxer) #}
     <div id="stepPane1" class="blanxer-step-pane flex flex-col gap-6">
-        {% for fieldset in adminform %}
-            {% if forloop.counter == 4 %}
-                {% include 'admin/includes/fieldset.html' %}
-            {% endif %}
-        {% endfor %}
+        {# Hidden Native Django Admin Fieldset (keeps form state intact) #}
+        <div style="display:none;">
+            {% for fieldset in adminform %}
+                {% if forloop.counter == 4 %}
+                    {% include 'admin/includes/fieldset.html' %}
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <!-- 1:1 Blanxer Step 2 Content -->
+        <div class="bg-white rounded-xl">
+            <!-- Enable Product Variants Toggle Box -->
+            <div class="blanxer-variants-toggle-card">
+                <div>
+                    <div class="title">Enable Product Variants</div>
+                    <div class="desc">Whenever you have multiple color/sizes/specs for any product</div>
+                </div>
+                <div>
+                    <label class="blanxer-switch">
+                        <input type="checkbox" id="blanxerUiEnableVariants" onchange="window.blanxerToggleVariantsMode(this.checked)">
+                        <span class="blanxer-switch-slider">
+                            <span class="blanxer-switch-label-text" id="blanxerSwitchText">OFF</span>
+                        </span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Simple Product Pricing & Inventory (Shown when Variants = OFF) -->
+            <div id="blanxerSimplePricingContainer">
+                <!-- Row 1: Crossed Price, Selling Price *, Cost Price -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div class="blanxer-field-group">
+                        <label class="blanxer-field-label" for="blanxerUiCrossedPrice">Crossed Price</label>
+                        <input type="number" id="blanxerUiCrossedPrice" class="blanxer-input" placeholder="0">
+                    </div>
+                    <div class="blanxer-field-group">
+                        <label class="blanxer-field-label" for="blanxerUiSellingPrice">
+                            Selling Price <span class="blanxer-req-star">*</span>
+                        </label>
+                        <input type="number" id="blanxerUiSellingPrice" class="blanxer-input" placeholder="0">
+                    </div>
+                    <div class="blanxer-field-group">
+                        <label class="blanxer-field-label" for="blanxerUiCostPrice">Cost Price</label>
+                        <input type="number" id="blanxerUiCostPrice" class="blanxer-input" placeholder="0">
+                    </div>
+                </div>
+
+                <!-- Row 2: Quantity, Weight (per unit, in KG) *, SKU -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div class="blanxer-field-group">
+                        <label class="blanxer-field-label" for="blanxerUiQuantity">Quantity</label>
+                        <input type="number" id="blanxerUiQuantity" class="blanxer-input" placeholder="0">
+                    </div>
+                    <div class="blanxer-field-group">
+                        <label class="blanxer-field-label" for="blanxerUiWeight">
+                            Weight (per unit, in KG) <span class="blanxer-req-star">*</span>
+                        </label>
+                        <input type="number" step="0.01" id="blanxerUiWeight" class="blanxer-input" placeholder="0">
+                    </div>
+                    <div class="blanxer-field-group">
+                        <label class="blanxer-field-label" for="blanxerUiSku">SKU</label>
+                        <div class="blanxer-input-with-action">
+                            <input type="text" id="blanxerUiSku" class="blanxer-input" placeholder="eg: PROD-NP-101">
+                            <button type="button" class="blanxer-input-action-btn" title="Generate serial SKU" onclick="window.blanxerRegenerateSku()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Collapsible Barcode & HS Code -->
+                <div>
+                    <div class="blanxer-collapsible-trigger" onclick="window.blanxerToggleBarcodeDropdown()">
+                        <span>Barcode &amp; HS code (optional)</span>
+                        <svg id="blanxerBarcodeCaret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+                    </div>
+                    <div id="blanxerBarcodeDropdown" class="blanxer-collapsible-content">
+                        <div class="blanxer-field-group">
+                            <label class="blanxer-field-label" for="blanxerUiAltBarcode">Alternative Barcode</label>
+                            <input type="text" id="blanxerUiAltBarcode" class="blanxer-input" placeholder="eg: 890123456789">
+                        </div>
+                        <div class="blanxer-field-group">
+                            <label class="blanxer-field-label" for="blanxerUiHsCode">HS Code</label>
+                            <input type="text" id="blanxerUiHsCode" class="blanxer-input" placeholder="eg: 8471300000">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Variants Container (Shown when Variants = ON) -->
+            <div id="blanxerVariantsOnContainer" style="display:none;">
+                <div class="blanxer-variants-box">
+                    <!-- Choose Variant -->
+                    <div class="blanxer-field-group">
+                        <label class="blanxer-field-label" for="blanxerUiChooseVariant">Choose Variant</label>
+                        <input type="text" id="blanxerUiChooseVariant" class="blanxer-input" placeholder="eg. Red, Green">
+                    </div>
+
+                    <!-- Show color preview toggle -->
+                    <div class="blanxer-color-preview-row">
+                        <div class="blanxer-color-preview-header">
+                            <span class="blanxer-field-label" style="margin:0;">Show color preview</span>
+                            <label class="blanxer-switch" style="width:52px; height:26px;">
+                                <input type="checkbox" id="blanxerUiShowColorPreview">
+                                <span class="blanxer-switch-slider" style="border-radius:26px;"></span>
+                            </label>
+                        </div>
+                        <span class="blanxer-color-preview-desc">
+                            Enable this to display the color as a visual preview instead of text (e.g. Black, Pink).
+                        </span>
+                    </div>
+
+                    <!-- Choose Size -->
+                    <div class="blanxer-field-group">
+                        <label class="blanxer-field-label" for="blanxerUiChooseSize">Choose Size</label>
+                        <input type="text" id="blanxerUiChooseSize" class="blanxer-input" placeholder="eg. M, X, XL">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Continue selling checkbox (Always Visible on Step 2) -->
+            <label class="blanxer-checkbox-row">
+                <input type="checkbox" id="blanxerUiContinueSelling" class="blanxer-custom-checkbox" checked>
+                <span class="blanxer-checkbox-label">Continue selling even after product is out of stock</span>
+            </label>
+        </div>
     </div>
 
+    {# Render Step 2: Custom Fields & SEO #}
     <div id="stepPane2" class="blanxer-step-pane flex flex-col gap-6">
         {% for fieldset in adminform %}
             {% if forloop.counter >= 5 %}
@@ -247,79 +623,77 @@
         {% endfor %}
     </div>
 
-    <!-- Wizard Step Navigation Action Bar -->
+    <!-- Blanxer Step Wizard Navigation Footer -->
     <div class="blanxer-wizard-nav-footer">
-        <div>
-            <button type="button" class="blanxer-btn-step blanxer-btn-prev" id="blanxerBtnPrev" style="display:none;" onclick="window.blanxerPrevStep()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
-                <span>Previous Step</span>
-            </button>
-        </div>
-        <div class="flex items-center gap-3">
-            <button type="button" class="blanxer-btn-step blanxer-btn-next" id="blanxerBtnNext" onclick="window.blanxerNextStep()">
-                <span>Next: Variants & Stock</span>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
-            </button>
-            <button type="submit" name="_save" class="blanxer-btn-step blanxer-btn-next" id="blanxerBtnSave" style="display:none; background:#10B981; border-color:#059669;">
-                <span>Save Product</span>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>
-            </button>
-        </div>
+        <button type="button" class="blanxer-footer-btn-prev" id="blanxerBtnPrev" style="display:none;" onclick="window.blanxerPrevStep()">
+            Previous: General Information
+        </button>
+
+        <button type="button" class="blanxer-footer-btn-next" id="blanxerBtnNext" onclick="window.blanxerNextStep()">
+            <span>Next: Variants &amp; Inventory</span>
+        </button>
+
+        <button type="submit" name="_save" class="blanxer-footer-btn-next" id="blanxerBtnSave" style="display:none; background:#10B981; border-color:#059669;">
+            <span>Save Product</span>
+        </button>
     </div>
 
     <script>
     (function() {
-        const stepTitles = [
-            "General Information & Media",
-            "Variants, Colors & Inventory by Size",
-            "SEO, Tags & Social Card"
+        let currentStep = 0;
+        const prevLabels = [
+            "",
+            "Previous: General Information",
+            "Previous: Variants & Inventory"
         ];
         const nextLabels = [
-            "Next: Variants & Stock",
-            "Next: SEO & Tags",
+            "Next: Variants & Inventory",
+            "Next: Custom Fields",
             "Save Product"
         ];
-        let currentStep = 0;
 
         window.blanxerGoToStep = function(stepIdx) {
             currentStep = Math.max(0, Math.min(2, stepIdx));
-            
-            // Panes
+
             for (let i = 0; i < 3; i++) {
                 const pane = document.getElementById("stepPane" + i);
-                const tab = document.getElementById("blanxerTab" + i);
-                if (!pane || !tab) continue;
+                const node = document.getElementById("blanxerStepNode" + i);
+                const div = document.getElementById("blanxerStepDiv" + i);
+
+                if (!pane || !node) continue;
 
                 if (i === currentStep) {
                     pane.classList.add("is-visible");
-                    tab.className = "blanxer-step-item is-active";
-                    const check = tab.querySelector(".step-check");
-                    if (check) check.style.display = "none";
+                    node.className = "blanxer-step-node is-active";
+                    const circle = node.querySelector(".blanxer-step-circle");
+                    if (circle) circle.innerHTML = (i + 1);
                 } else if (i < currentStep) {
                     pane.classList.remove("is-visible");
-                    tab.className = "blanxer-step-item is-done";
-                    const check = tab.querySelector(".step-check");
-                    if (check) check.style.display = "inline";
+                    node.className = "blanxer-step-node is-done";
+                    const circle = node.querySelector(".blanxer-step-circle");
+                    if (circle) {
+                        circle.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+                    }
                 } else {
                     pane.classList.remove("is-visible");
-                    tab.className = "blanxer-step-item";
-                    const check = tab.querySelector(".step-check");
-                    if (check) check.style.display = "none";
+                    node.className = "blanxer-step-node";
+                    const circle = node.querySelector(".blanxer-step-circle");
+                    if (circle) circle.innerHTML = (i + 1);
+                }
+
+                if (div) {
+                    div.className = (i < currentStep) ? "blanxer-step-divider is-active" : "blanxer-step-divider";
                 }
             }
 
-            // Meta titles
-            const metaText = document.getElementById("blanxerStepMetaText");
-            const titleText = document.getElementById("blanxerStepTitleText");
-            if (metaText) metaText.innerText = "Step " + (currentStep + 1) + " of 3";
-            if (titleText) titleText.innerText = stepTitles[currentStep];
-
-            // Buttons
             const btnPrev = document.getElementById("blanxerBtnPrev");
             const btnNext = document.getElementById("blanxerBtnNext");
             const btnSave = document.getElementById("blanxerBtnSave");
 
-            if (btnPrev) btnPrev.style.display = currentStep > 0 ? "inline-flex" : "none";
+            if (btnPrev) {
+                btnPrev.style.display = currentStep > 0 ? "inline-flex" : "none";
+                if (currentStep > 0) btnPrev.innerText = prevLabels[currentStep];
+            }
             if (btnNext) {
                 if (currentStep < 2) {
                     btnNext.style.display = "inline-flex";
@@ -332,7 +706,6 @@
                 btnSave.style.display = currentStep === 2 ? "inline-flex" : "none";
             }
 
-            // Smooth scroll up to wizard container
             const wizardRoot = document.getElementById("blanxerWizardRoot");
             if (wizardRoot) {
                 wizardRoot.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -350,8 +723,102 @@
                 window.blanxerGoToStep(currentStep - 1);
             }
         };
-        // Live Image File Preview
-        document.addEventListener('DOMContentLoaded', function() {
+
+        window.blanxerToggleVariantsMode = function(isOn) {
+            const simpleBox = document.getElementById("blanxerSimplePricingContainer");
+            const variantsBox = document.getElementById("blanxerVariantsOnContainer");
+            const labelText = document.getElementById("blanxerSwitchText");
+            const nativeToggle = document.getElementById("id_enable_variants");
+
+            if (simpleBox) simpleBox.style.display = isOn ? "none" : "block";
+            if (variantsBox) variantsBox.style.display = isOn ? "block" : "none";
+            if (labelText) labelText.innerText = isOn ? "ON" : "OFF";
+            if (nativeToggle) {
+                nativeToggle.checked = isOn;
+                nativeToggle.dispatchEvent(new Event('change'));
+            }
+        };
+
+        window.blanxerToggleBarcodeDropdown = function() {
+            const dropdown = document.getElementById("blanxerBarcodeDropdown");
+            const caret = document.getElementById("blanxerBarcodeCaret");
+            if (!dropdown) return;
+            const isOpen = dropdown.classList.toggle("is-open");
+            if (caret) caret.style.transform = isOpen ? "rotate(180deg)" : "rotate(0deg)";
+        };
+
+        window.blanxerRegenerateSku = function() {
+            const skuInput = document.getElementById("blanxerUiSku");
+            const nativeSku = document.getElementById("id_product_id");
+            const randomCode = Math.floor(100 + Math.random() * 900);
+            const newSku = "PROD-NP-" + randomCode;
+            if (skuInput) skuInput.value = newSku;
+            if (nativeSku) {
+                nativeSku.value = newSku;
+                nativeSku.dispatchEvent(new Event('input'));
+            }
+        };
+
+        // Two-way synchronization between Blanxer Step 2 UI and native Django hidden fields
+        document.addEventListener("DOMContentLoaded", function() {
+            const pairs = [
+                { ui: "blanxerUiCrossedPrice", native: "id_original_price" },
+                { ui: "blanxerUiSellingPrice", native: "id_price" },
+                { ui: "blanxerUiCostPrice", native: "id_cost_price" },
+                { ui: "blanxerUiQuantity", native: "id_quantity" },
+                { ui: "blanxerUiWeight", native: "id_weight" },
+                { ui: "blanxerUiSku", native: "id_product_id" },
+                { ui: "blanxerUiAltBarcode", native: "id_alt_barcode" },
+                { ui: "blanxerUiHsCode", native: "id_hs_code" },
+                { ui: "blanxerUiChooseVariant", native: "id_colors" },
+                { ui: "blanxerUiChooseSize", native: "id_sizes" }
+            ];
+
+            pairs.forEach(pair => {
+                const uiEl = document.getElementById(pair.ui);
+                const nativeEl = document.getElementById(pair.native);
+                if (uiEl && nativeEl) {
+                    if (nativeEl.value !== undefined && nativeEl.value !== "") {
+                        uiEl.value = nativeEl.value;
+                    }
+                    uiEl.addEventListener("input", function() {
+                        nativeEl.value = uiEl.value;
+                    });
+                }
+            });
+
+            // Checkbox sync: Enable variants
+            const uiVariants = document.getElementById("blanxerUiEnableVariants");
+            const nativeVariants = document.getElementById("id_enable_variants");
+            if (uiVariants && nativeVariants) {
+                uiVariants.checked = nativeVariants.checked;
+                window.blanxerToggleVariantsMode(uiVariants.checked);
+                uiVariants.addEventListener("change", function() {
+                    nativeVariants.checked = uiVariants.checked;
+                });
+            }
+
+            // Checkbox sync: Show color preview
+            const uiPreview = document.getElementById("blanxerUiShowColorPreview");
+            const nativePreview = document.getElementById("id_show_color_preview");
+            if (uiPreview && nativePreview) {
+                uiPreview.checked = nativePreview.checked;
+                uiPreview.addEventListener("change", function() {
+                    nativePreview.checked = uiPreview.checked;
+                });
+            }
+
+            // Checkbox sync: Continue selling
+            const uiContinue = document.getElementById("blanxerUiContinueSelling");
+            const nativeContinue = document.getElementById("id_continue_selling");
+            if (uiContinue && nativeContinue) {
+                uiContinue.checked = nativeContinue.checked;
+                uiContinue.addEventListener("change", function() {
+                    nativeContinue.checked = uiContinue.checked;
+                });
+            }
+
+            // Live Image Preview on Step 0
             const fileInput = document.querySelector('input[type="file"][name="image"]');
             if (fileInput) {
                 fileInput.addEventListener('change', function(e) {

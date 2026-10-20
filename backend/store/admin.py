@@ -287,7 +287,7 @@ class ProductAdmin(ModelAdmin):
     fieldsets = (
         ('Garment Identification', {
             'fields': (
-                ('product_id', 'category'),
+                'category',
                 ('name', 'fabric_type'),
                 'status',
             ),
@@ -300,24 +300,31 @@ class ProductAdmin(ModelAdmin):
             ),
             'description': 'Choose an image file directly from your computer to replace or set the product photo.'
         }),
-        ('Pricing & Details', {
+        ('Product Details', {
             'fields': (
-                ('price', 'original_price'),
                 'is_featured',
                 'is_deleted',
                 'description',
             )
         }),
-        ('Variants & Colors (Inventory)', {
+        ('STEP 2: Variants & Inventory', {
             'fields': (
+                'enable_variants',
+                ('original_price', 'price', 'cost_price'),
+                ('quantity', 'weight', 'product_id'),
+                'alt_barcode',
+                'hs_code',
                 'colors',
+                'show_color_preview',
+                'sizes',
                 ('stock_xs', 'stock_s'),
                 ('stock_m', 'stock_l'),
                 ('stock_xl', 'stock_xxl'),
                 ('stock_xxxl', 'stock_free'),
                 'custom_sizes',
+                'continue_selling',
             ),
-            'description': 'Specify color options separated by commas (e.g. Red, Bottle Green, Mustard Yellow), and enter available units for each size. Items with 0 units automatically show as Sold Out.'
+            'description': 'Whenever you have multiple color/sizes/specs for any product, enable product variants.'
         }),
         ('🔍 Search Engine Optimization (SEO, Tags & Social Card)', {
             'fields': (

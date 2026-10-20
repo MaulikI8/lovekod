@@ -182,6 +182,7 @@ UNFOLD = {
     "SITE_TITLE": "LoveKod - Blanxer Vendor",
     "SITE_HEADER": "LoveKod (लभकोण) Boutique",
     "SITE_URL": "https://lovekod.com",
+    "THEME": "light",
     "DASHBOARD_CALLBACK": "store.admin.blanxer_dashboard_callback",
     "STYLES": ["/static/css/admin_fix.css"],
     "COLORS": {
@@ -236,6 +237,11 @@ UNFOLD = {
                         "title": "Reviews",
                         "icon": "rate_review",
                         "link": reverse_lazy("admin:store_testimonial_changelist"),
+                    },
+                    {
+                        "title": "Discount Coupons",
+                        "icon": "local_offer",
+                        "link": reverse_lazy("admin:store_coupon_changelist"),
                     },
                     {
                         "title": "Festival Moments",

@@ -285,11 +285,17 @@ export function StoreProvider({ children }) {
       const p = products.find(pr => pr.id === c.productId);
       return { ...c, name: p?.name, price: p?.price, image: p?.image };
     });
+    const finalTotal = typeof customerInfo.total === 'number'
+      ? customerInfo.total
+      : cartTotal + (cartTotal >= threshold ? 0 : 150);
+
     const orderPayload = {
       id: orderId,
       customer: customerInfo,
       items: orderItems,
-      total: cartTotal + (cartTotal >= threshold ? 0 : 150),
+      total: finalTotal,
+      couponCode: customerInfo.couponCode || '',
+      discountAmount: customerInfo.discountAmount || 0,
       status: 'Pending',
       createdAt: new Date().toISOString(),
     };

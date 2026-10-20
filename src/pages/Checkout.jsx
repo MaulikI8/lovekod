@@ -21,6 +21,40 @@ export default function Checkout() {
   });
 
   const [submitting, setSubmitting] = useState(false);
+  const [couponInput, setCouponInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponFeedback, setCouponFeedback] = useState(null);
+
+  const handleApplyCoupon = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    const code = couponInput.trim().toUpperCase();
+    if (!code) return;
+    setCouponLoading(true);
+    setCouponFeedback(null);
+    try {
+      const res = await fetch(`/api/coupons/validate/?code=${encodeURIComponent(code)}&subtotal=${cartTotal}`);
+      const data = await res.json();
+      if (res.ok && data.valid) {
+        setAppliedCoupon(data);
+        setCouponFeedback({ type: 'success', message: data.message });
+      } else {
+        setAppliedCoupon(null);
+        setCouponFeedback({ type: 'error', message: data.message || 'Invalid coupon code.' });
+      }
+    } catch {
+      setAppliedCoupon(null);
+      setCouponFeedback({ type: 'error', message: 'Could not validate coupon. Please try again.' });
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponInput('');
+    setCouponFeedback(null);
+  };
 
   if (cart.length === 0) {
     return (
@@ -32,8 +66,9 @@ export default function Checkout() {
     );
   }
 
+  const discountAmount = appliedCoupon ? appliedCoupon.discountAmount : 0;
   const deliveryFee = 150;
-  const grandTotal = cartTotal + deliveryFee;
+  const grandTotal = Math.max(0, cartTotal - discountAmount) + deliveryFee;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -46,6 +81,9 @@ export default function Checkout() {
     const orderData = {
       ...formData,
       whatsapp: formData.sameAsPhone ? formData.phone : formData.whatsapp,
+      couponCode: appliedCoupon?.code || '',
+      discountAmount: discountAmount,
+      total: grandTotal,
     };
 
     try {
@@ -91,11 +129,76 @@ export default function Checkout() {
           })}
         </div>
 
+        {/* Discount Coupon Box */}
+        <div className="checkout-coupon-section" style={{ margin: '16px 0', padding: '14px', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--marigold-gold, #f59e0b)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span>🏷️</span> Have a Discount Coupon?
+            </span>
+            {appliedCoupon && (
+              <button
+                type="button"
+                onClick={handleRemoveCoupon}
+                style={{ background: 'none', border: 'none', color: '#f87171', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', padding: '2px 6px' }}
+              >
+                ✕ Remove
+              </button>
+            )}
+          </div>
+
+          {appliedCoupon ? (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '8px' }}>
+              <div>
+                <span style={{ fontWeight: 700, fontFamily: 'monospace', color: '#34d399', fontSize: '0.9rem' }}>
+                  {appliedCoupon.code}
+                </span>
+                <span style={{ fontSize: '0.75rem', color: '#9ca3af', marginLeft: '8px' }}>
+                  ({appliedCoupon.discountType === 'percentage' ? `${appliedCoupon.discountValue}% OFF` : `Rs. ${appliedCoupon.discountValue} OFF`})
+                </span>
+              </div>
+              <span style={{ fontWeight: 700, color: '#34d399', fontSize: '0.85rem' }}>
+                - Rs. {appliedCoupon.discountAmount.toLocaleString()}
+              </span>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input
+                type="text"
+                placeholder="e.g. TIHAR10, LOVEKOD200"
+                value={couponInput}
+                onChange={e => setCouponInput(e.target.value.toUpperCase())}
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleApplyCoupon(); } }}
+                style={{ flex: 1, padding: '8px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(0,0,0,0.2)', color: '#fff', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}
+              />
+              <button
+                type="button"
+                disabled={couponLoading || !couponInput.trim()}
+                onClick={handleApplyCoupon}
+                style={{ padding: '8px 16px', borderRadius: '8px', background: '#7C3AED', color: '#fff', border: 'none', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer', opacity: couponLoading || !couponInput.trim() ? 0.6 : 1 }}
+              >
+                {couponLoading ? '...' : 'Apply'}
+              </button>
+            </div>
+          )}
+
+          {couponFeedback && (
+            <div style={{ marginTop: '8px', fontSize: '0.78rem', color: couponFeedback.type === 'success' ? '#34d399' : '#f87171' }}>
+              {couponFeedback.message}
+            </div>
+          )}
+        </div>
+
         <div className="summary-calc-rows">
           <div className="calc-row">
             <span>Subtotal</span>
             <span className="tabular-num">Rs. {cartTotal.toLocaleString()}</span>
           </div>
+          {discountAmount > 0 && (
+            <div className="calc-row" style={{ color: '#34d399', fontWeight: 600 }}>
+              <span>Coupon Discount ({appliedCoupon.code})</span>
+              <span className="tabular-num">- Rs. {discountAmount.toLocaleString()}</span>
+            </div>
+          )}
           <div className="calc-row">
             <span>Standard Delivery</span>
             <span className="tabular-num">Rs. {deliveryFee}</span>

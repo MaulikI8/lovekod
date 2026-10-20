@@ -1,0 +1,69 @@
+<div class="blanxer-products-header mb-4">
+    <!-- Top Tabs: Products | Reviews -->
+    <div class="flex items-center justify-between flex-wrap gap-4 mb-4">
+        <div class="flex items-center gap-2">
+            <a href="{% url 'admin:store_product_changelist' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-50 text-purple-700 border border-purple-200/90 font-bold text-xs shadow-2xs">
+                <span>🎁</span>
+                <span>Products</span>
+            </a>
+            <a href="{% url 'admin:store_testimonial_changelist' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-100 font-semibold text-xs transition-colors">
+                <span>⭐</span>
+                <span>Reviews</span>
+            </a>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <a href="https://lovekod.com" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-purple-500/30 text-purple-700 bg-purple-50/50 text-xs font-semibold hover:bg-purple-100 transition-colors">
+                <span>POS MODE</span>
+            </a>
+            <a href="https://lovekod.com" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-purple-500/30 text-purple-700 bg-purple-50/50 text-xs font-semibold hover:bg-purple-100 transition-colors">
+                <span>AGENT MODE</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Heading -->
+    <div class="flex items-center justify-between flex-wrap gap-3 mb-3">
+        <h1 class="text-2xl font-extrabold text-gray-900 tracking-tight">
+            Products
+        </h1>
+
+        <div class="flex items-center gap-2">
+            <!-- Do with AI Dropdown -->
+            <div class="relative inline-block text-left" x-data="{ open: false }">
+                <button @click="open = !open" type="button" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-xs font-semibold shadow-xs transition-all">
+                    <span>✨ Do with AI</span>
+                    <svg class="w-3 h-3 text-purple-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <div x-show="open" @click.away="open = false" x-cloak class="absolute right-0 mt-2 w-56 rounded-xl bg-white shadow-xl border border-gray-100 py-1.5 z-50 text-xs text-gray-700">
+                    <a href="{% url 'admin:store_product_changelist' %}" class="block px-4 py-2 hover:bg-purple-50">✨ Audit Low Stock & Sizes</a>
+                    <a href="{% url 'admin:store_product_add' %}" class="block px-4 py-2 hover:bg-purple-50">🏷️ Add New Festive Kurtha</a>
+                </div>
+            </div>
+
+            <!-- Add Product -->
+            <a href="{% url 'admin:store_product_add' %}" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold shadow-xs transition-all">
+                <span>+ Add Product</span>
+            </a>
+
+            <!-- More Actions -->
+            <button type="button" class="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 text-sm font-bold">
+                &middot;&middot;&middot;
+            </button>
+        </div>
+    </div>
+
+    <!-- Filter Pills: Active | Draft | Archived -->
+    <div class="flex items-center gap-2 pt-1 pb-2">
+        <a href="{% url 'admin:store_product_changelist' %}" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold {% if not request.GET.is_deleted and not request.GET.status %}bg-purple-100 text-purple-800 border border-purple-300 font-bold{% else %}text-gray-600 bg-gray-50 hover:bg-gray-100{% endif %}">
+            <svg class="w-3.5 h-3.5 text-purple-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+            <span>Active</span>
+        </a>
+        <a href="{% url 'admin:store_product_changelist' %}?status=draft" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold {% if request.GET.status == 'draft' %}bg-purple-100 text-purple-800 border border-purple-300 font-bold{% else %}text-gray-600 bg-gray-50 hover:bg-gray-100{% endif %}">
+            <span>Draft</span>
+        </a>
+        <a href="{% url 'admin:store_product_changelist' %}?is_deleted=1" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold {% if request.GET.is_deleted == '1' %}bg-purple-100 text-purple-800 border border-purple-300 font-bold{% else %}text-gray-600 bg-gray-50 hover:bg-gray-100{% endif %}">
+            <span>Archived</span>
+        </a>
+    </div>
+</div>

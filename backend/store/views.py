@@ -2,7 +2,7 @@ import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404
-from .models import Category, Product, SiteSettings, FestivalMoment, Testimonial, Order, OrderItem
+from .models import Category, Product, SiteSettings, FestivalMoment, Testimonial, Order, OrderItem, Coupon
 
 DEFAULT_CATEGORIES = [
     {'name': 'All Sets', 'slug': 'all', 'nepali_name': '', 'order': 1},
@@ -606,6 +606,8 @@ def order_list_create(request):
 
             items = data.get('items', [])
             total = int(data.get('total', 0))
+            coupon_code = (data.get('couponCode') or data.get('coupon_code') or '').strip().upper()
+            discount_amount = int(data.get('discountAmount') or data.get('discount_amount') or 0)
             order_id = data.get('id')
             if not order_id:
                 import time, random
@@ -622,8 +624,16 @@ def order_list_create(request):
                 note=c_note,
                 payment_method=c_payment,
                 total=total,
+                coupon_code=coupon_code,
+                discount_amount=discount_amount,
                 status=data.get('status', 'Pending'),
             )
+
+            if coupon_code:
+                c_obj = Coupon.objects.filter(code=coupon_code, is_deleted=False).first()
+                if c_obj:
+                    c_obj.used_count += 1
+                    c_obj.save(update_fields=['used_count'])
 
             calc_items_total = 0
             for item in items:
@@ -720,3 +730,56 @@ def admin_login_api(request):
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
     return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+
+@csrf_exempt
+def coupon_validate(request):
+    """Validate coupon code against order subtotal and return discount amount."""
+    code = ''
+    subtotal = 0
+    if request.method == 'GET':
+        code = request.GET.get('code', '').strip().upper()
+        try:
+            subtotal = int(request.GET.get('subtotal', 0))
+        except (ValueError, TypeError):
+            subtotal = 0
+    elif request.method == 'POST':
+        try:
+            body = json.loads(request.body.decode('utf-8'))
+            code = (body.get('code') or '').strip().upper()
+            subtotal = int(body.get('subtotal') or 0)
+        except Exception:
+            return JsonResponse({'valid': False, 'message': 'Invalid request body.'}, status=400)
+    else:
+        return JsonResponse({'valid': False, 'message': 'Method not allowed.'}, status=405)
+
+    if not code:
+        return JsonResponse({'valid': False, 'message': 'Please enter a coupon code.'}, status=400)
+
+    coupon = Coupon.objects.filter(code=code, is_deleted=False).first()
+    if not coupon:
+        return JsonResponse({'valid': False, 'message': f"Coupon '{code}' does not exist."}, status=404)
+
+    is_valid, reason = coupon.is_valid(subtotal)
+    if not is_valid:
+        return JsonResponse({'valid': False, 'message': reason}, status=400)
+
+    discount = coupon.calculate_discount(subtotal)
+    new_total = max(0, subtotal - discount)
+
+    return JsonResponse({
+        'valid': True,
+        'code': coupon.code,
+        'description': coupon.description,
+        'discountType': coupon.discount_type,
+        'discountValue': coupon.discount_value,
+        'discountAmount': discount,
+        'newTotal': new_total,
+        'message': f"Coupon '{coupon.code}' applied! Saved Rs. {discount:,}",
+    })
+
+
+def coupon_list(request):
+    """Return list of active public coupons for promotion banners."""
+    coupons = Coupon.objects.filter(is_deleted=False, is_active=True).order_by('-created_at')
+    return JsonResponse([c.to_dict() for c in coupons], safe=False)

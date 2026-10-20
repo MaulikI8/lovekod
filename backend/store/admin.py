@@ -4,7 +4,8 @@ from django.shortcuts import redirect
 from django.utils.html import format_html
 from unfold.admin import ModelAdmin, TabularInline
 from unfold.decorators import action
-from .models import Category, Product, SiteSettings, FestivalMoment, Testimonial, Order, OrderItem
+from .models import Category, Product, SiteSettings, FestivalMoment, Testimonial, Order, OrderItem, Coupon
+from django.urls import reverse
 
 admin.site.site_header = "LoveKod Boutique Administration"
 admin.site.site_title = "LoveKod Admin"
@@ -165,15 +166,17 @@ class OrderItemInline(TabularInline):
 @admin.register(Product)
 class ProductAdmin(ModelAdmin):
     list_display = (
-        'image_preview',
-        'product_details',
-        'category',
+        'row_number',
+        'blanxer_name',
+        'avg_rating_display',
         'price_display',
-        'inventory_display',
-        'is_featured',
-        'trash_status',
+        'inventory_pill',
+        'status_pill',
+        'created_display',
+        'actions_button',
     )
-    list_filter = (TrashStatusFilter, 'category', 'fabric_type', 'is_featured')
+    list_before_template = "admin/store/product/change_list_header.html"
+    list_filter = ('status', 'category', 'fabric_type', 'is_featured', TrashStatusFilter)
     search_fields = ('name', 'product_id', 'fabric_type')
     readonly_fields = ('image_display',)
     actions = COMMON_ACTIONS
@@ -185,7 +188,7 @@ class ProductAdmin(ModelAdmin):
             'fields': (
                 ('product_id', 'category'),
                 ('name', 'fabric_type'),
-                'pieces',
+                ('status', 'pieces'),
             )
         }),
         ('Product Imagery (Upload from Computer)', {
@@ -199,6 +202,7 @@ class ProductAdmin(ModelAdmin):
             'fields': (
                 ('price', 'original_price'),
                 ('badge', 'is_featured'),
+                ('rating', 'reviews_count'),
                 'is_deleted',
                 'description',
             )
@@ -215,67 +219,230 @@ class ProductAdmin(ModelAdmin):
         }),
     )
 
-    def trash_status(self, obj):
-        return deletion_badge(obj)
-    trash_status.short_description = "Status"
+    def row_number(self, obj):
+        return format_html('<span class="text-xs font-semibold text-gray-500">{}</span>', obj.id)
+    row_number.short_description = "#"
+    row_number.admin_order_field = "id"
 
-    def image_preview(self, obj):
+    def blanxer_name(self, obj):
         img_url = obj.get_image_url()
-        placeholder = '/images/kurtha-charcoal.jpg'
+        edit_url = reverse('admin:store_product_change', args=[obj.id])
         return format_html(
-            '<div style="width: 46px; height: 56px; border-radius: 6px; overflow: hidden; background: #231916; border: 1px solid rgba(255,255,255,0.12); display: flex; align-items: center; justify-content: center;">'
-            '<img src="{}" onerror="this.onerror=null; this.src=\'' + placeholder + '\';" style="width: 100%; height: 100%; object-fit: cover;" alt="preview" />'
+            '<div class="flex items-center gap-3.5 py-1">'
+            '<div class="w-11 h-14 rounded-lg overflow-hidden border border-gray-200 bg-gray-50 flex-shrink-0 shadow-2xs">'
+            '<img src="{}" onerror="this.onerror=null; this.src=&quot;/images/kurtha-charcoal.jpg&quot;;" class="w-full h-full object-cover" alt="{}" />'
+            '</div>'
+            '<div class="min-w-0">'
+            '<a href="{}" class="font-bold text-gray-900 hover:text-purple-600 transition-colors text-sm tracking-tight block truncate">{}</a>'
+            '<span class="text-[11px] text-gray-400 font-mono">SKU: {}</span>'
+            '</div>'
             '</div>',
-            img_url
+            img_url, obj.name, edit_url, obj.name, obj.product_id
         )
-    image_preview.short_description = "Photo"
+    blanxer_name.short_description = "NAME"
+    blanxer_name.admin_order_field = "name"
 
-    def product_details(self, obj):
-        badge_html = f' <span style="background: rgba(192,129,122,0.2); color: #c0817a; border: 1px solid rgba(192,129,122,0.4); padding: 1px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 600;">{obj.badge}</span>' if obj.badge else ''
+    def avg_rating_display(self, obj):
+        r = int(obj.rating) if obj.rating else 0
+        cnt = obj.reviews_count or 0
+        star_color = "#F59E0B" if r > 0 else "#9CA3AF"
         return format_html(
-            '<div>'
-            '<div style="font-weight: 600; font-size: 0.92rem; color: #f3ece6;">{}{}</div>'
-            '<div style="font-size: 0.75rem; color: #8e807a; margin-top: 3px;">SKU: <code style="background: rgba(255,255,255,0.06); padding: 1px 4px; border-radius: 3px; font-weight: 600; color: #d6ccc7;">{}</code> &bull; {}</div>'
+            '<div class="flex items-center gap-1.5 font-bold text-xs text-gray-800">'
+            '<span style="color: {}; font-size: 14px;">★</span>'
+            '<span>{} <span class="font-normal text-gray-400">({})</span></span>'
             '</div>',
-            obj.name,
-            format_html(badge_html),
-            obj.product_id,
-            obj.fabric_type
+            star_color, r, cnt
         )
-    product_details.short_description = "Product Name & SKU"
+    avg_rating_display.short_description = "AVG RATING"
+    avg_rating_display.admin_order_field = "rating"
 
     def price_display(self, obj):
-        orig_html = f'<span style="text-decoration: line-through; color: #887872; font-size: 0.78rem; margin-left: 6px;">Rs. {obj.original_price:,}</span>' if obj.original_price and obj.original_price > obj.price else ''
-        formatted_price = f"{obj.price:,}" if obj.price else "0"
+        formatted_price = f"{obj.price or 0:,}"
         return format_html(
-            '<div style="font-weight: 600; color: #c0817a; font-size: 0.9rem;">Rs. {}{}</div>',
-            formatted_price,
-            format_html(orig_html)
+            '<span class="font-bold text-gray-900 text-xs tracking-tight">Rs {}</span>',
+            formatted_price
         )
-    price_display.short_description = "Price"
+    price_display.short_description = "PRICE"
+    price_display.admin_order_field = "price"
 
-    def inventory_display(self, obj):
+    def inventory_pill(self, obj):
         tot = obj.total_stock()
-        color = '#34d399' if tot > 5 else ('#fbbf24' if tot > 0 else '#f87171')
-        bg = 'rgba(16, 185, 129, 0.15)' if tot > 5 else ('rgba(251, 191, 36, 0.15)' if tot > 0 else 'rgba(239, 68, 68, 0.15)')
+        sizes = obj.get_sizes_dict()
+        active_variants = [k for k, v in sizes.items() if (v or 0) > 0]
+        
+        if len(active_variants) > 1:
+            text = f"{tot} FOR {len(active_variants)} VARIANTS"
+            bg_color = "bg-emerald-50 text-emerald-700 border-emerald-200" if tot <= 20 else "bg-rose-50 text-rose-700 border-rose-200"
+        elif tot > 0:
+            text = str(tot)
+            bg_color = "bg-emerald-50 text-emerald-700 border-emerald-200"
+        else:
+            text = "0"
+            bg_color = "bg-gray-100 text-gray-400 border-gray-200"
+
         return format_html(
-            '<div style="display: inline-flex; align-items: center; gap: 6px; background: {}; color: {}; border: 1px solid {}; padding: 3px 10px; border-radius: 6px; font-weight: 600; font-size: 0.82rem;">'
-            '<span>{} units</span>'
-            '</div>',
-            bg, color, color, tot
+            '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold border {}">'
+            '{}'
+            '</span>',
+            bg_color, text
         )
-    inventory_display.short_description = "Total Stock"
+    inventory_pill.short_description = "INVENTORY"
+
+    def status_pill(self, obj):
+        st = (obj.status or 'active').lower()
+        if obj.is_deleted or st == 'archived':
+            return format_html(
+                '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-gray-100 text-gray-500 border border-gray-200">'
+                'ARCHIVED'
+                '</span>'
+            )
+        elif st == 'draft':
+            return format_html(
+                '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-200">'
+                'DRAFT'
+                '</span>'
+            )
+        return format_html(
+            '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-teal-50 text-teal-700 border border-teal-200">'
+            'ACTIVE'
+            '</span>'
+        )
+    status_pill.short_description = "STATUS"
+    status_pill.admin_order_field = "status"
+
+    def created_display(self, obj):
+        from django.utils import timezone
+        created = timezone.localtime(obj.created_at) if obj.created_at else None
+        txt = created.strftime("%b %d, %Y %I:%M %p") if created else "-"
+        return format_html('<span class="text-xs text-gray-500">{}</span>', txt)
+    created_display.short_description = "CREATED"
+    created_display.admin_order_field = "created_at"
+
+    def actions_button(self, obj):
+        edit_url = reverse('admin:store_product_change', args=[obj.id])
+        return format_html(
+            '<div class="flex items-center justify-end">'
+            '<a href="{}" class="w-8 h-8 rounded-lg inline-flex items-center justify-center text-purple-600 hover:bg-purple-50 transition-colors font-extrabold text-base tracking-widest" title="Edit Product">'
+            '&middot;&middot;&middot;'
+            '</a>'
+            '</div>',
+            edit_url
+        )
+    actions_button.short_description = "ACTIONS"
 
     def image_display(self, obj):
         img_url = obj.get_image_url()
         placeholder = '/images/kurtha-charcoal.jpg'
         return format_html(
             '<div style="margin-top: 8px;">'
-            '<img src="{}" onerror="this.onerror=null; this.src=\'' + placeholder + '\';" style="max-width: 260px; max-height: 340px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 4px 16px rgba(0,0,0,0.3);" />'
+            '<img src="{}" onerror="this.onerror=null; this.src='' + placeholder + '';" style="max-width: 260px; max-height: 340px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 4px 16px rgba(0,0,0,0.08);" />'
             '</div>',
             img_url
         )
     image_display.short_description = "Current Preview"
+
+
+@admin.register(Coupon)
+class CouponAdmin(ModelAdmin):
+    list_display = (
+        'code_badge',
+        'discount_badge',
+        'min_purchase_display',
+        'usage_display',
+        'is_active',
+        'valid_until_display',
+        'created_at_display',
+    )
+    list_filter = ('is_active', 'discount_type', TrashStatusFilter)
+    search_fields = ('code', 'description')
+    list_editable = ('is_active',)
+    actions = COMMON_ACTIONS
+    actions_on_top = True
+    actions_on_bottom = True
+
+    fieldsets = (
+        ('Coupon Identification', {
+            'fields': (
+                'code',
+                'description',
+                'is_active',
+            ),
+            'description': 'Enter uppercase promo code that customers enter at checkout (e.g. TIHAR10, LOVEKOD200).'
+        }),
+        ('Discount Benefits', {
+            'fields': (
+                ('discount_type', 'discount_value'),
+                ('min_purchase_amount', 'max_discount_amount'),
+            ),
+            'description': 'Configure percentage or flat Rs reduction, minimum purchase threshold, and max discount ceiling.'
+        }),
+        ('Redemption Limits & Validity', {
+            'fields': (
+                ('usage_limit', 'used_count'),
+                ('valid_from', 'valid_until'),
+                'is_deleted',
+            ),
+            'description': 'Limit total redemptions or schedule expiration date.'
+        }),
+    )
+
+    def code_badge(self, obj):
+        return format_html(
+            '<span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-mono font-bold bg-purple-50 text-purple-700 border border-purple-200">'
+            '🏷️ {}'
+            '</span>',
+            obj.code
+        )
+    code_badge.short_description = "Coupon Code"
+    code_badge.admin_order_field = "code"
+
+    def discount_badge(self, obj):
+        if obj.discount_type == 'percentage':
+            return format_html(
+                '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">'
+                '{}% OFF'
+                '</span>',
+                obj.discount_value
+            )
+        formatted_val = f"{obj.discount_value:,}"
+        return format_html(
+            '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">'
+            'Rs. {} FLAT'
+            '</span>',
+            formatted_val
+        )
+    discount_badge.short_description = "Discount"
+
+    def min_purchase_display(self, obj):
+        if obj.min_purchase_amount > 0:
+            formatted_min = f"{obj.min_purchase_amount:,}"
+            return format_html('<span class="text-xs font-semibold text-gray-700">Rs. {}</span>', formatted_min)
+        return format_html('<span class="text-xs text-gray-400">No Minimum</span>')
+    min_purchase_display.short_description = "Min Order"
+
+    def usage_display(self, obj):
+        limit = f"{obj.usage_limit}" if obj.usage_limit else "∞"
+        return format_html(
+            '<span class="text-xs font-semibold text-gray-700">{used} / {limit}</span>',
+            used=obj.used_count,
+            limit=limit
+        )
+    usage_display.short_description = "Used / Limit"
+
+    def valid_until_display(self, obj):
+        if obj.valid_until:
+            from django.utils import timezone
+            t = timezone.localtime(obj.valid_until)
+            return format_html('<span class="text-xs text-gray-600">{}</span>', t.strftime("%b %d, %Y"))
+        return format_html('<span class="text-xs text-gray-400">No Expiry</span>')
+    valid_until_display.short_description = "Expires"
+
+    def created_at_display(self, obj):
+        from django.utils import timezone
+        t = timezone.localtime(obj.created_at) if obj.created_at else None
+        txt = t.strftime("%b %d, %Y") if t else "-"
+        return format_html('<span class="text-xs text-gray-500">{}</span>', txt)
+    created_at_display.short_description = "Created"
 
 
 @admin.register(SiteSettings)
@@ -531,8 +698,27 @@ def blanxer_dashboard_callback(request, context):
     products_count = Product.objects.filter(is_deleted=False).count()
     categories_count = Category.objects.filter(is_deleted=False).count()
 
-    recent_orders = active_orders.order_by('-created_at')[:6]
+    recent_orders = active_orders.order_by('-created_at')[:8]
     recent_products = Product.objects.filter(is_deleted=False).order_by('-id')[:6]
+
+    # Live Low Stock Watch (Items with <= 5 total units)
+    low_stock_products = []
+    for p in Product.objects.filter(is_deleted=False):
+        tot = p.total_stock()
+        if tot <= 5:
+            low_stock_products.append({
+                'id': p.id,
+                'name': p.name,
+                'image': p.get_image_url(),
+                'price': f"{p.price:,}",
+                'stock': tot,
+            })
+        if len(low_stock_products) >= 6:
+            break
+
+    # Live Active Coupons & Campaigns
+    active_coupons = Coupon.objects.filter(is_deleted=False, is_active=True).order_by('-created_at')[:5]
+    coupons_count = Coupon.objects.filter(is_deleted=False, is_active=True).count()
 
     context.update({
         'greeting': greeting,
@@ -551,5 +737,8 @@ def blanxer_dashboard_callback(request, context):
         'categories_count': categories_count,
         'recent_orders': recent_orders,
         'recent_products': recent_products,
+        'low_stock_products': low_stock_products,
+        'active_coupons': active_coupons,
+        'coupons_count': coupons_count,
     })
     return context

@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   LOVEKOD ADMIN FIXES & RESPONSIVE POLISH
+   LOVEKOD ADMIN FIXES & BLANXER LIGHT-THEME STYLING
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* 1. Prevent sidebar from overlaying form content on desktop/laptop */
@@ -34,6 +34,10 @@
     min-width: 160px !important;
     display: block !important;
     visibility: visible !important;
+    border-radius: 8px !important;
+    border-color: #E5E7EB !important;
+    background-color: #FFFFFF !important;
+    color: #111827 !important;
 }
 
 /* 3. Form controls & fieldsets fit nicely */
@@ -60,7 +64,7 @@ textarea, input[type="text"], input[type="email"], input[type="number"], select 
     text-align: center !important;
 }
 
-/* 6. Blanxer-Style Horizontal Table (Prevents vertical stacking of columns) */
+/* 6. Blanxer-Style Crisp Light Table (Matches Blanxer Merchant Dashboard) */
 table#result_list,
 .result-list {
     display: table !important;
@@ -68,6 +72,11 @@ table#result_list,
     table-layout: auto !important;
     border-collapse: separate !important;
     border-spacing: 0 !important;
+    background: #FFFFFF !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+    border: 1px solid #E5E7EB !important;
 }
 
 table#result_list thead {
@@ -76,42 +85,52 @@ table#result_list thead {
 
 table#result_list thead tr {
     display: table-row !important;
-    height: 44px !important;
+    height: 48px !important;
+    background: #F9FAFB !important;
 }
 
 table#result_list thead th {
     display: table-cell !important;
     vertical-align: middle !important;
-    padding: 10px 14px !important;
+    padding: 12px 16px !important;
     white-space: nowrap !important;
-    font-size: 0.75rem !important;
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
     text-transform: uppercase !important;
-    letter-spacing: 0.05em !important;
-    color: #9c8e88 !important;
-    background: rgba(255, 255, 255, 0.03) !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    letter-spacing: 0.06em !important;
+    color: #4B5563 !important;
+    background: #F9FAFB !important;
+    border-bottom: 1px solid #E5E7EB !important;
+}
+
+table#result_list thead th a {
+    color: #4B5563 !important;
+    font-weight: 700 !important;
 }
 
 table#result_list tbody {
     display: table-row-group !important;
+    background: #FFFFFF !important;
 }
 
-table#result_list tbody tr.data-row {
+table#result_list tbody tr {
     display: table-row !important;
     transition: background 0.15s ease !important;
+    border-bottom: 1px solid #F3F4F6 !important;
 }
 
-table#result_list tbody tr.data-row:hover {
-    background: rgba(255, 255, 255, 0.04) !important;
+table#result_list tbody tr:hover {
+    background: #FAF5FF !important; /* Soft Blanxer purple hover */
 }
 
-table#result_list tbody tr.data-row td,
-table#result_list tbody tr.data-row th {
+table#result_list tbody tr td,
+table#result_list tbody tr th {
     display: table-cell !important;
     vertical-align: middle !important;
-    padding: 10px 14px !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
-    font-size: 0.875rem !important;
+    padding: 12px 16px !important;
+    border-top: 1px solid #F3F4F6 !important;
+    font-size: 0.85rem !important;
+    color: #111827 !important;
 }
 
 table#result_list .action-checkbox-column,
@@ -122,22 +141,16 @@ table#result_list .action-checkbox {
     text-align: center !important;
 }
 
-table#result_list .field-image_preview {
-    width: 62px !important;
-    min-width: 62px !important;
-}
-
-
 /* ═══════════════════════════════════════════════════════════════════════════
-   BLANXER VENDOR THEME STYLES (PURPLE HIGHLIGHTS & ROUNDED CARDS)
+   BLANXER VENDOR THEME STYLES (PURPLE HIGHLIGHTS & LIGHT THEME CARDS)
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* Blanxer Sidebar Active State */
 #nav-sidebar a.active,
 #nav-sidebar a[aria-current="page"] {
-    background-color: #F3EFFE !important;
+    background-color: #EDE9FE !important;
     color: #7C3AED !important;
-    font-weight: 600 !important;
+    font-weight: 700 !important;
     border-radius: 8px !important;
 }
 
@@ -146,8 +159,52 @@ table#result_list .field-image_preview {
     color: #7C3AED !important;
 }
 
-/* Blanxer Rounded Card Accents */
+/* Blanxer Light Dashboard Cards */
+.blanxer-dashboard-wrapper {
+    background-color: transparent !important;
+}
+
 .blanxer-dashboard-wrapper .rounded-2xl {
     border-radius: 16px !important;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04) !important;
+    background-color: #FFFFFF !important;
+    border-color: #E5E7EB !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BULK ACTIONS FLOATING BAR (PREVENT OVERLAPPING SIDEBAR & USER BADGE)
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (min-width: 768px) {
+    div:has(> #changelist-actions-wrapper),
+    .group-has-\[input\.action-select\:checked\]\:flex {
+        left: 280px !important;
+        inset-inline-start: 280px !important;
+        max-width: calc(100vw - 310px) !important;
+        bottom: 16px !important;
+        z-index: 50 !important;
+    }
+    #changelist-actions {
+        width: auto !important;
+        max-width: 100% !important;
+    }
+    #changelist-actions > div {
+        border-radius: 12px !important;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15) !important;
+        border: 1px solid #E5E7EB !important;
+        background: #FFFFFF !important;
+        color: #111827 !important;
+    }
+}
+
+@media (max-width: 767px) {
+    div:has(> #changelist-actions-wrapper),
+    .group-has-\[input\.action-select\:checked\]\:flex {
+        left: 12px !important;
+        inset-inline-start: 12px !important;
+        right: 12px !important;
+        inset-inline-end: 12px !important;
+        max-width: calc(100vw - 24px) !important;
+        bottom: 12px !important;
+    }
 }

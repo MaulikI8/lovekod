@@ -169,91 +169,125 @@
     </div>
 
 
-    <!-- ══ 4. TWO-COLUMN ANALYTICS CARDS (HOURLY & WEEKLY) ══ -->
+        <!-- ══ 4. REAL STORE OPERATIONS & LIVE INVENTORY PANELS ══ -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
-        <!-- HOURLY ORDER STATISTICS -->
-        <div class="bg-white dark:bg-base-900 rounded-2xl border border-gray-200/80 dark:border-gray-800 p-5 shadow-xs">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-sm font-bold text-gray-900 dark:text-white">Hourly Order Statistics</h3>
-                <span class="text-xs text-gray-400">Realtime Distribution</span>
+        <!-- PANEL 1: LIVE INVENTORY & LOW STOCK WATCH -->
+        <div class="bg-white rounded-2xl border border-gray-200/80 p-5 shadow-xs flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-2">
+                        <span class="text-base">⚠️</span>
+                        <h3 class="text-sm font-bold text-gray-900">Inventory &amp; Low Stock Watch</h3>
+                    </div>
+                    <a href="{% url 'admin:store_product_changelist' %}" class="text-xs font-semibold text-purple-600 hover:text-purple-700">
+                        View Inventory &rarr;
+                    </a>
+                </div>
+                <p class="text-xs text-gray-500 mb-4">Outfits with low remaining units across sizes (XS through 3XL)</p>
+
+                <div class="space-y-3">
+                    {% for item in low_stock_products %}
+                    <div class="flex items-center justify-between p-2.5 rounded-xl bg-gray-50/80 border border-gray-100 hover:border-purple-200 transition-colors">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="w-10 h-12 rounded-lg overflow-hidden bg-white border border-gray-200 flex-shrink-0">
+                                <img src="{{ item.image }}" class="w-full h-full object-cover" alt="{{ item.name }}" />
+                            </div>
+                            <div class="min-w-0">
+                                <a href="{% url 'admin:store_product_change' item.id %}" class="text-xs font-bold text-gray-900 hover:text-purple-600 block truncate">
+                                    {{ item.name }}
+                                </a>
+                                <span class="text-[11px] text-gray-500">Rs. {{ item.price }}</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2 flex-shrink-0">
+                            {% if item.stock == 0 %}
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                                0 UNITS (OUT)
+                            </span>
+                            {% else %}
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                {{ item.stock }} left
+                            </span>
+                            {% endif %}
+                            <a href="{% url 'admin:store_product_change' item.id %}" class="text-xs font-semibold text-purple-600 hover:bg-purple-50 px-2 py-1 rounded-md">
+                                Restock
+                            </a>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="p-6 text-center text-xs text-gray-500 bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
+                        <span class="text-xl mb-1 block">✨</span>
+                        All boutique items are healthy &amp; well-stocked across boutique sizes.
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
 
-            <!-- Stylized chart grid matching Blanxer -->
-            <div class="relative h-44 flex flex-col justify-between py-2">
-                <div class="border-b border-dashed border-gray-100 dark:border-gray-800 flex items-center justify-between text-[11px] text-gray-400 pb-1">
-                    <span>4</span>
-                    <span class="w-full ml-4 border-b border-dashed border-gray-100 dark:border-gray-800"></span>
-                </div>
-                <div class="border-b border-dashed border-gray-100 dark:border-gray-800 flex items-center justify-between text-[11px] text-gray-400 pb-1">
-                    <span>3</span>
-                    <span class="w-full ml-4 border-b border-dashed border-gray-100 dark:border-gray-800"></span>
-                </div>
-                <div class="border-b border-dashed border-gray-100 dark:border-gray-800 flex items-center justify-between text-[11px] text-gray-400 pb-1">
-                    <span>2</span>
-                    <span class="w-full ml-4 border-b border-dashed border-gray-100 dark:border-gray-800"></span>
-                </div>
-                <div class="border-b border-dashed border-gray-100 dark:border-gray-800 flex items-center justify-between text-[11px] text-gray-400 pb-1">
-                    <span>1</span>
-                    <span class="w-full ml-4 border-b border-dashed border-gray-100 dark:border-gray-800"></span>
-                </div>
-
-                <!-- Live Bars Simulation -->
-                <div class="absolute inset-x-8 bottom-3 top-6 flex items-end justify-between gap-2 pt-2">
-                    <div class="w-4 bg-purple-100 dark:bg-purple-950/40 rounded-t h-[20%]"></div>
-                    <div class="w-4 bg-purple-200 dark:bg-purple-900/40 rounded-t h-[35%]"></div>
-                    <div class="w-4 bg-purple-300 dark:bg-purple-800/40 rounded-t h-[50%]"></div>
-                    <div class="w-4 bg-purple-500 rounded-t h-[80%]"></div>
-                    <div class="w-4 bg-purple-600 rounded-t h-[60%]"></div>
-                    <div class="w-4 bg-purple-400 rounded-t h-[40%]"></div>
-                    <div class="w-4 bg-purple-200 dark:bg-purple-900/40 rounded-t h-[30%]"></div>
-                </div>
-            </div>
-
-            <div class="flex justify-between text-[10px] text-gray-400 px-6 mt-1">
-                <span>9 AM</span>
-                <span>12 PM</span>
-                <span>3 PM</span>
-                <span>6 PM</span>
-                <span>9 PM</span>
+            <div class="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+                <span>{{ products_count }} active boutique products</span>
+                <a href="{% url 'admin:store_product_add' %}" class="font-semibold text-purple-600 hover:underline">+ Add New Outfit</a>
             </div>
         </div>
 
-        <!-- WEEKLY SALES -->
-        <div class="bg-white dark:bg-base-900 rounded-2xl border border-gray-200/80 dark:border-gray-800 p-5 shadow-xs flex flex-col justify-between">
+        <!-- PANEL 2: ACTIVE DISCOUNT COUPONS & CAMPAIGNS -->
+        <div class="bg-white rounded-2xl border border-gray-200/80 p-5 shadow-xs flex flex-col justify-between">
             <div>
-                <div class="flex items-center justify-between mb-1">
-                    <h3 class="text-sm font-bold text-gray-900 dark:text-white">Weekly Sales</h3>
-                    <div class="flex items-center gap-3 text-[11px]">
-                        <span class="inline-flex items-center gap-1 text-gray-600 dark:text-gray-300">
-                            <span class="w-2.5 h-2.5 rounded-sm bg-purple-600"></span> This week
-                        </span>
-                        <span class="inline-flex items-center gap-1 text-gray-400">
-                            <span class="w-2.5 h-2.5 rounded-sm bg-gray-300 dark:bg-gray-700"></span> Last week
-                        </span>
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-2">
+                        <span class="text-base">🏷️</span>
+                        <h3 class="text-sm font-bold text-gray-900">Discount Coupons &amp; Promotions</h3>
                     </div>
+                    <a href="{% url 'admin:store_coupon_add' %}" class="inline-flex items-center gap-1 text-xs font-semibold text-purple-600 hover:text-purple-700 bg-purple-50 px-2.5 py-1 rounded-lg">
+                        <span>+ New Coupon</span>
+                    </a>
                 </div>
+                <p class="text-xs text-gray-500 mb-4">Active checkout promo codes and customer redemption stats</p>
 
-                <p class="text-xs text-gray-400 mb-3">Sunday to today, against the same days last week</p>
+                <div class="space-y-3">
+                    {% for c in active_coupons %}
+                    <div class="flex items-center justify-between p-3 rounded-xl bg-gray-50/80 border border-gray-100 hover:border-purple-200 transition-colors">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="font-mono font-bold text-xs text-purple-700 bg-purple-100/70 px-2 py-0.5 rounded-md border border-purple-200">
+                                    {{ c.code }}
+                                </span>
+                                {% if c.discount_type == 'percentage' %}
+                                <span class="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                                    {{ c.discount_value }}% OFF
+                                </span>
+                                {% else %}
+                                <span class="text-[11px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
+                                    Rs. {{ c.discount_value }} OFF
+                                </span>
+                                {% endif %}
+                            </div>
+                            <p class="text-[11px] text-gray-500 mt-1 truncate max-w-xs">
+                                {{ c.description|default:'Valid on all festive orders' }}
+                            </p>
+                        </div>
 
-                <div class="flex items-baseline gap-2 mb-4">
-                    <span class="text-sm font-semibold text-gray-400">Rs</span>
-                    <span class="text-3xl font-extrabold text-gray-900 dark:text-white">{{ total_revenue }}</span>
-                    <span class="text-xs text-gray-400 ml-1">Active Boutique Orders</span>
+                        <div class="text-right">
+                            <span class="text-xs font-semibold text-gray-700 block">
+                                {{ c.used_count }} redeemed
+                            </span>
+                            <span class="text-[10px] text-gray-400">
+                                {% if c.min_purchase_amount > 0 %}Min Rs. {{ c.min_purchase_amount }}{% else %}No min{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="p-6 text-center text-xs text-gray-500 bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
+                        <span class="text-xl mb-1 block">🏷️</span>
+                        No active discount coupons. Launch a festive campaign!
+                    </div>
+                    {% endfor %}
                 </div>
             </div>
 
-            <!-- Area Curve Line Mock -->
-            <div class="w-full h-28 relative flex items-end">
-                <svg class="w-full h-full text-purple-600 overflow-visible" viewBox="0 0 300 80" fill="none">
-                    <path d="M0,70 C50,65 100,50 150,35 C200,20 250,10 300,5 L300,80 L0,80 Z" fill="url(#purpleGradient)" opacity="0.2"/>
-                    <path d="M0,70 C50,65 100,50 150,35 C200,20 250,10 300,5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-                    <defs>
-                        <linearGradient id="purpleGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" stop-color="#7C3AED"/>
-                            <stop offset="100%" stop-color="#7C3AED" stop-opacity="0"/>
-                        </linearGradient>
-                    </defs>
-                </svg>
+            <div class="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+                <span>{{ coupons_count }} active promotion(s)</span>
+                <a href="{% url 'admin:store_coupon_changelist' %}" class="font-semibold text-purple-600 hover:underline">Manage All Coupons &rarr;</a>
             </div>
         </div>
     </div>

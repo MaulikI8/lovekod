@@ -46,6 +46,14 @@ class Product(models.Model):
     )
     badge = models.CharField(max_length=100, blank=True, default='')
     is_featured = models.BooleanField(default=False)
+    status = models.CharField(
+        max_length=20,
+        choices=[('active', 'Active'), ('draft', 'Draft'), ('archived', 'Archived')],
+        default='active',
+        help_text="Product visibility status"
+    )
+    rating = models.FloatField(default=0.0, help_text="Average rating (e.g. 5.0)")
+    reviews_count = models.PositiveIntegerField(default=0, help_text="Number of customer reviews")
     is_deleted = models.BooleanField(default=False, db_index=True, help_text="Soft delete flag")
 
     # Customizable inventory tracking across boutique sizes
@@ -134,6 +142,9 @@ class Product(models.Model):
             'badge': self.badge,
             'isFeatured': self.is_featured,
             'isDeleted': self.is_deleted,
+            'status': self.status,
+            'rating': self.rating,
+            'reviewsCount': self.reviews_count,
             'sizes': self.get_sizes_dict(),
         }
 
@@ -430,6 +441,8 @@ class Order(models.Model):
         ]
     )
     total = models.IntegerField(default=0)
+    coupon_code = models.CharField(max_length=50, blank=True, default='')
+    discount_amount = models.IntegerField(default=0)
     status = models.CharField(
         max_length=50,
         default='Pending',
@@ -464,6 +477,8 @@ class Order(models.Model):
             },
             'items': [item.to_dict() for item in self.items.all()],
             'total': self.total,
+            'couponCode': self.coupon_code,
+            'discountAmount': self.discount_amount,
             'status': self.status,
             'isDeleted': self.is_deleted,
             'createdAt': self.created_at.isoformat(),
@@ -565,3 +580,76 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.size} x {self.quantity})"
+
+
+class Coupon(models.Model):
+    DISCOUNT_TYPE_CHOICES = [
+        ('percentage', 'Percentage (%)'),
+        ('fixed', 'Flat Amount (Rs)'),
+    ]
+    code = models.CharField(max_length=50, unique=True, db_index=True, help_text="Coupon code in UPPERCASE (e.g. FESTIVE10, LOVEKOD500)")
+    description = models.CharField(max_length=255, blank=True, default='')
+    discount_type = models.CharField(max_length=20, choices=DISCOUNT_TYPE_CHOICES, default='percentage')
+    discount_value = models.PositiveIntegerField(default=10, help_text="Percentage discount (e.g. 10) or Flat Rs amount (e.g. 500)")
+    min_purchase_amount = models.PositiveIntegerField(default=0, help_text="Minimum order subtotal needed in Rs (0 for no minimum)")
+    max_discount_amount = models.PositiveIntegerField(null=True, blank=True, help_text="Maximum discount cap in Rs for percentage discounts (optional)")
+    usage_limit = models.PositiveIntegerField(null=True, blank=True, help_text="Total times this coupon can be used across all orders (blank for unlimited)")
+    used_count = models.PositiveIntegerField(default=0, help_text="Number of times redeemed")
+    is_active = models.BooleanField(default=True, help_text="Enable or disable this coupon")
+    valid_from = models.DateTimeField(null=True, blank=True, help_text="Coupon valid starting date/time (optional)")
+    valid_until = models.DateTimeField(null=True, blank=True, help_text="Coupon expiration date/time (optional)")
+    is_deleted = models.BooleanField(default=False, db_index=True, help_text="Soft delete flag")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Discount Coupon'
+        verbose_name_plural = 'Discount Coupons'
+
+    def save(self, *args, **kwargs):
+        if self.code:
+            self.code = self.code.strip().upper()
+        super().save(*args, **kwargs)
+
+    def is_valid(self, subtotal=0):
+        from django.utils import timezone
+        now = timezone.now()
+        if not self.is_active or self.is_deleted:
+            return False, "This coupon is currently inactive."
+        if self.valid_from and now < self.valid_from:
+            return False, "This coupon promotion has not started yet."
+        if self.valid_until and now > self.valid_until:
+            return False, "This coupon has expired."
+        if self.usage_limit is not None and self.used_count >= self.usage_limit:
+            return False, "This coupon has reached its maximum usage limit."
+        if subtotal < self.min_purchase_amount:
+            return False, f"Minimum order amount of Rs. {self.min_purchase_amount:,} required to use this coupon."
+        return True, "Coupon is valid."
+
+    def calculate_discount(self, subtotal):
+        if self.discount_type == 'percentage':
+            discount = (subtotal * self.discount_value) // 100
+            if self.max_discount_amount:
+                discount = min(discount, self.max_discount_amount)
+        else:
+            discount = min(self.discount_value, subtotal)
+        return max(0, int(discount))
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'code': self.code,
+            'description': self.description,
+            'discountType': self.discount_type,
+            'discountValue': self.discount_value,
+            'minPurchaseAmount': self.min_purchase_amount,
+            'maxDiscountAmount': self.max_discount_amount,
+            'usageLimit': self.usage_limit,
+            'usedCount': self.used_count,
+            'isActive': self.is_active,
+            'validUntil': self.valid_until.isoformat() if self.valid_until else None,
+        }
+
+    def __str__(self):
+        val = f"{self.discount_value}%" if self.discount_type == 'percentage' else f"Rs. {self.discount_value}"
+        return f"{self.code} ({val} OFF)"

@@ -838,7 +838,7 @@
                         <label class="blanxer-field-label" for="blanxerVariantTextInput">Choose Variant</label>
                         <div class="blanxer-tags-input-container" id="blanxerVariantTagsContainer" onclick="document.getElementById('blanxerVariantTextInput').focus()">
                             <div class="blanxer-tags-list" id="blanxerVariantTagsList"></div>
-                            <input type="text" id="blanxerVariantTextInput" class="blanxer-tag-text-input" placeholder="eg. Red, Green" autocomplete="off">
+                            <input type="text" id="blanxerVariantTextInput" class="blanxer-tag-text-input" placeholder="eg. Red, Green" autocomplete="off" onkeydown="if(event.key==='Enter'||event.keyCode===13||event.key===','){event.preventDefault();event.stopPropagation();if(this.value.trim()){window.blanxerAddVariantTag(this.value);this.value='';}return false;}">
                         </div>
                         <input type="hidden" id="blanxerUiChooseVariant">
                     </div>
@@ -867,7 +867,7 @@
                         <label class="blanxer-field-label" for="blanxerSizeTextInput">Choose Size</label>
                         <div class="blanxer-tags-input-container" id="blanxerSizeTagsContainer" onclick="document.getElementById('blanxerSizeTextInput').focus()">
                             <div class="blanxer-tags-list" id="blanxerSizeTagsList"></div>
-                            <input type="text" id="blanxerSizeTextInput" class="blanxer-tag-text-input" placeholder="eg. M, X, XL" autocomplete="off">
+                            <input type="text" id="blanxerSizeTextInput" class="blanxer-tag-text-input" placeholder="eg. M, X, XL" autocomplete="off" onkeydown="if(event.key==='Enter'||event.keyCode===13||event.key===','){event.preventDefault();event.stopPropagation();if(this.value.trim()){window.blanxerAddSizeTag(this.value);this.value='';}return false;}">
                         </div>
                         <input type="hidden" id="blanxerUiChooseSize">
                     </div>
@@ -954,6 +954,40 @@
 
     <script>
     (function() {
+        // ── Block Enter Key Submission Globally Across The Whole Page Immediately ──
+        window.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.keyCode === 13) {
+                const target = e.target;
+                if (!target) return;
+                if (target.tagName === 'TEXTAREA') return;
+                if (target.tagName === 'BUTTON' || target.type === 'submit') return;
+
+                if (target.id === 'blanxerVariantTextInput') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (target.value.trim() && window.blanxerAddVariantTag) {
+                        window.blanxerAddVariantTag(target.value);
+                        target.value = '';
+                    }
+                    return false;
+                }
+                if (target.id === 'blanxerSizeTextInput') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (target.value.trim() && window.blanxerAddSizeTag) {
+                        window.blanxerAddSizeTag(target.value);
+                        target.value = '';
+                    }
+                    return false;
+                }
+
+                // Prevent Enter from submitting form in any input/section
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+        }, true);
+
         let currentStep = 0;
         const prevLabels = [
             "",
@@ -1149,8 +1183,7 @@
 
         window.blanxerAddVariantTag = function(val) {
             if (!val) return;
-            const parts = val.split(/[,
-]/);
+            const parts = val.split(new RegExp("[,\r\n]+"));
             let added = false;
             parts.forEach(function(part) {
                 const clean = part.trim();
@@ -1221,8 +1254,7 @@
 
         window.blanxerAddSizeTag = function(val) {
             if (!val) return;
-            const parts = val.split(/[,
-]/);
+            const parts = val.split(new RegExp("[,\r\n]+"));
             let added = false;
             parts.forEach(function(part) {
                 const clean = part.trim().toUpperCase();

@@ -27,13 +27,13 @@ export default function LookbookCarousel({ products = [], siteSettings }) {
         </p>
       </div>
 
-      <div className="relative w-full max-w-6xl mx-auto px-4 mt-6">
+      <div className="relative w-full max-w-6xl mx-auto px-2 sm:px-4 mt-6">
         <PerspectiveCarousel
           items={carouselItems}
           defaultActiveIndex={Math.min(2, Math.floor(carouselItems.length / 2))}
-          slideWidth={220}
+          slideWidth={260}
           loop={true}
-          className="perspective-carousel-shell h-[520px] rounded-2xl border border-[var(--line)] bg-[var(--surface)] text-[var(--ink)] shadow-md"
+          className="perspective-carousel-shell h-[510px] sm:h-[530px] rounded-2xl border border-[var(--line)] bg-[var(--surface)] text-[var(--ink)] shadow-md"
         />
       </div>
     </section>

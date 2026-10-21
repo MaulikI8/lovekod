@@ -51,12 +51,21 @@ export function PerspectiveCarousel({
   const isMobile = windowWidth <= 640;
   const isTablet = windowWidth > 640 && windowWidth <= 1024;
 
-  const cardWidth = isMobile ? 185 : isTablet ? 200 : slideWidth;
+  // Make the card comfortably wide on mobile (~70% of screen, up to 270px) so the full outfit is displayed without cropping
+  const cardWidth = isMobile
+    ? Math.min(270, Math.max(230, Math.round(windowWidth * 0.70)))
+    : isTablet
+    ? 240
+    : (slideWidth || 260);
+
   const cardHeight = Math.round((cardWidth * 4) / 3);
 
-  // Cylindrical Ring / Circle Radius
-  // Cylinder radius chosen so cards spread nicely on the circle
-  const radius = isMobile ? 260 : isTablet ? 380 : 480;
+  // Cylindrical Ring / Circle Radius tuned so adjacent side cards frame the center card gracefully on any mobile screen width
+  const radius = isMobile
+    ? Math.min(210, Math.max(160, Math.round(windowWidth * 0.44)))
+    : isTablet
+    ? 380
+    : 480;
 
   const selectSlide = React.useCallback(
     (targetIndex) => {
@@ -85,6 +94,30 @@ export function PerspectiveCarousel({
     }
   };
 
+  // Touch swipe handling for mobile
+  const touchStartX = React.useRef(null);
+  const touchStartY = React.useRef(null);
+
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e) => {
+    if (touchStartX.current === null) return;
+    const diffX = touchStartX.current - e.changedTouches[0].clientX;
+    const diffY = (touchStartY.current || 0) - e.changedTouches[0].clientY;
+    if (Math.abs(diffX) > 35 && Math.abs(diffX) > Math.abs(diffY)) {
+      if (diffX > 0) {
+        selectSlide(currentIndex + 1);
+      } else {
+        selectSlide(currentIndex - 1);
+      }
+    }
+    touchStartX.current = null;
+    touchStartY.current = null;
+  };
+
   return (
     <div
       role="region"
@@ -92,7 +125,7 @@ export function PerspectiveCarousel({
       aria-label="3D Circular Carousel"
       tabIndex={tabIndex ?? 0}
       onKeyDown={handleKeyDown}
-      className={cn("relative isolate h-full w-full overflow-hidden select-none", className)}
+      onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} className={cn("relative isolate h-full w-full overflow-hidden select-none", className)}
       {...props}
     >
       {/* 3D Scene Stage */}
@@ -120,19 +153,21 @@ export function PerspectiveCarousel({
             const isActive = diff === 0;
 
             // Compute angle on circle
-            const angleStep = 360 / Math.max(n, 5);
+            // On mobile, use a gentler angle step so side cards stay nicely visible within the screen
+            const angleStep = isMobile
+              ? Math.min(42, 360 / Math.max(n, 6))
+              : (360 / Math.max(n, 5));
+
             const angle = diff * angleStep;
             const rad = (angle * Math.PI) / 180;
 
             // 3D Circular coordinates:
-            // X = sin(angle) * radius
-            // Z = cos(angle) * radius - radius (active item at Z=0, others pushed backwards)
             const x = Math.sin(rad) * radius;
-            const z = Math.cos(rad) * radius - radius;
-            const rotateY = angle * 0.9; // Dynamic look-at-center rotation
+            const z = Math.cos(rad) * radius - (isMobile ? radius * 0.6 : radius);
+            const rotateY = angle * (isMobile ? 0.72 : 0.9); // Gentle 3D perspective so outfits are recognizable
 
-            const scale = isActive ? 1 : Math.max(0.72, 1 - Math.abs(diff) * 0.12);
-            const opacity = Math.abs(diff) > 2 ? 0.35 : isActive ? 1 : 0.85;
+            const scale = isActive ? 1 : Math.max(isMobile ? 0.8 : 0.72, 1 - Math.abs(diff) * 0.12);
+            const opacity = Math.abs(diff) > 2 ? 0.25 : isActive ? 1 : 0.85;
             const zIndex = Math.round(100 - Math.abs(diff) * 10);
 
             return (

@@ -923,44 +923,72 @@ class OrderAdmin(ModelAdmin):
     search_fields = ('order_id', 'customer_name', 'phone', 'email', 'whatsapp', 'district', 'city', 'address', 'channel')
     list_editable = ()
     inlines = [OrderItemInline]
-    ordering = ('-created_at',)
-    readonly_fields = ('created_at',)
+    ordering = ('-created_at', '-id')
+    readonly_fields = ('order_id', 'created_at')
     actions = COMMON_ACTIONS
     actions_on_top = True
     actions_on_bottom = True
     actions_list = ["manual_create_order_action"]
 
-    fieldsets = (
-        ('Order Identification & Status', {
-            'fields': (
-                ('order_id', 'status'),
-                ('channel', 'payment_method'),
-                'total',
-                'is_deleted',
-            ),
-            'description': 'Leave Order ID blank to auto-generate (e.g. ORD-190A...). Set Total to 0 to auto-sum from line items below. Channel label indicates order source (default Website).'
-        }),
-        ('Customer Contact Information', {
-            'fields': (
-                'customer',
-                'customer_name',
-                ('phone', 'whatsapp'),
-                'email',
-            ),
-            'description': 'Customer phone number is the primary key. If the customer exists, their information will link automatically.'
-        }),
-        ('Delivery Destination in Nepal', {
-            'fields': (
-                ('district', 'city'),
-                'address',
-                'note',
+    def get_fieldsets(self, request, obj=None):
+        if not obj:
+            return (
+                ('Order Status & Channel', {
+                    'fields': (
+                        ('status', 'channel'),
+                        ('payment_method', 'total'),
+                        'is_deleted',
+                    ),
+                    'description': 'Order Reference ID will be assigned automatically (e.g. ORD-1001). Set Total to 0 to auto-sum from line items below.'
+                }),
+                ('Customer Contact Information', {
+                    'fields': (
+                        'customer',
+                        'customer_name',
+                        ('phone', 'whatsapp'),
+                        'email',
+                    ),
+                    'description': 'Customer phone number is the primary key. If the customer exists, their information will link automatically.'
+                }),
+                ('Delivery Destination in Nepal', {
+                    'fields': (
+                        ('district', 'city'),
+                        'address',
+                        'note',
+                    )
+                }),
             )
-        }),
-        ('System Timestamps', {
-            'fields': ('created_at',),
-            'classes': ('collapse',),
-        }),
-    )
+        return (
+            ('Order Identification & Status', {
+                'fields': (
+                    ('order_id', 'status'),
+                    ('channel', 'payment_method'),
+                    'total',
+                    'is_deleted',
+                ),
+                'description': 'Order Reference ID is assigned automatically (e.g. ORD-1001). Channel label indicates order source.'
+            }),
+            ('Customer Contact Information', {
+                'fields': (
+                    'customer',
+                    'customer_name',
+                    ('phone', 'whatsapp'),
+                    'email',
+                ),
+                'description': 'Customer phone number is the primary key. If the customer exists, their information will link automatically.'
+            }),
+            ('Delivery Destination in Nepal', {
+                'fields': (
+                    ('district', 'city'),
+                    'address',
+                    'note',
+                )
+            }),
+            ('System Timestamps', {
+                'fields': ('created_at',),
+                'classes': ('collapse',),
+            }),
+        )
 
     @action(
         description="➕ Manually Create Order",

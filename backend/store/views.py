@@ -616,10 +616,10 @@ def order_list_create(request):
             total = int(data.get('total', 0))
             coupon_code = (data.get('couponCode') or data.get('coupon_code') or '').strip().upper()
             discount_amount = int(data.get('discountAmount') or data.get('discount_amount') or 0)
-            order_id = data.get('id')
-            if not order_id:
-                import time, random
-                order_id = f"ORD-{int(time.time()*1000):X}{random.randint(10, 99)}"
+            order_id = (data.get('id') or data.get('order_id') or '').strip()
+            # If order_id not explicitly set or is a client timestamp string, auto-generate sequential ORD-1001, etc.
+            if not order_id or (order_id.startswith('ORD-') and len(order_id) > 10):
+                order_id = ""
 
             order = Order.objects.create(
                 order_id=order_id,

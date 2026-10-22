@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import { nepalDistricts } from '../data/districts';
+import LocationAutocomplete from '../components/common/LocationAutocomplete';
 import { DiyaIcon, ShieldCheckIcon, ArrowRightIcon } from '../components/Icons';
 
 export default function Checkout() {
@@ -318,15 +319,21 @@ export default function Checkout() {
 
         <div className="form-row">
           <div className="form-group">
-            <label>District (Nepal 77 Districts) *</label>
-            <select
+            <label>City / District (Type to search) *</label>
+            <LocationAutocomplete
+              required
               value={formData.district}
-              onChange={e => setFormData({ ...formData, district: e.target.value })}
-            >
-              {nepalDistricts.map(d => (
-                <option key={d} value={d}>{d}</option>
-              ))}
-            </select>
+              onChange={val => setFormData({ ...formData, district: val })}
+              placeholder="e.g. Sunsari, Pokhara, Kathmandu..."
+              inputStyle={{
+                padding: '10px 14px',
+                borderRadius: '8px',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                background: 'rgba(0, 0, 0, 0.25)',
+                color: '#fff',
+                fontSize: '0.9rem',
+              }}
+            />
           </div>
 
           <div className="form-group">

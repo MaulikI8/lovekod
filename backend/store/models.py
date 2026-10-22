@@ -713,10 +713,32 @@ class Order(models.Model):
     is_deleted = models.BooleanField(default=False, db_index=True, help_text="Soft delete flag")
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ["-created_at", "-id"]
+        verbose_name = "Order"
+        verbose_name_plural = "Orders"
+
     def save(self, *args, **kwargs):
         if not self.order_id:
-            import time, random
-            self.order_id = f"ORD-{int(time.time()*1000):X}{random.randint(10, 99)}"
+            import re
+            # Auto-assign sequential Order ID (ORD-1001, ORD-1002, ...)
+            last_orders = Order.objects.exclude(order_id__isnull=True).exclude(order_id="").order_by("-id")[:50]
+            max_num = 1000
+            for o in last_orders:
+                nums = re.findall(r"\d+", o.order_id or "")
+                for n_str in nums:
+                    try:
+                        n = int(n_str)
+                        if 1000 <= n < 10000000 and n > max_num:
+                            max_num = n
+                    except ValueError:
+                        pass
+            next_num = max_num + 1
+            candidate = f"ORD-{next_num}"
+            while Order.objects.filter(order_id=candidate).exists():
+                next_num += 1
+                candidate = f"ORD-{next_num}"
+            self.order_id = candidate
 
         clean_phone = (self.phone or "").strip()
         if clean_phone:

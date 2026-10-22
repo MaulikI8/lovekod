@@ -205,13 +205,14 @@ export function StoreProvider({ children }) {
       }
     } catch { /* offline fallback */ }
 
-    // 6. Orders
+    // 6. Orders (Always sorted with newest on top)
     try {
       const ordersRes = await fetchLive('/orders/');
       if (ordersRes.ok) {
         const orderData = await ordersRes.json();
         if (Array.isArray(orderData)) {
           const activeOnly = orderData.filter(o => !o.isDeleted && !o.is_deleted);
+          activeOnly.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
           setOrders(activeOnly);
         }
       }
@@ -343,6 +344,7 @@ export function StoreProvider({ children }) {
       });
       if (res.ok) {
         const savedOrder = await res.json();
+        setOrders(prev => [savedOrder, ...prev.filter(o => o.id !== orderId && o.id !== savedOrder.id)]);
         refreshFromBackend();
         return savedOrder;
       }
@@ -532,6 +534,7 @@ export function StoreProvider({ children }) {
       });
       if (res.ok) {
         const saved = await res.json();
+        setOrders(prev => [saved, ...prev.filter(o => o.id !== saved.id)]);
         await refreshFromBackend();
         showToast(`Order ${saved.id} created successfully!`);
         return saved;

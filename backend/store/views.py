@@ -698,11 +698,23 @@ def order_detail_update(request, order_id):
     elif request.method in ['PATCH', 'PUT']:
         try:
             data = json.loads(request.body.decode('utf-8'))
+            update_fields = []
+            if 'payment_status' in data or 'paymentStatus' in data:
+                order.payment_status = data.get('payment_status') or data.get('paymentStatus')
+                update_fields.append('payment_status')
             if 'status' in data:
                 old_status = order.status
                 new_status = data['status']
                 order.status = new_status
-                order.save(update_fields=['status'])
+                update_fields.append('status')
+                if new_status == 'Cancelled' and old_status != 'Cancelled':
+                    for item in order.items.all():
+                        item.restore_inventory()
+                elif old_status == 'Cancelled' and new_status != 'Cancelled':
+                    for item in order.items.all():
+                        item.deduct_inventory()
+            if update_fields:
+                order.save(update_fields=update_fields)
                 if new_status == 'Cancelled' and old_status != 'Cancelled':
                     for item in order.items.all():
                         item.restore_inventory()

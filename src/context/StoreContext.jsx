@@ -548,17 +548,22 @@ export function StoreProvider({ children }) {
     }
   }
 
-  async function updateOrderStatus(orderId, status) {
-    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status } : o));
-    showToast('Order status updated');
+  async function updateOrderStatus(orderId, statusOrPatch) {
+    const patch = typeof statusOrPatch === 'string' ? { status: statusOrPatch } : (statusOrPatch || {});
+    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, ...patch } : o));
+    showToast('Order updated');
 
     try {
       await fetch(`${API_BASE}/orders/${orderId}/`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify(patch),
       });
     } catch { /* offline fallback */ }
+  }
+
+  async function updateOrderPaymentStatus(orderId, paymentStatus) {
+    return updateOrderStatus(orderId, { paymentStatus, payment_status: paymentStatus });
   }
 
   async function adminLogin(password) {
@@ -672,7 +677,7 @@ export function StoreProvider({ children }) {
     addCategory, updateCategory, deleteCategory,
     addFestivalMoment, updateFestivalMoment, deleteFestivalMoment,
     addTestimonial, updateTestimonial, deleteTestimonial,
-    updateProduct, addProduct, deleteProduct, createManualOrder, updateOrderStatus,
+    updateProduct, addProduct, deleteProduct, createManualOrder, updateOrderStatus, updateOrderPaymentStatus,
     lookupCustomer, addCustomer, updateCustomer, deleteCustomer,
     adminLogin, adminLogout, showToast, resetInventory, refreshFromBackend,
   };

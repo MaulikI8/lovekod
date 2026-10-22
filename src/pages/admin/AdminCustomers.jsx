@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { WhatsAppIcon } from '../../components/Icons';
-import { nepalDistricts } from '../../data/districts';
+import LocationAutocomplete from '../../components/common/LocationAutocomplete';
 import { Link } from 'react-router-dom';
 
 export default function AdminCustomers() {
@@ -11,6 +11,7 @@ export default function AdminCustomers() {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [editingCustomer, setEditingCustomer] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedPhones, setSelectedPhones] = useState([]);
 
   // Form for adding new customer
   const initialNewCustomer = {
@@ -19,9 +20,10 @@ export default function AdminCustomers() {
     email: '',
     whatsapp: '',
     sameAsPhone: true,
-    district: 'Kathmandu',
-    city: 'Kathmandu',
+    district: 'Kathmandu Inside Ring Road',
+    city: 'Kathmandu Inside Ring Road',
     address: '',
+    landmark: '',
     note: '',
   };
   const [newCustForm, setNewCustForm] = useState(initialNewCustomer);
@@ -38,9 +40,10 @@ export default function AdminCustomers() {
       fullName: c.name || 'Valued Customer',
       email: c.email || '',
       whatsapp: c.whatsapp || c.phone,
-      district: c.district || 'Kathmandu',
-      city: c.city || 'Kathmandu',
+      district: c.district || 'Kathmandu Inside Ring Road',
+      city: c.city || 'Kathmandu Inside Ring Road',
       address: c.address || '',
+      landmark: c.landmark || '',
       note: c.note || '',
       ordersCount: c.totalOrders || 0,
       totalSpent: c.totalSpent || 0,
@@ -60,9 +63,10 @@ export default function AdminCustomers() {
           fullName: cust.fullName || 'Valued Customer',
           email: cust.email || '',
           whatsapp: cust.whatsapp || key,
-          district: cust.district || 'Kathmandu',
-          city: cust.city || 'Kathmandu',
+          district: cust.district || 'Kathmandu Inside Ring Road',
+          city: cust.city || 'Kathmandu Inside Ring Road',
           address: cust.address || '',
+          landmark: cust.landmark || '',
           note: cust.note || '',
           ordersCount: 0,
           totalSpent: 0,
@@ -71,7 +75,6 @@ export default function AdminCustomers() {
         };
       }
       unifiedMap[key].orders.push(order);
-      // If customer table had 0 stats, compute from loaded orders
       if (unifiedMap[key].ordersCount === 0) {
         unifiedMap[key].ordersCount = unifiedMap[key].orders.length;
         unifiedMap[key].totalSpent = unifiedMap[key].orders.reduce((sum, o) => sum + (o.total || 0), 0);
@@ -79,48 +82,65 @@ export default function AdminCustomers() {
     }
   });
 
-  const customerList = Object.values(unifiedMap).sort((a, b) => b.totalSpent - a.totalSpent);
+  const customerList = Object.values(unifiedMap).sort(
+    (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+  );
 
   const filtered = customerList.filter(c => {
+    if (!search.trim()) return true;
     const q = search.toLowerCase();
-    return (c.fullName || '').toLowerCase().includes(q) ||
-           (c.phone || '').includes(q) ||
-           (c.email || '').toLowerCase().includes(q) ||
-           (c.district || '').toLowerCase().includes(q) ||
-           (c.city || '').toLowerCase().includes(q);
+    return (
+      c.fullName.toLowerCase().includes(q) ||
+      c.phone.includes(q) ||
+      c.email.toLowerCase().includes(q) ||
+      c.district.toLowerCase().includes(q)
+    );
   });
 
-  const getWaLink = (customer) => {
-    const raw = customer.whatsapp || customer.phone;
-    const clean = raw.replace(/[^\d]/g, '').replace(/^0+/, '').replace(/^977/, '');
-    const text = encodeURIComponent(
-      `Namaste ${customer.fullName}! This is LoveKod reaching out to you. How can we assist you today?`
-    );
-    return `https://wa.me/977${clean}?text=${text}`;
+  const handleExportCSV = () => {
+    if (filtered.length === 0) {
+      alert('No customer records to export.');
+      return;
+    }
+    const headers = ['#', 'Customer Name', 'Email', 'Phone Number', 'City/District', 'Address', 'Total Orders', 'Total Spent (Rs)', 'Created'];
+    const rows = filtered.map((c, i) => [
+      i + 1,
+      `"${c.fullName.replace(/"/g, '""')}"`,
+      `"${c.email.replace(/"/g, '""')}"`,
+      `"${c.phone}"`,
+      `"${c.district.replace(/"/g, '""')}"`,
+      `"${c.address.replace(/"/g, '""')}"`,
+      c.ordersCount,
+      c.totalSpent,
+      `"${new Date(c.createdAt || Date.now()).toLocaleDateString()}"`
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `LoveKod_Customers_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
-  const handleAddSubmit = async (e) => {
+  const handleCreateCustomer = async (e) => {
     e.preventDefault();
-    const cleanPhone = newCustForm.phone.replace(/[^0-9]/g, '').trim();
-    if (!cleanPhone) {
-      alert('Mobile phone number is required as the unique primary key.');
+    if (!newCustForm.phone.trim() || !newCustForm.name.trim()) {
+      alert('Customer Name and Phone Number are required.');
       return;
     }
-    if (!newCustForm.name.trim()) {
-      alert('Please enter customer full name.');
-      return;
-    }
-
     setIsSubmitting(true);
     try {
       await addCustomer({
-        phone: cleanPhone,
+        phone: newCustForm.phone.trim(),
         name: newCustForm.name.trim(),
         email: newCustForm.email.trim(),
-        whatsapp: newCustForm.sameAsPhone ? cleanPhone : (newCustForm.whatsapp.trim() || cleanPhone),
+        whatsapp: newCustForm.sameAsPhone ? newCustForm.phone.trim() : newCustForm.whatsapp.trim(),
         district: newCustForm.district,
-        city: newCustForm.city.trim() || newCustForm.district,
+        city: newCustForm.district,
         address: newCustForm.address.trim(),
+        landmark: newCustForm.landmark.trim(),
         note: newCustForm.note.trim(),
       });
       setIsSubmitting(false);
@@ -131,7 +151,7 @@ export default function AdminCustomers() {
     }
   };
 
-  const handleEditSubmit = async (e) => {
+  const handleSaveEdit = async (e) => {
     e.preventDefault();
     if (!editingCustomer) return;
     setIsSubmitting(true);
@@ -141,345 +161,586 @@ export default function AdminCustomers() {
         email: editingCustomer.email,
         whatsapp: editingCustomer.whatsapp,
         district: editingCustomer.district,
-        city: editingCustomer.city,
+        city: editingCustomer.district,
         address: editingCustomer.address,
+        landmark: editingCustomer.landmark,
         note: editingCustomer.note,
       });
       setIsSubmitting(false);
       setEditingCustomer(null);
+      if (selectedCustomer && selectedCustomer.phone === editingCustomer.phone) {
+        setSelectedCustomer(prev => ({ ...prev, ...editingCustomer }));
+      }
     } catch {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div>
-      <div className="admin-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
+    <div style={{ color: '#1e293b' }}>
+      {/* ══ 1. TOP HEADER & ACTION BAR (MATCHES BLANXER REF) ══ */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '20px' }}>
         <div>
-          <h2>Customer Directory ({customerList.length})</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-            Standalone customer database with phone number as primary key, live order sync, and WhatsApp concierge.
+          <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>
+            Customers
+          </h1>
+          <p style={{ margin: '4px 0 0', fontSize: '0.86rem', color: '#64748b' }}>
+            Everyone from orders and leads, uniquely identified by phone number.
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
           <button
-            onClick={() => setShowAddModal(true)}
+            type="button"
             className="admin-btn"
             style={{
-              background: 'var(--marigold)',
-              color: '#1a0d08',
+              background: '#8b5cf6',
+              color: '#ffffff',
               fontWeight: 700,
+              fontSize: '0.85rem',
               display: 'inline-flex',
               alignItems: 'center',
               gap: '6px',
-              padding: '10px 18px',
-              borderRadius: '4px',
+              padding: '9px 16px',
+              borderRadius: '8px',
               border: 'none',
               cursor: 'pointer',
+              boxShadow: '0 2px 8px rgba(139,92,246,0.3)',
             }}
           >
-            <span>+</span>
-            <span>Add New Customer</span>
+            <span>✨</span>
+            <span>Do with AI</span>
+            <span style={{ fontSize: '0.75rem' }}>▼</span>
           </button>
-          <Link to="/admin/orders" className="admin-btn" style={{ background: 'var(--night-surface)', color: '#fff', border: '1px solid var(--night-border)' }}>
-            View Orders
-          </Link>
+
+          <button
+            type="button"
+            onClick={handleExportCSV}
+            style={{
+              background: '#ffffff',
+              color: '#334155',
+              border: '1px solid #cbd5e1',
+              fontWeight: 700,
+              fontSize: '0.85rem',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '9px 16px',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+            }}
+          >
+            <span>📥</span>
+            <span>Export CSV</span>
+          </button>
+
+          <button
+            onClick={() => setShowAddModal(true)}
+            style={{
+              background: '#7c3aed',
+              color: '#ffffff',
+              border: 'none',
+              fontWeight: 700,
+              fontSize: '0.85rem',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '9px 18px',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(124,58,237,0.3)'
+            }}
+          >
+            <span style={{ fontSize: '1.1rem', lineHeight: 1 }}>+</span>
+            <span>Add Customer</span>
+          </button>
         </div>
       </div>
 
-      {/* Search Bar */}
-      <div style={{ marginBottom: '24px' }}>
-        <input
-          type="text"
-          placeholder="Search by customer name, mobile phone (primary key), email, district, city..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          style={{
-            maxWidth: '440px', width: '100%', background: 'var(--night-surface)',
-            border: '1px solid var(--night-border)', color: '#fff', padding: '10px 14px',
-            borderRadius: 'var(--radius-sm)', fontSize: '0.88rem'
-          }}
-        />
+      {/* ══ 2. SEARCH BAR MATCHING BLANXER ══ */}
+      <div style={{
+        background: '#ffffff',
+        border: '1px solid #e2e8f0',
+        borderRadius: '12px',
+        padding: '14px 16px',
+        marginBottom: '20px',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
+      }}>
+        <div style={{ position: 'relative', maxWidth: '380px' }}>
+          <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: '0.9rem' }}>
+            🔍
+          </span>
+          <input
+            type="text"
+            placeholder="Search..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            style={{
+              width: '100%',
+              background: '#f8fafc',
+              border: '1px solid #cbd5e1',
+              borderRadius: '8px',
+              padding: '8px 12px 8px 36px',
+              fontSize: '0.86rem',
+              color: '#1e293b',
+              outline: 'none',
+            }}
+          />
+        </div>
       </div>
 
-      {/* Customer Table */}
+      {/* ══ 3. CUSTOMER TABLE MATCHING BLANXER REF ══ */}
       {filtered.length === 0 ? (
-        <div style={{ background: 'var(--night-card)', padding: '48px', textAlign: 'center', borderRadius: 'var(--radius-md)', border: '1px solid var(--night-border)', color: 'var(--text-muted)' }}>
-          No customer records found matching your search.
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '60px 24px', textAlign: 'center', color: '#64748b' }}>
+          <div style={{ fontSize: '2.5rem', marginBottom: '10px' }}>👥</div>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b', marginBottom: '6px' }}>No customer records found</h3>
+          <p style={{ fontSize: '0.88rem', margin: 0 }}>Create a new customer or search using another keyword.</p>
         </div>
       ) : (
-        <div style={{ background: 'var(--night-card)', border: '1px solid var(--night-border)', borderRadius: 'var(--radius-md)', overflowX: 'auto' }}>
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Customer</th>
-                <th>Phone (Primary Key)</th>
-                <th>Email Address</th>
-                <th>Primary Location</th>
-                <th>Total Orders</th>
-                <th>Total Spent</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((c, idx) => (
-                <tr key={idx} style={{ cursor: 'pointer' }} onClick={() => setSelectedCustomer(c)}>
-                  <td>
-                    <div style={{ fontWeight: 600, color: '#fff' }}>{c.fullName}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                      {c.address ? c.address.slice(0, 32) + (c.address.length > 32 ? '...' : '') : 'Nepal'}
-                    </div>
-                  </td>
-                  <td>
-                    <span style={{ fontFamily: 'monospace', color: 'var(--marigold-light, #fbbf24)', fontWeight: 600 }}>
-                      {c.phone || 'N/A'}
-                    </span>
-                  </td>
-                  <td>
-                    <span style={{ fontSize: '0.82rem', color: c.email ? '#93c5fd' : 'var(--text-muted)' }}>
-                      {c.email || '—'}
-                    </span>
-                  </td>
-                  <td>
-                    <span style={{ color: '#fff', fontWeight: 500 }}>{c.city || c.district}</span>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>{c.district}</span>
-                  </td>
-                  <td style={{ fontWeight: 700, color: 'var(--marigold)' }}>
-                    {c.ordersCount} {c.ordersCount === 1 ? 'order' : 'orders'}
-                  </td>
-                  <td style={{ fontWeight: 700, color: '#10b981' }} className="tabular-num">
-                    Rs. {c.totalSpent.toLocaleString()}
-                  </td>
-                  <td onClick={e => e.stopPropagation()}>
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                      <a
-                        href={getWaLink(c)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn-whatsapp-square"
-                        style={{ height: '32px', width: '32px' }}
-                        title="Chat with customer on WhatsApp"
-                      >
-                        <WhatsAppIcon size={16} />
-                      </a>
-                      <button
-                        type="button"
-                        onClick={() => setEditingCustomer({ ...c })}
-                        style={{
-                          background: 'rgba(255,255,255,0.08)',
-                          border: '1px solid rgba(255,255,255,0.15)',
-                          color: '#fff',
-                          padding: '4px 10px',
-                          borderRadius: '4px',
-                          fontSize: '0.78rem',
-                          cursor: 'pointer'
-                        }}
-                        title="Edit Customer"
-                      >
-                        Edit
-                      </button>
-                    </div>
-                  </td>
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.84rem' }}>
+              <thead>
+                <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', color: '#64748b', fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  <th style={{ padding: '12px 16px', fontWeight: 700, width: '48px' }}>#</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 700 }}>Customer Name</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 700 }}>Phone Number</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 700 }}>Delivery record</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 700 }}>Total Orders</th>
+                  <th style={{ padding: '12px 16px', fontWeight: 700 }}>Created</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700 }}>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filtered.map((c, index) => {
+                  const isNew = c.ordersCount <= 1;
+                  return (
+                    <tr
+                      key={c.phone}
+                      onClick={() => setSelectedCustomer(c)}
+                      style={{
+                        borderBottom: '1px solid #f1f5f9',
+                        cursor: 'pointer',
+                        background: '#ffffff',
+                        transition: 'background 0.12s ease'
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
+                      onMouseLeave={e => e.currentTarget.style.background = '#ffffff'}
+                    >
+                      {/* Row Index */}
+                      <td style={{ padding: '14px 16px', fontWeight: 700, color: '#64748b' }}>
+                        {index + 1}
+                      </td>
+
+                      {/* Customer Name + Email */}
+                      <td style={{ padding: '14px 16px' }}>
+                        <div style={{ fontWeight: 700, color: '#0f172a' }}>
+                          {c.fullName}
+                        </div>
+                        <div style={{ fontSize: '0.76rem', color: '#64748b', marginTop: '2px' }}>
+                          {c.email || `${c.phone}@client.lovekod.com`}
+                        </div>
+                      </td>
+
+                      {/* Phone Number (Primary Key) */}
+                      <td style={{ padding: '14px 16px', fontFamily: 'monospace', fontWeight: 700, color: '#7c3aed' }}>
+                        {c.phone}
+                      </td>
+
+                      {/* Delivery Record Badge */}
+                      <td style={{ padding: '14px 16px' }}>
+                        {isNew ? (
+                          <span style={{
+                            display: 'inline-block',
+                            padding: '2px 8px',
+                            borderRadius: '4px',
+                            fontSize: '0.72rem',
+                            fontWeight: 800,
+                            background: '#eff6ff',
+                            color: '#2563eb',
+                            border: '1px solid #bfdbfe',
+                            letterSpacing: '0.04em'
+                          }}>
+                            NEW
+                          </span>
+                        ) : (
+                          <span style={{
+                            display: 'inline-block',
+                            padding: '2px 8px',
+                            borderRadius: '4px',
+                            fontSize: '0.72rem',
+                            fontWeight: 800,
+                            background: '#ecfdf5',
+                            color: '#059669',
+                            border: '1px solid #a7f3d0',
+                            letterSpacing: '0.04em'
+                          }}>
+                            LOYAL ({c.ordersCount})
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Total Orders */}
+                      <td style={{ padding: '14px 16px', fontWeight: 700, color: '#0f172a' }}>
+                        {c.ordersCount || 1}
+                      </td>
+
+                      {/* Created */}
+                      <td style={{ padding: '14px 16px', color: '#64748b', fontSize: '0.78rem', whiteSpace: 'nowrap' }}>
+                        {new Date(c.createdAt || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+                          {new Date(c.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      </td>
+
+                      {/* Actions */}
+                      <td style={{ padding: '14px 16px', textAlign: 'right' }} onClick={e => e.stopPropagation()}>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                          <a
+                            href={`https://wa.me/977${c.whatsapp?.replace(/^0+/, '').replace(/^\+?977/, '')}?text=${encodeURIComponent(`Namaste ${c.fullName}! This is LoveKod boutique. How may we assist you today?`)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="Chat on WhatsApp"
+                            style={{
+                              padding: '5px 7px',
+                              borderRadius: '6px',
+                              background: '#25D366',
+                              color: '#fff',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              textDecoration: 'none'
+                            }}
+                          >
+                            <WhatsAppIcon size={14} />
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedCustomer(c)}
+                            title="Customer Details"
+                            style={{
+                              background: '#f1f5f9',
+                              border: '1px solid #cbd5e1',
+                              borderRadius: '6px',
+                              padding: '4px 8px',
+                              cursor: 'pointer',
+                              fontSize: '0.85rem',
+                              fontWeight: 700,
+                              color: '#334155'
+                            }}
+                          >
+                            •••
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* ══ 4. BOTTOM PAGINATION BAR (MATCHES REF: 1 - 10 / 10 < 1 >) ══ */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', background: '#f8fafc', borderTop: '1px solid #e2e8f0', fontSize: '0.82rem', color: '#64748b' }}>
+            <div>
+              1 - {filtered.length} / {filtered.length}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <button disabled style={{ padding: '4px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', cursor: 'not-allowed', color: '#94a3b8' }}>
+                ‹
+              </button>
+              <button style={{ padding: '4px 10px', borderRadius: '6px', border: 'none', background: '#7c3aed', color: '#ffffff', fontWeight: 700 }}>
+                1
+              </button>
+              <button disabled style={{ padding: '4px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', cursor: 'not-allowed', color: '#94a3b8' }}>
+                ›
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* ── ADD NEW CUSTOMER MODAL ── */}
-      {showAddModal && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0, 0, 0, 0.75)',
-            backdropFilter: 'blur(4px)',
+      {/* ══ 5. CUSTOMER DETAIL DRAWER / MODAL ══ */}
+      {selectedCustomer && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(15, 23, 42, 0.65)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '16px'
+        }}>
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '16px',
+            width: '100%',
+            maxWidth: '680px',
+            maxHeight: '90vh',
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            padding: '20px'
-          }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setShowAddModal(false);
-          }}
-        >
-          <div
-            style={{
-              background: 'var(--night-surface, #1C120C)',
-              border: '1px solid var(--marigold, #C47820)',
-              borderRadius: '8px',
-              maxWidth: '560px',
-              width: '100%',
-              maxHeight: '90vh',
-              overflowY: 'auto',
-              padding: '28px',
-              boxShadow: '0 20px 40px rgba(0,0,0,0.6)',
-              color: '#fff'
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '14px', marginBottom: '20px' }}>
+            flexDirection: 'column',
+            overflow: 'hidden',
+            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
+            border: '1px solid #e2e8f0'
+          }}>
+            {/* Header */}
+            <div style={{ padding: '18px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <h3 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--marigold)' }}>Add New Customer</h3>
-                <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                  Customer will be saved with their mobile number as the primary key.
-                </p>
+                <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#0f172a' }}>
+                  {selectedCustomer.fullName}
+                </h3>
+                <div style={{ fontSize: '0.82rem', color: '#7c3aed', fontWeight: 700, fontFamily: 'monospace', marginTop: '2px' }}>
+                  Phone (Primary Key): {selectedCustomer.phone}
+                </div>
               </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingCustomer(selectedCustomer);
+                    setSelectedCustomer(null);
+                  }}
+                  style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '6px 12px', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', color: '#334155' }}
+                >
+                  ✏️ Edit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedCustomer(null)}
+                  style={{ background: '#f1f5f9', border: 'none', borderRadius: '6px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b' }}
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div style={{ padding: '20px 24px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '18px' }}>
+              {/* Profile Card */}
+              <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '16px', display: 'grid', gridTemplateColumns: '120px 1fr', rowGap: '8px', fontSize: '0.85rem' }}>
+                <span style={{ color: '#64748b', fontWeight: 600 }}>Email:</span>
+                <span style={{ color: '#0f172a' }}>{selectedCustomer.email || '-'}</span>
+
+                <span style={{ color: '#64748b', fontWeight: 600 }}>WhatsApp:</span>
+                <span style={{ color: '#0f172a', fontFamily: 'monospace' }}>{selectedCustomer.whatsapp || selectedCustomer.phone}</span>
+
+                <span style={{ color: '#64748b', fontWeight: 600 }}>District/City:</span>
+                <span style={{ color: '#0f172a', fontWeight: 600 }}>{selectedCustomer.district || 'Kathmandu'}</span>
+
+                <span style={{ color: '#64748b', fontWeight: 600 }}>Delivery Address:</span>
+                <span style={{ color: '#334155' }}>{selectedCustomer.address || '-'}</span>
+
+                <span style={{ color: '#64748b', fontWeight: 600 }}>Landmark:</span>
+                <span style={{ color: '#334155' }}>{selectedCustomer.landmark || '-'}</span>
+
+                <span style={{ color: '#64748b', fontWeight: 600 }}>Notes:</span>
+                <span style={{ color: '#334155', fontStyle: 'italic' }}>{selectedCustomer.note || 'None'}</span>
+              </div>
+
+              {/* Order History */}
+              <div>
+                <h4 style={{ margin: '0 0 10px', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>
+                  Order History ({selectedCustomer.orders?.length || 0})
+                </h4>
+                {(selectedCustomer.orders || []).length === 0 ? (
+                  <div style={{ padding: '16px', background: '#f8fafc', border: '1px dashed #cbd5e1', borderRadius: '8px', color: '#94a3b8', fontSize: '0.82rem', textAlign: 'center' }}>
+                    No prior orders recorded for this phone number.
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {selectedCustomer.orders.map(order => (
+                      <div key={order.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px 14px', fontSize: '0.84rem' }}>
+                        <div>
+                          <span style={{ fontFamily: 'monospace', fontWeight: 800, color: '#7c3aed' }}>
+                            {order.id?.replace(/^ORD-/, '#')}
+                          </span>
+                          <span style={{ marginLeft: '10px', color: '#64748b', fontSize: '0.78rem' }}>
+                            {new Date(order.createdAt || Date.now()).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <span style={{ fontWeight: 700, color: '#0f172a' }}>
+                            Rs {Number(order.total || 0).toLocaleString()}
+                          </span>
+                          <span style={{
+                            padding: '2px 8px',
+                            borderRadius: '4px',
+                            fontSize: '0.72rem',
+                            fontWeight: 700,
+                            background: '#dcfce7',
+                            color: '#15803d'
+                          }}>
+                            {order.status}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', gap: '10px', marginTop: '6px' }}>
+                <a
+                  href={`https://wa.me/977${selectedCustomer.whatsapp?.replace(/^0+/, '').replace(/^\+?977/, '')}?text=${encodeURIComponent(`Namaste ${selectedCustomer.fullName}! Reaching out from LoveKod boutique.`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    padding: '10px',
+                    background: '#25D366',
+                    color: '#ffffff',
+                    fontWeight: 700,
+                    fontSize: '0.86rem',
+                    borderRadius: '8px',
+                    textDecoration: 'none'
+                  }}
+                >
+                  <WhatsAppIcon size={16} />
+                  <span>Message on WhatsApp</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══ 6. ADD CUSTOMER MODAL ══ */}
+      {showAddModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(15, 23, 42, 0.7)',
+          backdropFilter: 'blur(3px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '16px'
+        }}>
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '14px',
+            width: '100%',
+            maxWidth: '560px',
+            maxHeight: '90vh',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.25)',
+            border: '1px solid #e2e8f0'
+          }}>
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800, color: '#0f172a' }}>Add New Customer</h3>
               <button
                 type="button"
                 onClick={() => setShowAddModal(false)}
-                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '1.4rem', cursor: 'pointer' }}
+                style={{ background: '#f1f5f9', border: 'none', borderRadius: '6px', width: '28px', height: '28px', cursor: 'pointer', color: '#64748b' }}
               >
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleAddSubmit}>
-              <div style={{ marginBottom: '14px' }}>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--marigold-light, #fbbf24)', fontWeight: 600, marginBottom: '4px' }}>
-                  Mobile Phone Number * (Primary Key)
+            <form onSubmit={handleCreateCustomer} style={{ padding: '18px 20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
+                  Phone Number (Customer Primary Key) <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <input
                   type="tel"
                   required
-                  placeholder="e.g. 9841234567"
+                  placeholder="e.g. 9819377122"
                   value={newCustForm.phone}
                   onChange={e => setNewCustForm({ ...newCustForm, phone: e.target.value })}
-                  style={{ width: '100%', padding: '9px 12px', background: '#261811', border: '1px solid var(--marigold)', borderRadius: '4px', color: '#fff', fontSize: '0.92rem', fontFamily: 'monospace' }}
+                  style={{ width: '100%', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '8px 12px', fontSize: '0.86rem' }}
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                    Full Name *
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
+                    Customer Name <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Sita Sharma"
+                    placeholder="e.g. Pursottam Timalsena"
                     value={newCustForm.name}
                     onChange={e => setNewCustForm({ ...newCustForm, name: e.target.value })}
-                    style={{ width: '100%', padding: '8px 12px', background: '#261811', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px', color: '#fff', fontSize: '0.88rem' }}
+                    style={{ width: '100%', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '8px 12px', fontSize: '0.86rem' }}
                   />
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
                     Email Address
                   </label>
                   <input
                     type="email"
-                    placeholder="e.g. sita@example.com"
+                    placeholder="e.g. customer@gmail.com"
                     value={newCustForm.email}
                     onChange={e => setNewCustForm({ ...newCustForm, email: e.target.value })}
-                    style={{ width: '100%', padding: '8px 12px', background: '#261811', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px', color: '#fff', fontSize: '0.88rem' }}
+                    style={{ width: '100%', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '8px 12px', fontSize: '0.86rem' }}
                   />
                 </div>
               </div>
 
-              <div style={{ marginBottom: '14px' }}>
-                <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                  WhatsApp Number
-                </label>
-                <input
-                  type="tel"
-                  disabled={newCustForm.sameAsPhone}
-                  placeholder="98XXXXXXXX"
-                  value={newCustForm.sameAsPhone ? newCustForm.phone : newCustForm.whatsapp}
-                  onChange={e => setNewCustForm({ ...newCustForm, whatsapp: e.target.value })}
-                  style={{ width: '100%', padding: '8px 12px', background: '#261811', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px', color: '#fff', fontSize: '0.88rem', opacity: newCustForm.sameAsPhone ? 0.6 : 1 }}
+              <div>
+                <LocationAutocomplete
+                  value={newCustForm.district}
+                  onChange={val => setNewCustForm({ ...newCustForm, district: val, city: val })}
+                  label="City / District"
+                  required
                 />
-                <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px', cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={newCustForm.sameAsPhone}
-                    onChange={e => setNewCustForm({ ...newCustForm, sameAsPhone: e.target.checked })}
-                  />
-                  Same as mobile number
-                </label>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '12px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                    District (77 Districts) *
-                  </label>
-                  <select
-                    value={newCustForm.district}
-                    onChange={e => setNewCustForm({ ...newCustForm, district: e.target.value })}
-                    style={{ width: '100%', padding: '8px 12px', background: '#261811', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px', color: '#fff', fontSize: '0.88rem' }}
-                  >
-                    {nepalDistricts.map(d => (
-                      <option key={d} value={d}>{d}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                    City / Area *
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
+                    Delivery Address
                   </label>
                   <input
                     type="text"
-                    required
-                    placeholder="e.g. Kathmandu, Pokhara"
-                    value={newCustForm.city}
-                    onChange={e => setNewCustForm({ ...newCustForm, city: e.target.value })}
-                    style={{ width: '100%', padding: '8px 12px', background: '#261811', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px', color: '#fff', fontSize: '0.88rem' }}
+                    placeholder="e.g. Divya Marg, Ward 4"
+                    value={newCustForm.address}
+                    onChange={e => setNewCustForm({ ...newCustForm, address: e.target.value })}
+                    style={{ width: '100%', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '8px 12px', fontSize: '0.86rem' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
+                    Landmark
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Dai building"
+                    value={newCustForm.landmark}
+                    onChange={e => setNewCustForm({ ...newCustForm, landmark: e.target.value })}
+                    style={{ width: '100%', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '8px 12px', fontSize: '0.86rem' }}
                   />
                 </div>
               </div>
 
-              <div style={{ marginBottom: '14px' }}>
-                <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                  Street Address
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. New Road, Ward 22"
-                  value={newCustForm.address}
-                  onChange={e => setNewCustForm({ ...newCustForm, address: e.target.value })}
-                  style={{ width: '100%', padding: '8px 12px', background: '#261811', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px', color: '#fff', fontSize: '0.88rem' }}
-                />
-              </div>
-
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                  Internal Notes
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Regular festive kurtha client"
-                  value={newCustForm.note}
-                  onChange={e => setNewCustForm({ ...newCustForm, note: e.target.value })}
-                  style={{ width: '100%', padding: '8px 12px', background: '#261811', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px', color: '#fff', fontSize: '0.88rem' }}
-                />
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '6px' }}>
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  style={{ padding: '9px 16px', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '4px', cursor: 'pointer' }}
+                  style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '8px 16px', fontSize: '0.84rem', cursor: 'pointer' }}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  style={{
-                    padding: '9px 22px',
-                    background: 'var(--marigold)',
-                    color: '#1a0d08',
-                    border: 'none',
-                    fontWeight: 700,
-                    borderRadius: '4px',
-                    cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                    opacity: isSubmitting ? 0.7 : 1
-                  }}
+                  style={{ background: '#7c3aed', color: '#fff', border: 'none', borderRadius: '6px', padding: '8px 20px', fontSize: '0.86rem', fontWeight: 700, cursor: 'pointer' }}
                 >
                   {isSubmitting ? 'Saving...' : 'Save Customer'}
                 </button>
@@ -489,367 +750,117 @@ export default function AdminCustomers() {
         </div>
       )}
 
-      {/* ── VIEW CUSTOMER & ORDER HISTORY MODAL ── */}
-      {selectedCustomer && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0, 0, 0, 0.75)',
-            backdropFilter: 'blur(4px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            padding: '20px'
-          }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setSelectedCustomer(null);
-          }}
-        >
-          <div
-            style={{
-              background: 'var(--night-surface, #1C120C)',
-              border: '1px solid var(--marigold, #C47820)',
-              borderRadius: '8px',
-              maxWidth: '650px',
-              width: '100%',
-              maxHeight: '90vh',
-              overflowY: 'auto',
-              padding: '28px',
-              boxShadow: '0 20px 40px rgba(0,0,0,0.6)',
-              color: '#fff'
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '14px', marginBottom: '20px' }}>
-              <div>
-                <h3 style={{ margin: 0, fontSize: '1.3rem', color: '#fff' }}>{selectedCustomer.fullName}</h3>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
-                  <span style={{ fontFamily: 'monospace', color: 'var(--marigold-light, #fbbf24)', fontWeight: 600 }}>
-                    {selectedCustomer.phone}
-                  </span>
-                  {selectedCustomer.email && (
-                    <span style={{ fontSize: '0.82rem', color: '#93c5fd' }}>
-                      • {selectedCustomer.email}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedCustomer(null)}
-                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '1.4rem', cursor: 'pointer' }}
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Quick Stat Tiles */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '20px' }}>
-              <div style={{ background: '#261811', padding: '12px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Total Orders</div>
-                <div style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--marigold)', marginTop: '2px' }}>
-                  {selectedCustomer.ordersCount}
-                </div>
-              </div>
-
-              <div style={{ background: '#261811', padding: '12px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Total Spent</div>
-                <div style={{ fontSize: '1.3rem', fontWeight: 700, color: '#10b981', marginTop: '2px' }}>
-                  Rs. {selectedCustomer.totalSpent.toLocaleString()}
-                </div>
-              </div>
-
-              <div style={{ background: '#261811', padding: '12px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Location</div>
-                <div style={{ fontSize: '0.95rem', fontWeight: 600, color: '#fff', marginTop: '4px' }}>
-                  {selectedCustomer.city || selectedCustomer.district}
-                </div>
-              </div>
-            </div>
-
-            {/* Delivery address */}
-            <div style={{ background: '#261811', padding: '14px', borderRadius: '6px', marginBottom: '20px', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>
-                Delivery Address &amp; District
-              </div>
-              <div style={{ color: '#fff', fontSize: '0.9rem' }}>
-                {selectedCustomer.address ? `${selectedCustomer.address}, ` : ''}{selectedCustomer.city}, {selectedCustomer.district}
-              </div>
-              {selectedCustomer.note && (
-                <div style={{ marginTop: '6px', fontSize: '0.8rem', color: 'var(--marigold-light)', fontStyle: 'italic' }}>
-                  Note: "{selectedCustomer.note}"
-                </div>
-              )}
-            </div>
-
-            {/* Orders Placed by this customer */}
-            <div>
-              <h4 style={{ fontSize: '0.9rem', color: 'var(--marigold)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>
-                Order History ({selectedCustomer.orders.length})
-              </h4>
-              {selectedCustomer.orders.length === 0 ? (
-                <div style={{ padding: '20px', textAlign: 'center', background: '#261811', borderRadius: '6px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                  No orders linked yet for this customer phone.
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {selectedCustomer.orders.map((ord, idx) => (
-                    <div
-                      key={idx}
-                      style={{
-                        background: '#261811',
-                        border: '1px solid rgba(255,255,255,0.1)',
-                        borderRadius: '6px',
-                        padding: '12px 16px',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        flexWrap: 'wrap',
-                        gap: '10px'
-                      }}
-                    >
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <span style={{ fontFamily: 'monospace', fontWeight: 700, color: 'var(--marigold)' }}>
-                            {ord.id}
-                          </span>
-                          <span style={{
-                            padding: '1px 6px',
-                            borderRadius: '3px',
-                            fontSize: '0.68rem',
-                            fontWeight: 700,
-                            background: ord.channel === 'WhatsApp' ? 'rgba(37, 211, 102, 0.15)' : ord.channel === 'Instagram' ? 'rgba(236, 72, 153, 0.15)' : 'rgba(59, 130, 246, 0.15)',
-                            color: ord.channel === 'WhatsApp' ? '#25D366' : ord.channel === 'Instagram' ? '#f472b6' : '#60a5fa',
-                          }}>
-                            {ord.channel || 'Website'}
-                          </span>
-                          <span className={`status-badge ${ord.status?.toLowerCase()}`}>
-                            {ord.status}
-                          </span>
-                        </div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-                          {ord.createdAt ? new Date(ord.createdAt).toLocaleDateString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) : 'Recent'}
-                        </div>
-                      </div>
-
-                      <div style={{ fontWeight: 700, color: '#fff', fontSize: '0.95rem' }}>
-                        Rs. {(ord.total || 0).toLocaleString()}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Actions */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '16px' }}>
-              <a
-                href={getWaLink(selectedCustomer)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="admin-btn"
-                style={{ background: '#25D366', color: '#fff', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}
-              >
-                <WhatsAppIcon size={16} />
-                <span>Chat on WhatsApp</span>
-              </a>
-              <button
-                type="button"
-                onClick={() => {
-                  setEditingCustomer({ ...selectedCustomer });
-                  setSelectedCustomer(null);
-                }}
-                className="admin-btn"
-                style={{ background: 'var(--night-surface)', color: '#fff', border: '1px solid var(--night-border)' }}
-              >
-                Edit Details
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── EDIT CUSTOMER MODAL ── */}
+      {/* ══ 7. EDIT CUSTOMER MODAL ══ */}
       {editingCustomer && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0, 0, 0, 0.75)',
-            backdropFilter: 'blur(4px)',
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(15, 23, 42, 0.7)',
+          backdropFilter: 'blur(3px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '16px'
+        }}>
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '14px',
+            width: '100%',
+            maxWidth: '560px',
+            maxHeight: '90vh',
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            padding: '20px'
-          }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setEditingCustomer(null);
-          }}
-        >
-          <div
-            style={{
-              background: 'var(--night-surface, #1C120C)',
-              border: '1px solid var(--marigold, #C47820)',
-              borderRadius: '8px',
-              maxWidth: '560px',
-              width: '100%',
-              maxHeight: '90vh',
-              overflowY: 'auto',
-              padding: '28px',
-              boxShadow: '0 20px 40px rgba(0,0,0,0.6)',
-              color: '#fff'
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '14px', marginBottom: '20px' }}>
-              <div>
-                <h3 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--marigold)' }}>Edit Customer Profile</h3>
-                <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                  Primary key: <strong style={{ color: '#fff' }}>{editingCustomer.phone}</strong>
-                </p>
-              </div>
+            flexDirection: 'column',
+            overflow: 'hidden',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.25)',
+            border: '1px solid #e2e8f0'
+          }}>
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800, color: '#0f172a' }}>Edit Customer</h3>
               <button
                 type="button"
                 onClick={() => setEditingCustomer(null)}
-                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '1.4rem', cursor: 'pointer' }}
+                style={{ background: '#f1f5f9', border: 'none', borderRadius: '6px', width: '28px', height: '28px', cursor: 'pointer', color: '#64748b' }}
               >
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleEditSubmit}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+            <form onSubmit={handleSaveEdit} style={{ padding: '18px 20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
+                  Phone Number (Primary Key - Unchangeable)
+                </label>
+                <input
+                  type="tel"
+                  disabled
+                  value={editingCustomer.phone}
+                  style={{ width: '100%', background: '#e2e8f0', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '8px 12px', fontSize: '0.86rem', color: '#64748b', cursor: 'not-allowed' }}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                    Full Name *
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
+                    Customer Name
                   </label>
                   <input
                     type="text"
                     required
                     value={editingCustomer.fullName}
                     onChange={e => setEditingCustomer({ ...editingCustomer, fullName: e.target.value })}
-                    style={{ width: '100%', padding: '8px 12px', background: '#261811', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px', color: '#fff', fontSize: '0.88rem' }}
+                    style={{ width: '100%', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '8px 12px', fontSize: '0.86rem' }}
                   />
                 </div>
-
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
                     Email Address
                   </label>
                   <input
                     type="email"
-                    value={editingCustomer.email || ''}
+                    value={editingCustomer.email}
                     onChange={e => setEditingCustomer({ ...editingCustomer, email: e.target.value })}
-                    style={{ width: '100%', padding: '8px 12px', background: '#261811', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px', color: '#fff', fontSize: '0.88rem' }}
+                    style={{ width: '100%', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '8px 12px', fontSize: '0.86rem' }}
                   />
                 </div>
               </div>
 
-              <div style={{ marginBottom: '14px' }}>
-                <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                  WhatsApp Number
-                </label>
-                <input
-                  type="tel"
-                  value={editingCustomer.whatsapp || ''}
-                  onChange={e => setEditingCustomer({ ...editingCustomer, whatsapp: e.target.value })}
-                  style={{ width: '100%', padding: '8px 12px', background: '#261811', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px', color: '#fff', fontSize: '0.88rem' }}
+              <div>
+                <LocationAutocomplete
+                  value={editingCustomer.district}
+                  onChange={val => setEditingCustomer({ ...editingCustomer, district: val, city: val })}
+                  label="City / District"
+                  required
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                    District *
-                  </label>
-                  <select
-                    value={editingCustomer.district}
-                    onChange={e => setEditingCustomer({ ...editingCustomer, district: e.target.value })}
-                    style={{ width: '100%', padding: '8px 12px', background: '#261811', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px', color: '#fff', fontSize: '0.88rem' }}
-                  >
-                    {nepalDistricts.map(d => (
-                      <option key={d} value={d}>{d}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                    City / Area *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={editingCustomer.city}
-                    onChange={e => setEditingCustomer({ ...editingCustomer, city: e.target.value })}
-                    style={{ width: '100%', padding: '8px 12px', background: '#261811', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px', color: '#fff', fontSize: '0.88rem' }}
-                  />
-                </div>
-              </div>
-
-              <div style={{ marginBottom: '14px' }}>
-                <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                  Street Address
+              <div>
+                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
+                  Delivery Address
                 </label>
                 <input
                   type="text"
                   value={editingCustomer.address}
                   onChange={e => setEditingCustomer({ ...editingCustomer, address: e.target.value })}
-                  style={{ width: '100%', padding: '8px 12px', background: '#261811', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px', color: '#fff', fontSize: '0.88rem' }}
+                  style={{ width: '100%', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '8px 12px', fontSize: '0.86rem' }}
                 />
               </div>
 
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                  Notes
-                </label>
-                <input
-                  type="text"
-                  value={editingCustomer.note}
-                  onChange={e => setEditingCustomer({ ...editingCustomer, note: e.target.value })}
-                  style={{ width: '100%', padding: '8px 12px', background: '#261811', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px', color: '#fff', fontSize: '0.88rem' }}
-                />
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '6px' }}>
                 <button
                   type="button"
-                  onClick={async () => {
-                    if (confirm(`Are you sure you want to move customer ${editingCustomer.fullName} to trash?`)) {
-                      await deleteCustomer(editingCustomer.phone);
-                      setEditingCustomer(null);
-                    }
-                  }}
-                  style={{ background: 'transparent', border: 'none', color: '#f87171', fontSize: '0.82rem', cursor: 'pointer', textDecoration: 'underline' }}
+                  onClick={() => setEditingCustomer(null)}
+                  style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '8px 16px', fontSize: '0.84rem', cursor: 'pointer' }}
                 >
-                  Move to Trash
+                  Cancel
                 </button>
-
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <button
-                    type="button"
-                    onClick={() => setEditingCustomer(null)}
-                    style={{ padding: '8px 14px', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '4px', cursor: 'pointer' }}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    style={{
-                      padding: '8px 20px',
-                      background: 'var(--marigold)',
-                      color: '#1a0d08',
-                      border: 'none',
-                      fontWeight: 700,
-                      borderRadius: '4px',
-                      cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                    }}
-                  >
-                    {isSubmitting ? 'Updating...' : 'Save Changes'}
-                  </button>
-                </div>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  style={{ background: '#7c3aed', color: '#fff', border: 'none', borderRadius: '6px', padding: '8px 20px', fontSize: '0.86rem', fontWeight: 700, cursor: 'pointer' }}
+                >
+                  {isSubmitting ? 'Saving...' : 'Update Customer'}
+                </button>
               </div>
             </form>
           </div>

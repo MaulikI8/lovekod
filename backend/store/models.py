@@ -698,16 +698,28 @@ class Order(models.Model):
     total = models.IntegerField(default=0)
     coupon_code = models.CharField(max_length=50, blank=True, default="")
     discount_amount = models.IntegerField(default=0)
+    payment_status = models.CharField(
+        max_length=50,
+        default="Unpaid",
+        choices=[
+            ("Unpaid", "Unpaid"),
+            ("Paid", "Paid"),
+            ("Partial", "Partial"),
+            ("Refunded", "Refunded"),
+        ],
+        verbose_name="Payment Status"
+    )
     status = models.CharField(
         max_length=50,
         default="Pending",
         choices=[
             ("Pending", "Pending"),
-            ("Confirmed", "Confirmed"),
             ("Processing", "Processing"),
+            ("Dispatched", "Dispatched"),
             ("Shipped", "Shipped"),
             ("Delivered", "Delivered"),
             ("Cancelled", "Cancelled"),
+            ("Returned", "Returned"),
         ]
     )
     is_deleted = models.BooleanField(default=False, db_index=True, help_text="Soft delete flag")
@@ -802,6 +814,7 @@ class Order(models.Model):
             "couponCode": self.coupon_code,
             "discountAmount": self.discount_amount,
             "status": self.status,
+            "paymentStatus": self.payment_status,
             "channel": self.channel,
             "isDeleted": self.is_deleted,
             "createdAt": self.created_at.isoformat(),

@@ -600,34 +600,114 @@ class Testimonial(models.Model):
         return f"{self.customer_name} ({self.location})"
 
 
+class Customer(models.Model):
+    phone = models.CharField(
+        max_length=50,
+        primary_key=True,
+        verbose_name="Phone Number",
+        help_text="Primary Key: 10-digit mobile contact number (e.g. 9841234567)"
+    )
+    name = models.CharField(max_length=255, default="", verbose_name="Customer Name")
+    email = models.CharField(max_length=255, blank=True, default="", verbose_name="Email Address")
+    whatsapp = models.CharField(max_length=50, blank=True, default="", verbose_name="WhatsApp Number")
+    district = models.CharField(max_length=100, blank=True, default="Kathmandu")
+    city = models.CharField(max_length=100, blank=True, default="Kathmandu")
+    address = models.TextField(blank=True, default="")
+    note = models.TextField(blank=True, default="", verbose_name="Customer Note / Preferences")
+    total_orders = models.PositiveIntegerField(default=0, verbose_name="Total Orders")
+    total_spent = models.IntegerField(default=0, verbose_name="Total Spent (Rs.)")
+    is_deleted = models.BooleanField(default=False, db_index=True, help_text="Soft delete flag")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Customer"
+        verbose_name_plural = "Customers"
+
+    def clean(self):
+        super().clean()
+        if self.phone:
+            self.phone = self.phone.strip()
+
+    def update_stats(self):
+        """Recalculate total orders count and total spent from non-deleted orders."""
+        active_orders = self.orders.filter(is_deleted=False)
+        self.total_orders = active_orders.count()
+        self.total_spent = sum(o.total or 0 for o in active_orders)
+        self.save(update_fields=["total_orders", "total_spent", "updated_at"])
+
+    def to_dict(self):
+        return {
+            "phone": self.phone,
+            "name": self.name,
+            "email": self.email,
+            "whatsapp": self.whatsapp or self.phone,
+            "district": self.district,
+            "city": self.city,
+            "address": self.address,
+            "note": self.note,
+            "totalOrders": self.total_orders,
+            "totalSpent": self.total_spent,
+            "isDeleted": self.is_deleted,
+            "createdAt": self.created_at.isoformat() if self.created_at else None,
+            "updatedAt": self.updated_at.isoformat() if self.updated_at else None,
+        }
+
+    def __str__(self):
+        return f"{self.name or 'Customer'} ({self.phone})"
+
+
 class Order(models.Model):
     order_id = models.CharField(max_length=50, unique=True, db_index=True, blank=True)
-    customer_name = models.CharField(max_length=255)
-    phone = models.CharField(max_length=50)
-    whatsapp = models.CharField(max_length=50, blank=True, default='')
-    district = models.CharField(max_length=100, default='Kathmandu')
-    city = models.CharField(max_length=100, blank=True, default='Kathmandu')
+    customer = models.ForeignKey(
+        Customer,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="orders",
+        verbose_name="Linked Customer"
+    )
+    customer_name = models.CharField(max_length=255, verbose_name="Customer Name")
+    phone = models.CharField(max_length=50, verbose_name="Customer Phone")
+    email = models.CharField(max_length=255, blank=True, default="", verbose_name="Customer Email")
+    whatsapp = models.CharField(max_length=50, blank=True, default="", verbose_name="WhatsApp Number")
+    channel = models.CharField(
+        max_length=50,
+        default="Website",
+        choices=[
+            ("Website", "Website"),
+            ("WhatsApp", "WhatsApp"),
+            ("Instagram", "Instagram"),
+        ],
+        verbose_name="Order Channel / Label",
+        help_text="Order source: Website, WhatsApp, or Instagram"
+    )
+    district = models.CharField(max_length=100, default="Kathmandu")
+    city = models.CharField(max_length=100, blank=True, default="Kathmandu")
     address = models.TextField()
-    note = models.TextField(blank=True, default='')
+    note = models.TextField(blank=True, default="")
     payment_method = models.CharField(
         max_length=50,
-        default='COD',
+        default="COD",
         choices=[
-            ('COD', 'Cash on Delivery'),
-            ('DynamicQR', 'Dynamic QR Pay'),
+            ("COD", "Cash on Delivery"),
+            ("DynamicQR", "Dynamic QR Pay"),
         ]
     )
     total = models.IntegerField(default=0)
-    coupon_code = models.CharField(max_length=50, blank=True, default='')
+    coupon_code = models.CharField(max_length=50, blank=True, default="")
     discount_amount = models.IntegerField(default=0)
     status = models.CharField(
         max_length=50,
-        default='Pending',
+        default="Pending",
         choices=[
-            ('Pending', 'Pending'),
-            ('Confirmed', 'Confirmed'),
-            ('Shipped', 'Shipped'),
-            ('Delivered', 'Delivered'),
+            ("Pending", "Pending"),
+            ("Confirmed", "Confirmed"),
+            ("Processing", "Processing"),
+            ("Shipped", "Shipped"),
+            ("Delivered", "Delivered"),
+            ("Cancelled", "Cancelled"),
         ]
     )
     is_deleted = models.BooleanField(default=False, db_index=True, help_text="Soft delete flag")
@@ -637,28 +717,72 @@ class Order(models.Model):
         if not self.order_id:
             import time, random
             self.order_id = f"ORD-{int(time.time()*1000):X}{random.randint(10, 99)}"
+
+        clean_phone = (self.phone or "").strip()
+        if clean_phone:
+            cust = Customer.objects.filter(phone=clean_phone).first()
+            if not cust:
+                cust = Customer.objects.create(
+                    phone=clean_phone,
+                    name=self.customer_name or "Valued Customer",
+                    email=self.email or "",
+                    whatsapp=self.whatsapp or clean_phone,
+                    district=self.district or "Kathmandu",
+                    city=self.city or "Kathmandu",
+                    address=self.address or "",
+                    note=self.note or "",
+                )
+            else:
+                changed = False
+                if self.customer_name and (not cust.name or cust.name == "Valued Customer"):
+                    cust.name = self.customer_name
+                    changed = True
+                if self.email and not cust.email:
+                    cust.email = self.email
+                    changed = True
+                if self.address and not cust.address:
+                    cust.address = self.address
+                    changed = True
+                if self.district and not cust.district:
+                    cust.district = self.district
+                    changed = True
+                if self.city and not cust.city:
+                    cust.city = self.city
+                    changed = True
+                if changed:
+                    cust.save()
+            self.customer = cust
+
         super().save(*args, **kwargs)
+
+        if self.customer:
+            try:
+                self.customer.update_stats()
+            except Exception:
+                pass
 
     def to_dict(self):
         return {
-            'id': self.order_id,
-            'customer': {
-                'fullName': self.customer_name,
-                'phone': self.phone,
-                'whatsapp': self.whatsapp or self.phone,
-                'district': self.district,
-                'city': self.city,
-                'address': self.address,
-                'note': self.note,
-                'paymentMethod': self.payment_method,
+            "id": self.order_id,
+            "customer": {
+                "fullName": self.customer_name,
+                "phone": self.phone,
+                "email": self.email or "",
+                "whatsapp": self.whatsapp or self.phone,
+                "district": self.district,
+                "city": self.city,
+                "address": self.address,
+                "note": self.note,
+                "paymentMethod": self.payment_method,
             },
-            'items': [item.to_dict() for item in self.items.all()],
-            'total': self.total,
-            'couponCode': self.coupon_code,
-            'discountAmount': self.discount_amount,
-            'status': self.status,
-            'isDeleted': self.is_deleted,
-            'createdAt': self.created_at.isoformat(),
+            "items": [item.to_dict() for item in self.items.all()],
+            "total": self.total,
+            "couponCode": self.coupon_code,
+            "discountAmount": self.discount_amount,
+            "status": self.status,
+            "channel": self.channel,
+            "isDeleted": self.is_deleted,
+            "createdAt": self.created_at.isoformat(),
         }
 
     def __str__(self):

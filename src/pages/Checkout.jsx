@@ -5,12 +5,13 @@ import { nepalDistricts } from '../data/districts';
 import { DiyaIcon, ShieldCheckIcon, ArrowRightIcon } from '../components/Icons';
 
 export default function Checkout() {
-  const { cart, products, cartTotal, placeOrder, siteSettings } = useStore();
+  const { cart, products, cartTotal, placeOrder, siteSettings, lookupCustomer } = useStore();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     fullName: '',
     phone: '',
+    email: '',
     whatsapp: '',
     sameAsPhone: true,
     district: 'Kathmandu',
@@ -19,8 +20,42 @@ export default function Checkout() {
     note: '',
     paymentMethod: 'DynamicQR',
   });
+  const [customerLookupStatus, setCustomerLookupStatus] = useState(null);
 
   const [submitting, setSubmitting] = useState(false);
+  
+  const handlePhoneChange = async (e) => {
+    const rawVal = e.target.value;
+    setFormData(prev => ({ ...prev, phone: rawVal }));
+
+    const clean = rawVal.replace(/[^0-9]/g, '');
+    if (clean.length >= 10 && lookupCustomer) {
+      const res = await lookupCustomer(clean);
+      if (res && res.exists && res.customer) {
+        const c = res.customer;
+        setCustomerLookupStatus({
+          exists: true,
+          name: c.name,
+          phone: c.phone,
+          orders: c.totalOrders || 0,
+        });
+        setFormData(prev => ({
+          ...prev,
+          fullName: prev.fullName || c.name || '',
+          email: prev.email || c.email || '',
+          whatsapp: prev.sameAsPhone ? rawVal : (c.whatsapp || prev.whatsapp),
+          district: c.district || prev.district,
+          city: (prev.city && prev.city !== 'Kathmandu') ? prev.city : (c.city || prev.city),
+          address: prev.address || c.address || '',
+        }));
+      } else {
+        setCustomerLookupStatus({ exists: false, phone: clean });
+      }
+    } else if (clean.length < 7) {
+      setCustomerLookupStatus(null);
+    }
+  };
+
   const [couponInput, setCouponInput] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponLoading, setCouponLoading] = useState(false);
@@ -80,6 +115,8 @@ export default function Checkout() {
     setSubmitting(true);
     const orderData = {
       ...formData,
+      email: (formData.email || '').trim(),
+      channel: 'Website',
       whatsapp: formData.sameAsPhone ? formData.phone : formData.whatsapp,
       couponCode: appliedCoupon?.code || '',
       discountAmount: discountAmount,
@@ -214,15 +251,27 @@ export default function Checkout() {
       <form onSubmit={handleSubmit} className="checkout-form-card">
         <h3 className="form-card-title">Delivery &amp; Contact Details</h3>
 
-        <div className="form-group">
-          <label>Full Name *</label>
-          <input
-            type="text"
-            required
-            placeholder="e.g. Alisha Shrestha"
-            value={formData.fullName}
-            onChange={e => setFormData({ ...formData, fullName: e.target.value })}
-          />
+        <div className="form-row">
+          <div className="form-group">
+            <label>Full Name *</label>
+            <input
+              type="text"
+              required
+              placeholder="e.g. Alisha Shrestha"
+              value={formData.fullName}
+              onChange={e => setFormData({ ...formData, fullName: e.target.value })}
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Email Address (Optional)</label>
+            <input
+              type="email"
+              placeholder="e.g. alisha@example.com"
+              value={formData.email}
+              onChange={e => setFormData({ ...formData, email: e.target.value })}
+            />
+          </div>
         </div>
 
         <div className="form-row">
@@ -233,8 +282,18 @@ export default function Checkout() {
               required
               placeholder="e.g. 9841XXXXXX"
               value={formData.phone}
-              onChange={e => setFormData({ ...formData, phone: e.target.value })}
+              onChange={handlePhoneChange}
             />
+            {customerLookupStatus?.exists && (
+              <div style={{ marginTop: '6px', fontSize: '0.78rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <span>✓</span> Welcome back <strong>{customerLookupStatus.name}</strong>! Details auto-filled.
+              </div>
+            )}
+            {customerLookupStatus && !customerLookupStatus.exists && (
+              <div style={{ marginTop: '6px', fontSize: '0.78rem', color: '#60a5fa' }}>
+                ℹ New customer account will be linked to this number.
+              </div>
+            )}
           </div>
 
           <div className="form-group">

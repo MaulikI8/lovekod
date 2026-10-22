@@ -2,7 +2,7 @@ import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404
-from .models import Category, Product, SiteSettings, FestivalMoment, Testimonial, Order, OrderItem, Coupon
+from .models import Category, Product, SiteSettings, FestivalMoment, Testimonial, Order, OrderItem, Coupon, Customer
 
 DEFAULT_CATEGORIES = [
     {'name': 'All Sets', 'slug': 'all', 'nepali_name': '', 'order': 1},
@@ -608,7 +608,9 @@ def order_list_create(request):
             c_city = customer.get('city') or data.get('city') or 'Kathmandu'
             c_address = customer.get('address') or data.get('address') or ''
             c_note = customer.get('note') or data.get('note') or ''
+            c_email = customer.get('email') or data.get('email') or ''
             c_payment = customer.get('paymentMethod') or data.get('paymentMethod') or data.get('payment_method') or 'COD'
+            channel = data.get('channel') or data.get('label') or 'Website'
 
             items = data.get('items', [])
             total = int(data.get('total', 0))
@@ -623,7 +625,9 @@ def order_list_create(request):
                 order_id=order_id,
                 customer_name=c_name,
                 phone=c_phone,
+                email=c_email,
                 whatsapp=c_whatsapp,
+                channel=channel,
                 district=c_district,
                 city=c_city,
                 address=c_address,
@@ -789,3 +793,141 @@ def coupon_list(request):
     """Return list of active public coupons for promotion banners."""
     coupons = Coupon.objects.filter(is_deleted=False, is_active=True).order_by('-created_at')
     return JsonResponse([c.to_dict() for c in coupons], safe=False)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# CUSTOMERS API
+# ══════════════════════════════════════════════════════════════════════════════
+
+@csrf_exempt
+def customer_list_create(request):
+    if request.method == 'GET':
+        search = (request.GET.get('search') or request.GET.get('q') or '').strip().lower()
+        include_deleted = request.GET.get('include_deleted') == 'true'
+        customers = Customer.objects.all().order_by('-total_spent', '-created_at')
+        if not include_deleted:
+            customers = customers.filter(is_deleted=False)
+
+        if search:
+            from django.db.models import Q
+            customers = customers.filter(
+                Q(phone__icontains=search) |
+                Q(name__icontains=search) |
+                Q(email__icontains=search) |
+                Q(district__icontains=search) |
+                Q(city__icontains=search)
+            )
+
+        return JsonResponse([c.to_dict() for c in customers], safe=False)
+
+    elif request.method == 'POST':
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            phone = (data.get('phone') or '').strip()
+            if not phone:
+                return JsonResponse({'error': 'Mobile phone number is required as the primary key.'}, status=400)
+
+            name = (data.get('name') or data.get('fullName') or 'Valued Customer').strip()
+            email = (data.get('email') or '').strip()
+            whatsapp = (data.get('whatsapp') or phone).strip()
+            district = (data.get('district') or 'Kathmandu').strip()
+            city = (data.get('city') or 'Kathmandu').strip()
+            address = (data.get('address') or '').strip()
+            note = (data.get('note') or '').strip()
+
+            customer, created = Customer.objects.get_or_create(
+                phone=phone,
+                defaults={
+                    'name': name,
+                    'email': email,
+                    'whatsapp': whatsapp,
+                    'district': district,
+                    'city': city,
+                    'address': address,
+                    'note': note,
+                }
+            )
+
+            if not created:
+                if name and name != 'Valued Customer': customer.name = name
+                if email: customer.email = email
+                if whatsapp: customer.whatsapp = whatsapp
+                if district: customer.district = district
+                if city: customer.city = city
+                if address: customer.address = address
+                if note: customer.note = note
+                customer.save()
+
+            customer.update_stats()
+            return JsonResponse(customer.to_dict(), status=201 if created else 200)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+
+@csrf_exempt
+def customer_lookup(request):
+    """Fast customer lookup by phone number for live checkout or admin auto-fill."""
+    if request.method == 'GET':
+        raw_phone = (request.GET.get('phone') or '').strip()
+        clean = ''.join(filter(lambda ch: ch.isdigit() or ch == '+', raw_phone)).strip()
+        if not clean:
+            return JsonResponse({'exists': False, 'customer': None})
+
+        # Match exact phone or matching without leading zeros / 977
+        cust = Customer.objects.filter(phone=clean).first()
+        if not cust and clean.startswith('977') and len(clean) > 3:
+            cust = Customer.objects.filter(phone=clean[3:]).first()
+        if not cust and clean.startswith('+977') and len(clean) > 4:
+            cust = Customer.objects.filter(phone=clean[4:]).first()
+        if not cust and len(clean) >= 10:
+            cust = Customer.objects.filter(phone__icontains=clean).first()
+
+        if cust:
+            return JsonResponse({'exists': True, 'customer': cust.to_dict()})
+        return JsonResponse({'exists': False, 'customer': None})
+
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+
+@csrf_exempt
+def customer_detail_update_delete(request, phone):
+    clean_phone = (phone or '').strip()
+    cust = get_object_or_404(Customer, phone=clean_phone)
+
+    if request.method == 'GET':
+        orders = cust.orders.filter(is_deleted=False).order_by('-created_at')
+        return JsonResponse({
+            'customer': cust.to_dict(),
+            'orders': [o.to_dict() for o in orders]
+        })
+
+    elif request.method in ['PATCH', 'PUT']:
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            if 'name' in data: cust.name = data['name'].strip()
+            if 'email' in data: cust.email = data['email'].strip()
+            if 'whatsapp' in data: cust.whatsapp = data['whatsapp'].strip()
+            if 'district' in data: cust.district = data['district'].strip()
+            if 'city' in data: cust.city = data['city'].strip()
+            if 'address' in data: cust.address = data['address'].strip()
+            if 'note' in data: cust.note = data['note'].strip()
+            if 'isDeleted' in data: cust.is_deleted = bool(data['isDeleted'])
+            cust.save()
+            cust.update_stats()
+            return JsonResponse(cust.to_dict())
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+
+    elif request.method == 'DELETE':
+        hard = request.GET.get('hard') == 'true' or request.GET.get('permanent') == 'true'
+        if hard:
+            cust.delete()
+            return JsonResponse({'success': True, 'hard_deleted': clean_phone})
+        else:
+            cust.is_deleted = True
+            cust.save(update_fields=['is_deleted'])
+            return JsonResponse({'success': True, 'soft_deleted': clean_phone})
+
+    return JsonResponse({'error': 'Method not allowed'}, status=405)

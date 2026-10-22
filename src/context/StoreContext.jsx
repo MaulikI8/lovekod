@@ -110,6 +110,7 @@ export function StoreProvider({ children }) {
   const [festivalMoments, setFestivalMoments] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [customers, setCustomers] = useState([]);
 
   // Client session state (persisted)
   const [cart, setCart] = useState(() => loadState(STORAGE_KEYS.CART, []));
@@ -215,6 +216,18 @@ export function StoreProvider({ children }) {
         }
       }
     } catch { /* offline fallback */ }
+
+    // 7. Customers Directory
+    try {
+      const custRes = await fetchLive('/customers/');
+      if (custRes.ok) {
+        const custData = await custRes.json();
+        if (Array.isArray(custData)) {
+          const activeOnly = custData.filter(c => !c.isDeleted && !c.is_deleted);
+          setCustomers(activeOnly);
+        }
+      }
+    } catch { /* offline fallback */ }
   }, []);
 
   useEffect(() => {
@@ -296,12 +309,16 @@ export function StoreProvider({ children }) {
 
     const orderPayload = {
       id: orderId,
-      customer: customerInfo,
+      customer: {
+        ...customerInfo,
+        email: customerInfo.email || '',
+      },
       items: orderItems,
       total: finalTotal,
       couponCode: customerInfo.couponCode || '',
       discountAmount: customerInfo.discountAmount || 0,
-      status: 'Pending',
+      channel: customerInfo.channel || 'Website',
+      status: customerInfo.status || 'Pending',
       createdAt: new Date().toISOString(),
     };
 
@@ -575,9 +592,77 @@ export function StoreProvider({ children }) {
     } catch { /* offline fallback */ }
   }
 
+
+  // ── Customer Directory Management ──
+  async function lookupCustomer(phone) {
+    if (!phone) return null;
+    try {
+      const res = await fetchLive(`/customers/lookup/?phone=${encodeURIComponent(phone)}`);
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (err) {
+      console.warn('Customer lookup error:', err);
+    }
+    return { exists: false, customer: null };
+  }
+
+  async function addCustomer(customerData) {
+    try {
+      const res = await fetch(`${API_BASE}/customers/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(customerData),
+      });
+      if (res.ok) {
+        const saved = await res.json();
+        await refreshFromBackend();
+        showToast(`Customer ${saved.name || saved.phone} saved successfully!`);
+        return saved;
+      } else {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Failed to save customer');
+      }
+    } catch (err) {
+      showToast(err.message || 'Error saving customer', 'error');
+      throw err;
+    }
+  }
+
+  async function updateCustomer(phone, updates) {
+    try {
+      const res = await fetch(`${API_BASE}/customers/${encodeURIComponent(phone)}/`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        await refreshFromBackend();
+        showToast('Customer record updated');
+        return updated;
+      }
+    } catch (err) {
+      showToast('Error updating customer', 'error');
+    }
+  }
+
+  async function deleteCustomer(phone) {
+    try {
+      const res = await fetch(`${API_BASE}/customers/${encodeURIComponent(phone)}/`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        await refreshFromBackend();
+        showToast('Customer moved to trash');
+      }
+    } catch (err) {
+      showToast('Error deleting customer', 'error');
+    }
+  }
   const value = {
     products, categories, siteSettings, festivalMoments, testimonials,
-    cart, orders, cartOpen, toast, isAdmin, cartTotal, cartCount,
+    cart, orders, customers, cartOpen, toast, isAdmin, cartTotal, cartCount,
     lightsEnabled, toggleLights, celebrateLights,
     setCartOpen, addToCart, updateCartQty, removeFromCart, clearCart, placeOrder,
     updateSiteSettings,
@@ -585,6 +670,7 @@ export function StoreProvider({ children }) {
     addFestivalMoment, updateFestivalMoment, deleteFestivalMoment,
     addTestimonial, updateTestimonial, deleteTestimonial,
     updateProduct, addProduct, deleteProduct, createManualOrder, updateOrderStatus,
+    lookupCustomer, addCustomer, updateCustomer, deleteCustomer,
     adminLogin, adminLogout, showToast, resetInventory, refreshFromBackend,
   };
 

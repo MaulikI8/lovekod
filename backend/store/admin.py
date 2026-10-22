@@ -6,7 +6,7 @@ from django.shortcuts import redirect
 from django.utils.html import format_html
 from unfold.admin import ModelAdmin, TabularInline
 from unfold.decorators import action
-from .models import Category, Product, SiteSettings, FestivalMoment, Testimonial, Order, OrderItem, Coupon
+from .models import Category, Product, SiteSettings, FestivalMoment, Testimonial, Order, OrderItem, Coupon, Customer
 from django.urls import reverse
 
 admin.site.site_header = "LoveKod Administration"
@@ -798,23 +798,130 @@ class TestimonialAdmin(ModelAdmin):
     trash_status.short_description = "Trash Status"
 
 
-@admin.register(Order)
-class OrderAdmin(ModelAdmin):
+
+class OrderInlineForCustomer(TabularInline):
+    model = Order
+    fields = ('order_id', 'channel', 'status', 'total', 'created_at')
+    readonly_fields = ('order_id', 'channel', 'status', 'total', 'created_at')
+    extra = 0
+    can_delete = False
+    show_change_link = True
+    verbose_name = "Order History"
+    verbose_name_plural = "Orders Placed by Customer"
+
+
+@admin.register(Customer)
+class CustomerAdmin(ModelAdmin):
     list_display = (
-        'order_id',
-        'customer_name',
         'phone',
+        'name',
+        'email',
+        'orders_count_badge',
+        'total_spent_badge',
         'district',
-        'payment_method',
-        'total_display',
-        'status',
+        'city',
         'trash_status',
         'whatsapp_chat_action',
         'created_at',
     )
-    list_filter = (TrashStatusFilter, 'status', 'district', 'payment_method', 'created_at')
-    search_fields = ('order_id', 'customer_name', 'phone', 'whatsapp', 'district', 'city', 'address')
-    list_editable = ('status',)
+    list_filter = (TrashStatusFilter, 'district', 'created_at')
+    search_fields = ('phone', 'name', 'email', 'whatsapp', 'district', 'city', 'address')
+    ordering = ('-created_at',)
+    readonly_fields = ('total_orders', 'total_spent', 'created_at', 'updated_at')
+    inlines = [OrderInlineForCustomer]
+    actions = COMMON_ACTIONS
+    actions_on_top = True
+    actions_on_bottom = True
+
+    fieldsets = (
+        ('Customer Identification (Primary Key)', {
+            'fields': (
+                'phone',
+                'name',
+                ('email', 'whatsapp'),
+            ),
+            'description': 'Mobile Phone number is the unique primary key for identifying this boutique customer.'
+        }),
+        ('Location & Delivery Details', {
+            'fields': (
+                ('district', 'city'),
+                'address',
+                'note',
+            )
+        }),
+        ('Purchasing Statistics & Status', {
+            'fields': (
+                ('total_orders', 'total_spent'),
+                'is_deleted',
+            ),
+            'description': 'Cumulative orders and total spend are automatically computed from completed boutique orders.'
+        }),
+        ('Timestamps', {
+            'fields': (('created_at', 'updated_at'),),
+            'classes': ('collapse',),
+        }),
+    )
+
+    def trash_status(self, obj):
+        return deletion_badge(obj)
+    trash_status.short_description = "Trash Status"
+
+    def orders_count_badge(self, obj):
+        count = obj.total_orders or obj.orders.filter(is_deleted=False).count()
+        return format_html(
+            '<span style="background: rgba(124, 58, 237, 0.15); color: #8b5cf6; padding: 3px 9px; border-radius: 9999px; font-weight: 700; font-size: 0.8rem;">{} {}</span>',
+            count, "order" if count == 1 else "orders"
+        )
+    orders_count_badge.short_description = "Orders"
+
+    def total_spent_badge(self, obj):
+        spent = obj.total_spent or sum(o.total or 0 for o in obj.orders.filter(is_deleted=False))
+        return format_html(
+            '<span style="font-weight: 700; color: #10b981; font-family: monospace;">Rs. {:,}</span>',
+            spent
+        )
+    total_spent_badge.short_description = "Total Spent"
+
+    def whatsapp_chat_action(self, obj):
+        raw_phone = obj.whatsapp or obj.phone
+        if not raw_phone:
+            return "-"
+        clean = ''.join(filter(str.isdigit, raw_phone))
+        if clean.startswith('0'):
+            clean = clean[1:]
+        if not clean.startswith('977'):
+            clean = f"977{clean}"
+        msg = f"Namaste {obj.name or 'Valued Customer'}, this is LoveKod reaching out to you. How can we assist you today?"
+        from urllib.parse import quote
+        url = f"https://wa.me/{clean}?text={quote(msg)}"
+        return format_html(
+            '<a href="{}" target="_blank" style="background: #25D366; color: #fff; padding: 4px 8px; border-radius: 4px; text-decoration: none; font-size: 0.75rem; font-weight: 600; display: inline-block;">WhatsApp</a>',
+            url
+        )
+    whatsapp_chat_action.short_description = "WhatsApp"
+
+
+@admin.register(Order)
+class OrderAdmin(ModelAdmin):
+    class Media:
+        js = ('js/order_customer_lookup.js',)
+
+    list_display = (
+        'order_id',
+        'channel_badge',
+        'customer_name_display',
+        'phone',
+        'district',
+        'payment_method',
+        'total_display',
+        'status_badge',
+        'trash_status',
+        'whatsapp_chat_action',
+        'created_at',
+    )
+    list_filter = (TrashStatusFilter, 'channel', 'status', 'district', 'payment_method', 'created_at')
+    search_fields = ('order_id', 'customer_name', 'phone', 'email', 'whatsapp', 'district', 'city', 'address', 'channel')
+    list_editable = ()
     inlines = [OrderItemInline]
     ordering = ('-created_at',)
     readonly_fields = ('created_at',)
@@ -827,17 +934,20 @@ class OrderAdmin(ModelAdmin):
         ('Order Identification & Status', {
             'fields': (
                 ('order_id', 'status'),
-                ('payment_method', 'total'),
+                ('channel', 'payment_method'),
+                'total',
                 'is_deleted',
             ),
-            'description': 'Leave Order ID blank to auto-generate (e.g. ORD-190A...). Set Total to 0 to auto-sum from line items below. Check is_deleted to move this order to Trash.'
+            'description': 'Leave Order ID blank to auto-generate (e.g. ORD-190A...). Set Total to 0 to auto-sum from line items below. Channel label indicates order source (default Website).'
         }),
         ('Customer Contact Information', {
             'fields': (
+                'customer',
                 'customer_name',
                 ('phone', 'whatsapp'),
+                'email',
             ),
-            'description': 'Customer phone number is used for WhatsApp concierge dispatch.'
+            'description': 'Customer phone number is the primary key. If the customer exists, their information will link automatically.'
         }),
         ('Delivery Destination in Nepal', {
             'fields': (
@@ -864,6 +974,31 @@ class OrderAdmin(ModelAdmin):
         return deletion_badge(obj)
     trash_status.short_description = "Trash Status"
 
+    def channel_badge(self, obj):
+        ch = obj.channel or "Website"
+        colors = {
+            "Website": ("#1E40AF", "#DBEAFE"),
+            "WhatsApp": ("#065F46", "#A7F3D0"),
+            "Instagram": ("#831843", "#FBCFE8"),
+        }
+        bg, fg = colors.get(ch, ("#374151", "#F3F4F6"))
+        return format_html(
+            '<span style="background: {}; color: {}; padding: 2px 7px; border-radius: 4px; font-weight: 700; font-size: 0.72rem; letter-spacing: 0.02em;">{}</span>',
+            bg, fg, ch
+        )
+    channel_badge.short_description = "Channel / Label"
+
+    def customer_name_display(self, obj):
+        if obj.customer_id:
+            from django.urls import reverse
+            url = reverse('admin:store_customer_change', args=[obj.customer_id])
+            return format_html(
+                '<a href="{}" style="font-weight: 600; color: #7C3AED; text-decoration: underline;" title="View Customer Profile">👤 {}</a>',
+                url, obj.customer_name
+            )
+        return obj.customer_name
+    customer_name_display.short_description = "Customer"
+
     def total_display(self, obj):
         return f"Rs. {obj.total:,}"
     total_display.short_description = "Total"
@@ -872,8 +1007,10 @@ class OrderAdmin(ModelAdmin):
         colors = {
             'Pending': '#CA8A04',
             'Confirmed': '#2563EB',
+            'Processing': '#0284C7',
             'Shipped': '#7C3AED',
             'Delivered': '#059669',
+            'Cancelled': '#DC2626',
         }
         color = colors.get(obj.status, '#4B5563')
         return format_html(

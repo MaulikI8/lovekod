@@ -4,7 +4,7 @@ import { WhatsAppIcon } from '../../components/Icons';
 import { nepalDistricts } from '../../data/districts';
 
 export default function AdminOrders() {
-  const { orders, updateOrderStatus, products, createManualOrder } = useStore();
+  const { orders, updateOrderStatus, products, createManualOrder, lookupCustomer } = useStore();
   const [statusFilter, setStatusFilter] = useState('All');
   const [search, setSearch] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -14,12 +14,14 @@ export default function AdminOrders() {
   const initialForm = {
     fullName: '',
     phone: '',
+    email: '',
     whatsapp: '',
     sameAsPhone: true,
     district: 'Kathmandu',
     city: 'Kathmandu',
     address: '',
     note: '',
+    channel: 'Website',
     paymentMethod: 'COD',
     status: 'Pending',
     items: [
@@ -35,6 +37,38 @@ export default function AdminOrders() {
   };
 
   const [formData, setFormData] = useState(initialForm);
+  const [customerLookupStatus, setCustomerLookupStatus] = useState(null);
+
+  const handlePhoneLookup = async (val) => {
+    setFormData(prev => ({ ...prev, phone: val }));
+    const clean = val.replace(/[^0-9]/g, '');
+    if (clean.length >= 10 && lookupCustomer) {
+      const res = await lookupCustomer(clean);
+      if (res && res.exists && res.customer) {
+        const c = res.customer;
+        setCustomerLookupStatus({
+          exists: true,
+          name: c.name,
+          phone: c.phone,
+          orders: c.totalOrders || 0,
+          spent: c.totalSpent || 0,
+        });
+        setFormData(prev => ({
+          ...prev,
+          fullName: prev.fullName || c.name || '',
+          email: prev.email || c.email || '',
+          whatsapp: prev.sameAsPhone ? val : (c.whatsapp || prev.whatsapp),
+          district: c.district || prev.district,
+          city: (prev.city && prev.city !== 'Kathmandu') ? prev.city : (c.city || prev.city),
+          address: prev.address || c.address || '',
+        }));
+      } else {
+        setCustomerLookupStatus({ exists: false, phone: clean });
+      }
+    } else if (clean.length < 7) {
+      setCustomerLookupStatus(null);
+    }
+  };
 
   const filteredOrders = orders.filter(o => {
     if (statusFilter !== 'All' && o.status !== statusFilter) return false;
@@ -136,9 +170,11 @@ export default function AdminOrders() {
 
     setIsSubmitting(true);
     const orderPayload = {
+      channel: formData.channel || 'Website',
       customer: {
         fullName: formData.fullName.trim(),
         phone: formData.phone.trim(),
+        email: (formData.email || '').trim(),
         whatsapp: formData.sameAsPhone ? formData.phone.trim() : (formData.whatsapp.trim() || formData.phone.trim()),
         district: formData.district,
         city: formData.city.trim() || formData.district,
@@ -163,6 +199,7 @@ export default function AdminOrders() {
       setIsSubmitting(false);
       setShowCreateModal(false);
       setFormData(initialForm);
+      setCustomerLookupStatus(null);
     } catch (err) {
       setIsSubmitting(false);
       console.error(err);
@@ -251,9 +288,22 @@ export default function AdminOrders() {
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', borderBottom: '1px solid var(--night-border)', paddingBottom: '14px' }}>
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                     <span style={{ fontFamily: 'monospace', fontWeight: 700, color: 'var(--marigold)', fontSize: '1.05rem' }}>
                       {order.id}
+                    </span>
+                    <span style={{
+                      padding: '2px 8px',
+                      borderRadius: '4px',
+                      fontSize: '0.72rem',
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                      background: order.channel === 'WhatsApp' ? 'rgba(37, 211, 102, 0.15)' : order.channel === 'Instagram' ? 'rgba(236, 72, 153, 0.15)' : 'rgba(59, 130, 246, 0.15)',
+                      color: order.channel === 'WhatsApp' ? '#25D366' : order.channel === 'Instagram' ? '#f472b6' : '#60a5fa',
+                      border: `1px solid ${order.channel === 'WhatsApp' ? 'rgba(37, 211, 102, 0.3)' : order.channel === 'Instagram' ? 'rgba(236, 72, 153, 0.3)' : 'rgba(59, 130, 246, 0.3)'}`,
+                    }}>
+                      {order.channel || 'Website'}
                     </span>
                     <span className={`status-badge ${order.status?.toLowerCase()}`}>
                       {order.status}
@@ -277,8 +327,10 @@ export default function AdminOrders() {
                   >
                     <option value="Pending">Pending</option>
                     <option value="Confirmed">Confirmed</option>
+                    <option value="Processing">Processing</option>
                     <option value="Shipped">Shipped</option>
                     <option value="Delivered">Delivered</option>
+                    <option value="Cancelled">Cancelled</option>
                   </select>
 
                   <a
@@ -412,6 +464,30 @@ export default function AdminOrders() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
                   <div>
                     <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                      Contact Phone * (Primary Key)
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="e.g. 9841XXXXXX"
+                      value={formData.phone}
+                      onChange={e => handlePhoneLookup(e.target.value)}
+                      style={{ width: '100%', padding: '8px 12px', background: '#261811', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px', color: '#fff', fontSize: '0.88rem' }}
+                    />
+                    {customerLookupStatus?.exists && (
+                      <div style={{ marginTop: '5px', fontSize: '0.75rem', color: '#10b981', background: 'rgba(16,185,129,0.12)', padding: '3px 8px', borderRadius: '4px' }}>
+                        ✓ Existing Customer: <strong>{customerLookupStatus.name}</strong> • {customerLookupStatus.orders} previous orders • Spent: Rs. {customerLookupStatus.spent.toLocaleString()}
+                      </div>
+                    )}
+                    {customerLookupStatus && !customerLookupStatus.exists && (
+                      <div style={{ marginTop: '5px', fontSize: '0.75rem', color: '#60a5fa', background: 'rgba(59,130,246,0.12)', padding: '3px 8px', borderRadius: '4px' }}>
+                        ℹ New customer will be auto-saved in Customer directory.
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
                       Customer Full Name *
                     </label>
                     <input
@@ -423,19 +499,35 @@ export default function AdminOrders() {
                       style={{ width: '100%', padding: '8px 12px', background: '#261811', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px', color: '#fff', fontSize: '0.88rem' }}
                     />
                   </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                      Customer Email
+                    </label>
+                    <input
+                      type="email"
+                      placeholder="e.g. customer@example.com"
+                      value={formData.email}
+                      onChange={e => setFormData({ ...formData, email: e.target.value })}
+                      style={{ width: '100%', padding: '8px 12px', background: '#261811', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px', color: '#fff', fontSize: '0.88rem' }}
+                    />
+                  </div>
 
                   <div>
                     <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                      Contact Phone *
+                      Order Channel / Label (Source)
                     </label>
-                    <input
-                      type="tel"
-                      required
-                      placeholder="e.g. 9841XXXXXX"
-                      value={formData.phone}
-                      onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                    <select
+                      value={formData.channel}
+                      onChange={e => setFormData({ ...formData, channel: e.target.value })}
                       style={{ width: '100%', padding: '8px 12px', background: '#261811', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px', color: '#fff', fontSize: '0.88rem' }}
-                    />
+                    >
+                      <option value="Website">Website (Default)</option>
+                      <option value="WhatsApp">WhatsApp Order</option>
+                      <option value="Instagram">Instagram DM</option>
+                    </select>
                   </div>
                 </div>
 

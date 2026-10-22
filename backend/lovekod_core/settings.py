@@ -229,6 +229,11 @@ UNFOLD = {
                         "link": reverse_lazy("admin:store_order_changelist"),
                     },
                     {
+                        "title": "Customers",
+                        "icon": "group",
+                        "link": reverse_lazy("admin:store_customer_changelist"),
+                    },
+                    {
                         "title": "Reviews",
                         "icon": "rate_review",
                         "link": reverse_lazy("admin:store_testimonial_changelist"),

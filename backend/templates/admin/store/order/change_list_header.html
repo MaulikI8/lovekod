@@ -162,11 +162,11 @@
                             </div>
                             <input type="text" id="cust-search-input" placeholder="9841234567 / 9818765432" class="w-full pl-9 pr-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-gray-50/50">
                         </div>
-                        <button type="button" onclick="window.searchCustomer()" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-purple-600 text-purple-600 hover:bg-purple-50 text-xs font-semibold transition-colors cursor-pointer">
+                        <button type="button" onclick="window.searchCustomer()" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-purple-600 text-purple-600 hover:bg-purple-50 text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap">
                             <svg class="w-3.5 h-3.5 blanxer-icon-xs" style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                             <span>Search Customer</span>
                         </button>
-                        <button type="button" onclick="window.openCustomItemPrompt()" class="px-3 py-2 rounded-lg bg-pink-50 text-pink-600 hover:bg-pink-100 text-xs font-semibold transition-colors">
+                        <button type="button" onclick="window.openCustomItemPrompt()" class="px-3 py-2 rounded-lg bg-pink-50 border border-pink-200 text-pink-600 hover:bg-pink-100 text-xs font-semibold transition-colors whitespace-nowrap cursor-pointer">
                             Add Custom Item
                         </button>
                     </div>
@@ -873,10 +873,10 @@
                 const stockText = it.stock !== undefined ? `Stock: ${it.stock}` : '';
                 return `
                     <div class="p-3 rounded-xl border border-gray-200 bg-white flex items-center justify-between gap-3 text-xs">
-                        <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-3 min-w-0 flex-1">
                             <img src="${it.image}" class="w-11 h-11 object-cover rounded-lg border border-gray-100" style="width: 44px; height: 44px; min-width: 44px; max-width: 44px; object-fit: cover; border-radius: 8px; flex-shrink: 0;" onerror="this.src='/images/kurtha-charcoal.jpg'">
                             <div>
-                                <div class="font-bold text-gray-900">${it.name}</div>
+                                <div class="font-bold text-gray-900 truncate max-w-[280px]" title="${it.name}">${it.name}</div>
                                 <div class="text-[11px] text-gray-500 mt-0.5 flex items-center gap-2">
                                     <span class="font-semibold text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded">Variant: ${it.variant || it.size}</span>
                                     <span>•</span>

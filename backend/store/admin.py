@@ -875,10 +875,14 @@ class CustomerAdmin(ModelAdmin):
     orders_count_badge.short_description = "Orders"
 
     def total_spent_badge(self, obj):
-        spent = obj.total_spent or sum(o.total or 0 for o in obj.orders.filter(is_deleted=False))
+        try:
+            spent = int(obj.total_spent or sum(o.total or 0 for o in obj.orders.filter(is_deleted=False)))
+            spent_str = f"Rs. {spent:,}"
+        except Exception:
+            spent_str = "Rs. 0"
         return format_html(
-            '<span style="font-weight: 700; color: #10b981; font-family: monospace;">Rs. {:,}</span>',
-            spent
+            '<span style="font-weight: 700; color: #10b981; font-family: monospace;">{}</span>',
+            spent_str
         )
     total_spent_badge.short_description = "Total Spent"
 

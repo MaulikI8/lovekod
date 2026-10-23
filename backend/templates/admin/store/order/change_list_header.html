@@ -1,3 +1,23 @@
+<style>
+#blanxer-create-order-modal, #blanxer-product-picker-modal {
+    z-index: 9999999 !important;
+}
+#blanxer-create-order-modal svg, #blanxer-product-picker-modal svg {
+    max-width: 20px !important;
+    max-height: 20px !important;
+    display: inline-block !important;
+}
+.blanxer-icon-xs {
+    width: 14px !important;
+    height: 14px !important;
+    min-width: 14px !important;
+}
+.blanxer-icon-sm {
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px !important;
+}
+</style>
 <div class="blanxer-orders-wrapper mb-6" id="blanxer-orders-app">
     <!-- Top Tabs: Orders | Abandoned Carts | Customers -->
     <div class="flex items-center justify-between flex-wrap gap-4 mb-4">
@@ -48,7 +68,7 @@
 
             <!-- New Order Popup Trigger (Matching Blanxer) -->
             <button id="btn-open-blanxer-order-popup" type="button" onclick="window.openBlanxerOrderModal()" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold shadow-xs transition-all cursor-pointer">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                <svg class="w-4 h-4 blanxer-icon-xs" style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 <span>+ New order</span>
             </button>
 
@@ -110,7 +130,7 @@
             <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white sticky top-0 z-10">
                 <h3 class="text-lg font-bold text-gray-900">Create Order</h3>
                 <button type="button" onclick="window.closeBlanxerOrderModal()" class="text-gray-400 hover:text-gray-600 rounded-lg p-1 hover:bg-gray-100 transition-colors cursor-pointer">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    <svg class="w-5 h-5 blanxer-icon-sm" style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
 
@@ -138,12 +158,12 @@
                     <div id="customer-search-row" class="flex items-center gap-2">
                         <div class="relative flex-1">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                                <svg class="w-4 h-4 blanxer-icon-xs" style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                             </div>
                             <input type="text" id="cust-search-input" placeholder="Search by phone" class="w-full pl-9 pr-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-gray-50/50">
                         </div>
                         <button type="button" onclick="window.searchCustomer()" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-purple-600 text-purple-600 hover:bg-purple-50 text-xs font-semibold transition-colors cursor-pointer">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                            <svg class="w-3.5 h-3.5 blanxer-icon-xs" style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                             <span>Search Customer</span>
                         </button>
                         <button type="button" onclick="window.openCustomItemPrompt()" class="px-3 py-2 rounded-lg bg-pink-50 text-pink-600 hover:bg-pink-100 text-xs font-semibold transition-colors">
@@ -216,7 +236,7 @@
                     <div id="products-empty-state" class="border border-dashed border-gray-200 rounded-xl p-8 text-center bg-gray-50/50">
                         <p class="text-xs text-gray-500 mb-3">No products selected</p>
                         <button type="button" onclick="window.openProductPicker()" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-purple-200 text-purple-600 hover:bg-purple-50 text-xs font-bold transition-all shadow-2xs cursor-pointer">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <svg class="w-4 h-4 blanxer-icon-xs" style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                             <span>Add Products</span>
                         </button>
                     </div>
@@ -231,7 +251,7 @@
                 <div class="border-t border-gray-100 pt-3">
                     <button type="button" onclick="document.getElementById('coupon-accordion-body').classList.toggle('hidden');" class="flex items-center gap-1.5 text-xs font-semibold text-purple-600 hover:text-purple-700">
                         <span>Offers & code (optional)</span>
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        <svg class="w-3.5 h-3.5 blanxer-icon-xs" style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                     </button>
                     <div id="coupon-accordion-body" class="hidden mt-3 p-3 bg-gray-50 rounded-xl space-y-2">
                         <div class="flex items-center gap-2">
@@ -354,7 +374,7 @@
             <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
                 <h3 class="text-base font-bold text-gray-900">Select Products</h3>
                 <button type="button" onclick="window.closeProductPicker()" class="text-gray-400 hover:text-gray-600 rounded-lg p-1 hover:bg-gray-100">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    <svg class="w-5 h-5 blanxer-icon-sm" style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
 
@@ -362,7 +382,7 @@
             <div class="p-4 border-b border-gray-100 bg-gray-50/50">
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        <svg class="w-4 h-4 blanxer-icon-xs" style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     </div>
                     <input type="text" id="picker-search-input" oninput="window.filterPickerProducts()" placeholder="Search products by name or SKU..." class="w-full pl-9 pr-3 py-2 text-xs border border-gray-200 rounded-lg bg-white">
                 </div>
@@ -660,7 +680,7 @@
                         '</div>' +
                         '<span class="font-bold text-gray-900 w-16 text-right">Rs. ' + (it.price * it.quantity) + '</span>' +
                         '<button type="button" onclick="window.removeProductItem(' + idx + ')" class="text-gray-400 hover:text-red-500 p-1 cursor-pointer">' +
-                            '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>' +
+                            '<svg class="w-4 h-4 blanxer-icon-xs" style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>' +
                         '</button>' +
                     '</div>' +
                 '</div>';

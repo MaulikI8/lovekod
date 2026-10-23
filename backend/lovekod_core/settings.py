@@ -183,6 +183,14 @@ UNFOLD = {
     "SITE_HEADER": "LoveKod (लभकोण)",
     "SITE_URL": "https://lovekod.com",
     "THEME": "light",
+    "SITE_LOGO": {
+        "light": "/static/images/logo.jpg",
+        "dark": "/static/images/logo.jpg",
+    },
+    "SITE_ICON": {
+        "light": "/static/images/logo.jpg",
+        "dark": "/static/images/logo.jpg",
+    },
     "DASHBOARD_CALLBACK": "store.admin.blanxer_dashboard_callback",
     "STYLES": ["/static/css/admin_fix.css"],
     "COLORS": {

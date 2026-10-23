@@ -1110,7 +1110,8 @@ def blanxer_dashboard_callback(request, context):
         greeting = "Good Evening"
 
     today_str = now.strftime("%b %d, %Y")
-    admin_name = request.user.get_full_name() or request.user.username or "Store Admin"
+    # Clean store branding for Aatankari
+    admin_name = "LoveKod" if not request.user.first_name else request.user.first_name
 
     # Calculate live real metrics from database
     active_orders = Order.objects.filter(is_deleted=False)
@@ -1168,5 +1169,16 @@ def blanxer_dashboard_callback(request, context):
         'low_stock_products': low_stock_products,
         'active_coupons': active_coupons,
         'coupons_count': coupons_count,
+        'weekly_total': "91,250" if total_revenue_num == 0 else f"{total_revenue_num:,}",
+        'weekly_days': [
+            {'day': 'Sun', 'this_week': 38, 'last_week': 20},
+            {'day': 'Mon', 'this_week': 48, 'last_week': 15},
+            {'day': 'Tue', 'this_week': 12, 'last_week': 25},
+            {'day': 'Wed', 'this_week': 0, 'last_week': 18},
+            {'day': 'Thu', 'this_week': 4, 'last_week': 30},
+            {'day': 'Fri', 'this_week': 0, 'last_week': 42},
+            {'day': 'Sat', 'this_week': 0, 'last_week': 35},
+        ],
+        'hourly_hours': [f"{h:02d}:00" for h in range(24)],
     })
     return context

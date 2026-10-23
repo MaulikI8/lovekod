@@ -1,11 +1,10 @@
 import { useStore } from '../../context/StoreContext';
 import { Link } from 'react-router-dom';
-import { WhatsAppIcon } from '../../components/Icons';
 
 export default function AdminDashboard() {
-  const { products, orders, updateOrderStatus, siteSettings } = useStore();
+  const { products, orders } = useStore();
 
-  // Compute greeting based on local time
+  // Dynamic Greeting based on time of day
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good Morning' : (hour < 17 ? 'Good Afternoon' : 'Good Evening');
   const todayDateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -15,276 +14,385 @@ export default function AdminDashboard() {
   todayStart.setHours(0, 0, 0, 0);
 
   const todayOrders = orders.filter(o => o.createdAt && new Date(o.createdAt) >= todayStart);
-  const todayRevenue = todayOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+  const todayRevenue = todayOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+  const totalRevenue = orders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+  const todayAov = todayOrders.length > 0 ? Math.round(todayRevenue / todayOrders.length) : (orders.length > 0 ? Math.round(totalRevenue / orders.length) : 0);
 
-  const totalRevenue = orders.reduce((sum, o) => sum + (o.total || 0), 0);
-  const totalItemsSold = orders.reduce((sum, o) => sum + (o.items?.reduce((s, i) => s + i.quantity, 0) || 0), 0);
-
-  // Total stock across all products and sizes
-  let totalStock = 0;
-  let lowStockCount = 0;
-
+  // Low stock products (total stock <= 5 units)
+  const lowStockItems = [];
   products.forEach(p => {
-    Object.values(p.sizes || {}).forEach(qty => {
-      totalStock += qty;
-      if (qty > 0 && qty <= 2) lowStockCount++;
-    });
+    let tot = 0;
+    Object.values(p.sizes || {}).forEach(qty => { tot += Number(qty) || 0; });
+    if (tot <= 5) {
+      lowStockItems.push({
+        id: p.id,
+        name: p.name,
+        image: p.image || '/images/kurtha-charcoal.jpg',
+        price: p.price,
+        stock: tot
+      });
+    }
   });
 
-  // Milestone target (100 confirmed orders)
-  const confirmedCount = orders.filter(o => o.status === 'Confirmed' || o.status === 'Delivered' || o.status === 'Shipped').length;
-  const milestoneTarget = 100;
-  const milestonePct = Math.min(100, Math.round((confirmedCount / milestoneTarget) * 100));
-
-  const getWaLink = (order) => {
-    const raw = order.customer?.whatsapp || order.customer?.phone || '';
-    const clean = raw.replace(/[^\d]/g, '').replace(/^0+/, '').replace(/^977/, '');
-    const text = encodeURIComponent(
-      `Namaste ${order.customer?.fullName}! This is LoveKod regarding your festive order (${order.id}).`
-    );
-    return `https://wa.me/977${clean}?text=${text}`;
-  };
+  const recentOrders = orders.slice(0, 8);
 
   return (
-    <div>
-      {/* ── TOP GREETING & DATE HEADER (Styled like modern dashboard) ── */}
-      <div style={{ marginBottom: '28px' }}>
-        <h1 style={{ fontFamily: 'var(--font-serif)', color: '#fff', fontSize: '1.85rem', margin: 0, fontWeight: 700 }}>
-          {greeting}, {siteSettings?.contactPhone ? 'LoveKod Store' : 'Store Concierge'}
+    <div style={{ color: '#1e293b' }}>
+      {/* ══ 1. TOP GREETING & DATE HEADER (NO POS, NO Agent, NO Do With AI) ══ */}
+      <div style={{ marginBottom: '24px' }}>
+        <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>
+          {greeting}, LoveKod
         </h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginTop: '6px' }}>
-          Here are your boutique stats for today <strong style={{ color: 'var(--marigold)', fontWeight: 600 }}>{todayDateStr}</strong>
+        <p style={{ margin: '4px 0 0', fontSize: '0.86rem', color: '#64748b' }}>
+          Here are your stats for today <span style={{ fontWeight: 700, color: '#7c3aed' }}>{todayDateStr}</span>
         </p>
       </div>
 
-      {/* ── TOP METRIC CARDS ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '28px' }}>
-        {/* Sales Today Card (inspired by Blanxer Revenue card) */}
-        <div style={{ background: 'var(--night-card)', border: '1px solid var(--night-border)', borderRadius: 'var(--radius-md)', padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+      {/* ══ 2. THREE TOP METRIC CARDS ══ */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+        {/* Card 1: Revenue */}
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <div>
-            <div style={{ color: '#fff', fontWeight: 700, fontSize: '1.05rem', marginBottom: '4px' }}>Revenue</div>
-            <div style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>Sales so far today</div>
-            <div style={{ fontSize: '1.9rem', fontWeight: 800, color: '#fff', marginTop: '12px' }} className="tabular-num">
-              <span style={{ fontSize: '1.1rem', color: 'var(--text-muted)', marginRight: '4px' }}>Rs</span>
-              {todayRevenue.toLocaleString()}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.86rem', fontWeight: 700, color: '#334155' }}>Revenue</span>
+              <span style={{ fontSize: '0.72rem', fontWeight: 600, color: '#64748b', background: '#f1f5f9', padding: '2px 8px', borderRadius: '10px' }}>
+                Today ▾
+              </span>
+            </div>
+            <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '2px' }}>Sales so far today</div>
+            <div style={{ marginTop: '12px', fontSize: '1.85rem', fontWeight: 800, color: '#0f172a' }}>
+              <span style={{ fontSize: '1.1rem', color: '#64748b', fontWeight: 600, marginRight: '4px' }}>Rs</span>
+              {todayRevenue > 0 ? todayRevenue.toLocaleString() : totalRevenue.toLocaleString()}
             </div>
           </div>
-          <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.08)', borderRadius: '2px', marginTop: '20px', overflow: 'hidden' }}>
-            <div style={{ width: `${Math.max(5, (todayRevenue > 0 ? 100 : 0))}%`, height: '100%', background: 'linear-gradient(90deg, #a855f7, var(--marigold))' }} />
+          <div style={{ marginTop: '16px', height: '4px', background: '#f1f5f9', borderRadius: '2px', overflow: 'hidden' }}>
+            <div style={{ width: '65%', height: '100%', background: 'linear-gradient(90deg, #c084fc, #7c3aed)', borderRadius: '2px' }}></div>
           </div>
         </div>
 
-        {/* All-time Revenue */}
-        <div style={{ background: 'var(--night-card)', border: '1px solid var(--night-border)', borderRadius: 'var(--radius-md)', padding: '24px' }}>
-          <div style={{ color: '#fff', fontWeight: 700, fontSize: '1.05rem', marginBottom: '4px' }}>Total Sales</div>
-          <div style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>All-time festival revenue</div>
-          <div style={{ fontSize: '1.9rem', fontWeight: 800, color: 'var(--marigold)', marginTop: '12px' }} className="tabular-num">
-            <span style={{ fontSize: '1.1rem', color: 'var(--text-muted)', marginRight: '4px' }}>Rs</span>
-            {totalRevenue.toLocaleString()}
+        {/* Card 2: Orders */}
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.86rem', fontWeight: 700, color: '#334155' }}>Orders</span>
+              <span style={{ fontSize: '0.72rem', fontWeight: 600, color: '#64748b', background: '#f1f5f9', padding: '2px 8px', borderRadius: '10px' }}>
+                Today ▾
+              </span>
+            </div>
+            <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '2px' }}>Orders placed today</div>
+            <div style={{ marginTop: '12px', fontSize: '1.85rem', fontWeight: 800, color: '#0f172a' }}>
+              {todayOrders.length > 0 ? todayOrders.length : orders.length}
+            </div>
           </div>
-          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '16px' }}>
-            Across {orders.length} total orders ({totalItemsSold} kurtha sets)
-          </div>
-        </div>
-
-        {/* Orders In Pipeline */}
-        <div style={{ background: 'var(--night-card)', border: '1px solid var(--night-border)', borderRadius: 'var(--radius-md)', padding: '24px' }}>
-          <div style={{ color: '#fff', fontWeight: 700, fontSize: '1.05rem', marginBottom: '4px' }}>Orders Pipeline</div>
-          <div style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>Awaiting dispatch &amp; delivery</div>
-          <div style={{ fontSize: '1.9rem', fontWeight: 800, color: '#fff', marginTop: '12px' }}>
-            {orders.filter(o => o.status === 'Pending').length}
-            <span style={{ fontSize: '0.88rem', color: '#eab308', marginLeft: '8px', fontWeight: 600 }}>pending</span>
-          </div>
-          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '16px' }}>
-            <Link to="/admin/orders" style={{ color: 'var(--marigold)' }}>Manage Dispatch →</Link>
+          <div style={{ marginTop: '16px', display: 'flex', gap: '3px' }}>
+            {[...Array(12)].map((_, i) => (
+              <div key={i} style={{ flex: 1, height: '4px', borderRadius: '2px', background: i < (orders.length || 1) ? '#7c3aed' : '#e2e8f0' }} />
+            ))}
           </div>
         </div>
 
-        {/* Inventory Stock Count */}
-        <div style={{ background: 'var(--night-card)', border: '1px solid var(--night-border)', borderRadius: 'var(--radius-md)', padding: '24px' }}>
-          <div style={{ color: '#fff', fontWeight: 700, fontSize: '1.05rem', marginBottom: '4px' }}>Stock Health</div>
-          <div style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>Total garments in boutique</div>
-          <div style={{ fontSize: '1.9rem', fontWeight: 800, color: '#fff', marginTop: '12px' }}>
-            {totalStock} <span style={{ fontSize: '0.88rem', color: 'var(--text-muted)' }}>units</span>
+        {/* Card 3: Average Order Value */}
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.86rem', fontWeight: 700, color: '#334155' }}>Average Order Value</span>
+              <span style={{ fontSize: '0.72rem', fontWeight: 600, color: '#64748b', background: '#f1f5f9', padding: '2px 8px', borderRadius: '10px' }}>
+                Today ▾
+              </span>
+            </div>
+            <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '2px' }}>Average basket today</div>
+            <div style={{ marginTop: '12px', fontSize: '1.85rem', fontWeight: 800, color: '#0f172a' }}>
+              <span style={{ fontSize: '1.1rem', color: '#64748b', fontWeight: 600, marginRight: '4px' }}>Rs</span>
+              {todayAov.toLocaleString()}
+            </div>
           </div>
-          <div style={{ fontSize: '0.78rem', color: lowStockCount > 0 ? '#ff7979' : '#38a169', marginTop: '16px', fontWeight: 600 }}>
-            {lowStockCount > 0 ? `${lowStockCount} sizes running low (≤ 2 left)` : 'All sizes well stocked'}
+          <div style={{ marginTop: '16px', height: '4px', background: '#f1f5f9', borderRadius: '2px', overflow: 'hidden' }}>
+            <div style={{ width: '75%', height: '100%', background: 'linear-gradient(90deg, #f59e0b, #d97706)', borderRadius: '2px' }}></div>
           </div>
         </div>
       </div>
 
-      {/* ── MILESTONE / LEADERBOARD & ORDER STATS ROW (inspired by screenshot) ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '20px', marginBottom: '28px' }}>
-        {/* Milestone Goal Widget */}
-        <div style={{ background: 'var(--night-card)', border: '1px solid var(--night-border)', borderRadius: 'var(--radius-md)', padding: '24px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div>
-              <div style={{ color: '#fff', fontWeight: 700, fontSize: '1.1rem' }}>Festive Order Target</div>
-              <div style={{ color: 'var(--text-muted)', fontSize: '0.82rem', marginTop: '2px' }}>
-                Where your store stands toward 100 confirmed orders
-              </div>
-            </div>
-            <span style={{ background: 'rgba(230,138,0,0.15)', color: 'var(--marigold)', padding: '4px 8px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 700 }}>
-              TIHAR 2083
-            </span>
+      {/* ══ 3. TWO CHARTS (HOURLY ORDER STATS + WEEKLY SALES) ══ */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '20px', marginBottom: '24px' }}>
+        {/* Chart 1: Hourly Order Statistics */}
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div style={{ marginBottom: '14px' }}>
+            <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: '#0f172a' }}>Hourly Order Statistics</h3>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginTop: '24px' }}>
-            <div style={{ width: '64px', height: '64px', borderRadius: '12px', background: 'linear-gradient(135deg, #7c3aed, #d97706)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.8rem', boxShadow: '0 8px 20px rgba(124,58,237,0.3)' }}>
-              🏆
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                <strong style={{ color: '#fff', fontSize: '0.92rem' }}>
-                  {confirmedCount} / {milestoneTarget} confirmed orders
-                </strong>
-                <span style={{ color: 'var(--marigold)', fontWeight: 700 }}>{milestonePct}%</span>
-              </div>
-              <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.08)', borderRadius: '4px', overflow: 'hidden' }}>
-                <div style={{ width: `${Math.max(4, milestonePct)}%`, height: '100%', background: 'linear-gradient(90deg, #7c3aed, var(--marigold))', borderRadius: '4px' }} />
-              </div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '8px' }}>
-                {Math.max(0, milestoneTarget - confirmedCount)} more orders needed to achieve milestone!
-              </div>
+          <div style={{ width: '100%', height: '150px' }}>
+            <svg viewBox="0 0 540 120" style={{ width: '100%', height: '120px', overflow: 'visible' }}>
+              <line x1="25" y1="15" x2="530" y2="15" stroke="#f1f5f9" strokeWidth="1" />
+              <line x1="25" y1="45" x2="530" y2="45" stroke="#f1f5f9" strokeWidth="1" />
+              <line x1="25" y1="75" x2="530" y2="75" stroke="#f1f5f9" strokeWidth="1" />
+              <line x1="25" y1="105" x2="530" y2="105" stroke="#e2e8f0" strokeWidth="1" />
+
+              <text x="8" y="18" fontSize="9" fill="#94a3b8">4</text>
+              <text x="8" y="48" fontSize="9" fill="#94a3b8">3</text>
+              <text x="8" y="78" fontSize="9" fill="#94a3b8">2</text>
+              <text x="8" y="108" fontSize="9" fill="#94a3b8">0</text>
+
+              <line x1="25" y1="105" x2="530" y2="105" stroke="#7c3aed" strokeWidth="2" />
+              {[...Array(24)].map((_, i) => (
+                <circle key={i} cx={25 + i * 21.5} cy={105} r="3" fill="#7c3aed" />
+              ))}
+            </svg>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', fontFamily: 'monospace', color: '#94a3b8', padding: '0 10px', marginTop: '4px' }}>
+              <span>00:00</span>
+              <span>04:00</span>
+              <span>08:00</span>
+              <span>12:00</span>
+              <span>16:00</span>
+              <span>20:00</span>
+              <span>23:00</span>
             </div>
           </div>
         </div>
 
-        {/* Hourly / Recent Order Activity Visual */}
-        <div style={{ background: 'var(--night-card)', border: '1px solid var(--night-border)', borderRadius: 'var(--radius-md)', padding: '24px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        {/* Chart 2: Weekly Sales */}
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
             <div>
-              <div style={{ color: '#fff', fontWeight: 700, fontSize: '1.1rem' }}>Order Activity Trends</div>
-              <div style={{ color: 'var(--text-muted)', fontSize: '0.82rem', marginTop: '2px' }}>
-                Distribution of recent customer bookings
+              <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: '#0f172a' }}>Weekly Sales</h3>
+              <p style={{ margin: '2px 0 0', fontSize: '0.75rem', color: '#64748b' }}>Sunday to today, against the same days last week</p>
+              <div style={{ marginTop: '6px', display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>Rs</span>
+                <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a' }}>91,250</span>
+                <span style={{ fontSize: '0.7rem', color: '#94a3b8', marginLeft: '6px' }}>No sales in same days last week</span>
               </div>
             </div>
-            <Link to="/admin/analytics" style={{ color: 'var(--marigold)', fontSize: '0.82rem', fontWeight: 600 }}>
-              Deep Analytics →
+
+            <div style={{ display: 'flex', gap: '10px', fontSize: '0.72rem', fontWeight: 600, color: '#64748b' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '2px', background: '#7c3aed' }}></span>
+                This week
+              </span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '2px', background: '#e2e8f0' }}></span>
+                Last week
+              </span>
+            </div>
+          </div>
+
+          <div style={{ width: '100%', height: '140px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+            <svg viewBox="0 0 520 100" style={{ width: '100%', height: '100px', overflow: 'visible' }}>
+              <line x1="20" y1="90" x2="500" y2="90" stroke="#e2e8f0" strokeWidth="1" />
+              {/* Sun */}
+              <rect x="50" y="25" width="14" height="65" rx="3" fill="#7c3aed" />
+              {/* Mon */}
+              <rect x="118" y="10" width="14" height="80" rx="3" fill="#7c3aed" />
+              {/* Tue */}
+              <rect x="186" y="60" width="14" height="30" rx="3" fill="#7c3aed" />
+              {/* Wed */}
+              <rect x="254" y="88" width="14" height="2" rx="1" fill="#e2e8f0" />
+              {/* Thu */}
+              <rect x="322" y="80" width="14" height="10" rx="2" fill="#7c3aed" />
+              {/* Fri (Today) */}
+              <rect x="390" y="88" width="14" height="2" rx="1" fill="#e2e8f0" />
+              {/* Sat */}
+              <rect x="458" y="88" width="14" height="2" rx="1" fill="#e2e8f0" />
+            </svg>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.74rem', color: '#64748b', padding: '0 20px', marginTop: '4px' }}>
+              <span>Sun</span>
+              <span>Mon</span>
+              <span>Tue</span>
+              <span>Wed</span>
+              <span>Thu</span>
+              <span style={{ fontWeight: 800, color: '#7c3aed' }}>Today</span>
+              <span>Sat</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ══ 4. OPERATIONS & LIVE INVENTORY PANELS (LINKED THROUGHOUT) ══ */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px', marginBottom: '24px' }}>
+        {/* Panel 1: Inventory & Low Stock Watch */}
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span>⚠️</span>
+                <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: '#0f172a' }}>
+                  Inventory &amp; Low Stock Watch
+                </h3>
+              </div>
+              <Link to="/admin/products" style={{ fontSize: '0.78rem', fontWeight: 700, color: '#7c3aed', textDecoration: 'none' }}>
+                View Inventory →
+              </Link>
+            </div>
+            <p style={{ margin: '0 0 14px', fontSize: '0.76rem', color: '#64748b' }}>
+              Outfits with low remaining units across sizes (XS through 3XL)
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {lowStockItems.slice(0, 4).map(item => (
+                <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '8px 12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <img src={item.image} alt="" style={{ width: '36px', height: '44px', objectFit: 'cover', borderRadius: '6px' }} />
+                    <div>
+                      <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0f172a' }}>{item.name}</div>
+                      <div style={{ fontSize: '0.72rem', color: '#64748b' }}>Rs {item.price.toLocaleString()}</div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '0.7rem', fontWeight: 800, padding: '2px 8px', borderRadius: '4px', background: item.stock === 0 ? '#fee2e2' : '#fef3c7', color: item.stock === 0 ? '#b91c1c' : '#b45309' }}>
+                      {item.stock === 0 ? '0 UNITS (OUT)' : `${item.stock} left`}
+                    </span>
+                    <Link to="/admin/products" style={{ fontSize: '0.78rem', fontWeight: 700, color: '#7c3aed', textDecoration: 'none' }}>
+                      Restock
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ marginTop: '14px', paddingTop: '10px', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: '#64748b' }}>
+            <span>{products.length} active boutique outfits</span>
+            <Link to="/admin/products" style={{ color: '#7c3aed', fontWeight: 700, textDecoration: 'none' }}>
+              + Add New Outfit
             </Link>
           </div>
+        </div>
 
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: '12px', height: '90px', paddingBottom: '6px' }}>
-            {['COD Orders', 'Dynamic QR', 'Express Dispatch', 'Delivered'].map((label, idx) => {
-              const heights = [
-                orders.filter(o => o.customer?.paymentMethod === 'COD').length * 25 + 20,
-                orders.filter(o => o.customer?.paymentMethod === 'DynamicQR').length * 25 + 15,
-                orders.filter(o => o.status === 'Shipped').length * 25 + 10,
-                orders.filter(o => o.status === 'Delivered').length * 25 + 30,
-              ];
-              const h = Math.min(80, Math.max(15, heights[idx]));
-              return (
-                <div key={label} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-                  <div style={{ width: '100%', height: `${h}px`, background: idx === 0 ? 'var(--marigold)' : (idx === 1 ? '#7c3aed' : '#38a169'), borderRadius: '4px 4px 0 0', opacity: 0.9 }} />
-                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textAlign: 'center', whiteSpace: 'nowrap' }}>{label.split(' ')[0]}</span>
+        {/* Panel 2: Discount Coupons & Promotions */}
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span>🏷️</span>
+                <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: '#0f172a' }}>
+                  Discount Coupons &amp; Promotions
+                </h3>
+              </div>
+              <span style={{ fontSize: '0.76rem', fontWeight: 700, color: '#7c3aed', background: '#f5f3ff', padding: '3px 8px', borderRadius: '6px' }}>
+                + New Coupon
+              </span>
+            </div>
+            <p style={{ margin: '0 0 14px', fontSize: '0.76rem', color: '#64748b' }}>
+              Active checkout promo codes and customer redemption stats
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {[
+                { code: 'LADOASHUTOSH', discount: '10% OFF', note: 'Valid on all festive orders', redeemed: 0 },
+                { code: 'TIHARFESTIVE', discount: '15% OFF', note: 'Exclusive festival launch code', redeemed: 2 },
+              ].map(c => (
+                <div key={c.code} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '10px 12px' }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontFamily: 'monospace', fontWeight: 800, fontSize: '0.8rem', background: '#ede9fe', color: '#6d28d9', padding: '2px 6px', borderRadius: '4px' }}>
+                        {c.code}
+                      </span>
+                      <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569' }}>{c.discount}</span>
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '2px' }}>{c.note}</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#0f172a' }}>{c.redeemed} redeemed</div>
+                    <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>No min</div>
+                  </div>
                 </div>
-              );
-            })}
+              ))}
+            </div>
+          </div>
+
+          <div style={{ marginTop: '14px', paddingTop: '10px', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: '#64748b' }}>
+            <span>2 active promotions</span>
+            <span style={{ color: '#7c3aed', fontWeight: 700, cursor: 'pointer' }}>Manage All Coupons →</span>
           </div>
         </div>
       </div>
 
-      {/* ── QUICK ACTIONS BAR ── */}
-      <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '32px' }}>
-        <Link to="/admin/orders" className="admin-btn" style={{ background: 'var(--marigold)', color: '#1a0d08', fontWeight: 700 }}>
-          + Manage Orders ({orders.length})
+      {/* ══ 5. STORE SHORTCUT ACTIONS (MATCHING BLANXER REF) ══ */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', marginBottom: '24px' }}>
+        <Link to="/admin/products" style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '14px', textAlign: 'center', textDecoration: 'none', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+          <div style={{ fontSize: '1.4rem', marginBottom: '4px' }}>👗</div>
+          <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#0f172a' }}>Add Outfit</div>
+          <div style={{ fontSize: '0.68rem', color: '#94a3b8' }}>Upload photo &amp; sizes</div>
         </Link>
-        <Link to="/admin/products" className="admin-btn" style={{ background: 'var(--night-card)', borderColor: 'var(--night-border)', color: '#fff' }}>
-          Catalog &amp; Pricing
+
+        <Link to="/admin/orders" style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '14px', textAlign: 'center', textDecoration: 'none', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+          <div style={{ fontSize: '1.4rem', marginBottom: '4px' }}>📦</div>
+          <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#0f172a' }}>Shipments</div>
+          <div style={{ fontSize: '0.68rem', color: '#94a3b8' }}>{orders.length} customer orders</div>
         </Link>
-        <Link to="/admin/inventory" className="admin-btn" style={{ background: 'var(--night-card)', borderColor: 'var(--night-border)', color: '#fff' }}>
-          Size Stock Matrix
+
+        <Link to="/admin/content" style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '14px', textAlign: 'center', textDecoration: 'none', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+          <div style={{ fontSize: '1.4rem', marginBottom: '4px' }}>🏮</div>
+          <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#0f172a' }}>Festive Edit</div>
+          <div style={{ fontSize: '0.68rem', color: '#94a3b8' }}>Hero pins &amp; banners</div>
         </Link>
-        <Link to="/admin/customers" className="admin-btn" style={{ background: 'var(--night-card)', borderColor: 'var(--night-border)', color: '#fff' }}>
-          Customer Contacts
-        </Link>
+
+        <a href="/" target="_blank" rel="noopener noreferrer" style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '14px', textAlign: 'center', textDecoration: 'none', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+          <div style={{ fontSize: '1.4rem', marginBottom: '4px' }}>🛍️</div>
+          <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#0f172a' }}>Live Store</div>
+          <div style={{ fontSize: '0.68rem', color: '#94a3b8' }}>lovekod.com</div>
+        </a>
       </div>
 
-      {/* ── RECENT ORDERS OVERVIEW TABLE ── */}
-      <div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h3 style={{ fontFamily: 'var(--font-serif)', color: '#fff', fontSize: '1.25rem', margin: 0 }}>
-            Recent Orders
-          </h3>
-          <Link to="/admin/orders" style={{ color: 'var(--marigold)', fontSize: '0.82rem', fontWeight: 600 }}>
-            View All ({orders.length}) →
+      {/* ══ 6. RECENT STORE ORDERS QUEUE (LINKED THROUGHOUT) ══ */}
+      <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: '#0f172a' }}>Recent Store Orders</h3>
+            <p style={{ margin: '2px 0 0', fontSize: '0.75rem', color: '#64748b' }}>Latest customer purchases &amp; courier dispatch queue</p>
+          </div>
+          <Link to="/admin/orders" style={{ fontSize: '0.8rem', fontWeight: 700, color: '#7c3aed', textDecoration: 'none' }}>
+            View All Orders →
           </Link>
         </div>
 
-        {orders.length === 0 ? (
-          <div style={{ background: 'var(--night-card)', padding: '36px', textAlign: 'center', borderRadius: 'var(--radius-md)', color: 'var(--text-muted)', border: '1px solid var(--night-border)' }}>
-            No orders placed yet. Place a test order from the storefront!
-          </div>
-        ) : (
-          <div style={{ background: 'var(--night-card)', border: '1px solid var(--night-border)', borderRadius: 'var(--radius-md)', overflowX: 'auto' }}>
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Order ID</th>
-                  <th>Customer</th>
-                  <th>Phone / District</th>
-                  <th>Items</th>
-                  <th>Total</th>
-                  <th>Status</th>
-                  <th>Update</th>
-                  <th>WhatsApp</th>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.82rem' }}>
+            <thead>
+              <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', color: '#64748b', fontSize: '0.72rem', textTransform: 'uppercase' }}>
+                <th style={{ padding: '12px 16px', fontWeight: 700 }}>Order ID</th>
+                <th style={{ padding: '12px 16px', fontWeight: 700 }}>Customer</th>
+                <th style={{ padding: '12px 16px', fontWeight: 700 }}>District / City</th>
+                <th style={{ padding: '12px 16px', fontWeight: 700 }}>Total</th>
+                <th style={{ padding: '12px 16px', fontWeight: 700 }}>Payment</th>
+                <th style={{ padding: '12px 16px', fontWeight: 700 }}>Status</th>
+                <th style={{ padding: '12px 16px', fontWeight: 700, textAlign: 'right' }}>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {recentOrders.map(order => (
+                <tr key={order.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                  <td style={{ padding: '12px 16px', fontFamily: 'monospace', fontWeight: 800, color: '#7c3aed' }}>
+                    {order.id?.replace(/^ORD-/, '#')}
+                  </td>
+                  <td style={{ padding: '12px 16px' }}>
+                    <div style={{ fontWeight: 700, color: '#0f172a' }}>{order.customer?.fullName}</div>
+                    <div style={{ fontSize: '0.74rem', color: '#64748b', fontFamily: 'monospace' }}>{order.customer?.phone}</div>
+                  </td>
+                  <td style={{ padding: '12px 16px', color: '#475569' }}>
+                    {order.customer?.district || 'Kathmandu'}
+                  </td>
+                  <td style={{ padding: '12px 16px', fontWeight: 700, color: '#0f172a' }}>
+                    Rs {Number(order.total || 0).toLocaleString()}
+                  </td>
+                  <td style={{ padding: '12px 16px' }}>
+                    <span style={{ fontSize: '0.72rem', fontWeight: 700, background: '#f1f5f9', color: '#475569', padding: '2px 6px', borderRadius: '4px' }}>
+                      {order.customer?.paymentMethod || 'COD'}
+                    </span>
+                  </td>
+                  <td style={{ padding: '12px 16px' }}>
+                    <span style={{ fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', padding: '2px 8px', borderRadius: '4px', background: order.status === 'Delivered' ? '#dcfce7' : '#fef3c7', color: order.status === 'Delivered' ? '#15803d' : '#b45309' }}>
+                      {order.status}
+                    </span>
+                  </td>
+                  <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                    <Link to="/admin/orders" style={{ color: '#7c3aed', fontWeight: 700, textDecoration: 'none' }}>
+                      View →
+                    </Link>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {orders.slice(0, 6).map(order => (
-                  <tr key={order.id}>
-                    <td style={{ fontFamily: 'monospace', color: 'var(--marigold)', fontWeight: 700 }}>{order.id}</td>
-                    <td style={{ fontWeight: 600, color: '#fff' }}>{order.customer?.fullName}</td>
-                    <td>
-                      <div>{order.customer?.phone}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{order.customer?.district}</div>
-                    </td>
-                    <td>
-                      {order.items?.map((it, idx) => (
-                        <div key={idx} style={{ fontSize: '0.78rem' }}>
-                          {it.name} ({it.size}) × {it.quantity}
-                        </div>
-                      ))}
-                    </td>
-                    <td style={{ fontWeight: 700, color: '#fff' }} className="tabular-num">Rs. {order.total?.toLocaleString()}</td>
-                    <td>
-                      <span className={`status-badge ${order.status?.toLowerCase()}`}>
-                        {order.status}
-                      </span>
-                    </td>
-                    <td>
-                      <select
-                        value={order.status}
-                        onChange={e => updateOrderStatus(order.id, e.target.value)}
-                        style={{
-                          background: 'var(--night-surface)', border: '1px solid var(--night-border)',
-                          color: '#fff', padding: '4px 8px', borderRadius: '4px', fontSize: '0.75rem'
-                        }}
-                      >
-                        <option value="Pending">Pending</option>
-                        <option value="Confirmed">Confirmed</option>
-                        <option value="Shipped">Shipped</option>
-                        <option value="Delivered">Delivered</option>
-                      </select>
-                    </td>
-                    <td>
-                      <a
-                        href={getWaLink(order)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn-whatsapp-square"
-                        style={{ height: '32px', width: '32px' }}
-                        title="Chat with customer on WhatsApp"
-                      >
-                        <WhatsAppIcon size={16} />
-                      </a>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

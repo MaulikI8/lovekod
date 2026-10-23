@@ -1,0 +1,28 @@
+{% load unfold static %}
+
+<div class="border-b border-base-200 flex gap-3 items-center h-[68px] mb-4 dark:border-base-800 px-3">
+    <a href="{% url 'admin:index' %}" class="flex items-center gap-3 grow min-w-0 px-2 py-1.5 rounded-xl hover:bg-base-100 dark:hover:bg-white/[.06] transition-colors text-decoration-none">
+        <!-- LoveKod Logo Avatar -->
+        <div class="w-10 h-10 rounded-xl overflow-hidden border border-purple-200 dark:border-purple-800/50 shadow-xs flex-shrink-0 bg-white">
+            <img src="/static/images/logo.jpg" alt="LoveKod" class="w-full h-full object-cover" onerror="this.src='/images/logo.jpg'" />
+        </div>
+
+        <!-- Store Name & Owner Badge -->
+        <div class="min-w-0 flex flex-col justify-center">
+            <div class="flex items-center gap-1.5">
+                <span class="text-sm font-extrabold text-gray-900 dark:text-white truncate tracking-tight">
+                    LoveKod
+                </span>
+                <span class="text-[10px] text-gray-400">›</span>
+            </div>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">
+                OWNER
+            </span>
+        </div>
+    </a>
+
+    <!-- Mobile sidebar close toggle -->
+    <span class="material-symbols-outlined block cursor-pointer h-[18px] xl:hidden! hover:text-base-700 dark:hover:text-base-200 text-gray-400" x-on:click="sidebarToggle()">
+        close
+    </span>
+</div>

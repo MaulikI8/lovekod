@@ -501,18 +501,70 @@ export default function AdminOrders() {
 
   return (
     <div style={{ color: '#1e293b' }}>
-      {/* ══ 1. TOP HEADER & ACTION BAR ══ */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '20px' }}>
-        <div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>
+      {/* ══ 1. TOP HEADER & ACTION BAR (BLANXER EXACT MATCH) ══ */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+          <h1 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>
             Orders
           </h1>
-          <p style={{ margin: '4px 0 0', fontSize: '0.86rem', color: '#64748b' }}>
-            Manage boutique client orders, status fulfillment, and live customer communications.
-          </p>
+
+          {/* Search Bar with Info Icon */}
+          <div style={{ position: 'relative', width: '320px' }}>
+            <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: '0.85rem' }}>
+              🔍
+            </span>
+            <input
+              type="text"
+              placeholder="Name, phone, order # or email"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              style={{
+                width: '100%',
+                background: '#ffffff',
+                border: '1.5px solid #e2e8f0',
+                borderRadius: '8px',
+                padding: '7px 32px 7px 32px',
+                fontSize: '0.84rem',
+                color: '#1e293b',
+                outline: 'none',
+              }}
+            />
+            <span style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', color: '#cbd5e1', fontSize: '0.78rem', cursor: 'help' }} title="Search by customer name, phone number, order ID, or email">
+              ℹ️
+            </span>
+          </div>
+
+          {/* Date Selector */}
+          <div style={{ position: 'relative' }}>
+            <select
+              value={dateFilter}
+              onChange={e => setDateFilter(e.target.value)}
+              style={{
+                background: '#ffffff',
+                border: '1.5px solid #e2e8f0',
+                borderRadius: '8px',
+                padding: '7px 28px 7px 12px',
+                fontSize: '0.84rem',
+                fontWeight: 600,
+                color: '#334155',
+                cursor: 'pointer',
+                outline: 'none',
+                appearance: 'none',
+                backgroundImage: 'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E")',
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'right 8px center',
+              }}
+            >
+              <option value="Last 7 Days">Last 7 days</option>
+              <option value="Last 30 Days">Last 30 days</option>
+              <option value="This Month">This Month</option>
+              <option value="All Time">All Time</option>
+            </select>
+          </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        {/* Right Action Buttons */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <button
             type="button"
             className="admin-btn"
@@ -520,20 +572,19 @@ export default function AdminOrders() {
               background: '#8b5cf6',
               color: '#ffffff',
               fontWeight: 700,
-              fontSize: '0.85rem',
+              fontSize: '0.82rem',
               display: 'inline-flex',
               alignItems: 'center',
               gap: '6px',
-              padding: '9px 16px',
-              borderRadius: '8px',
+              padding: '7px 14px',
+              borderRadius: '6px',
               border: 'none',
               cursor: 'pointer',
-              boxShadow: '0 2px 8px rgba(139,92,246,0.3)',
             }}
           >
             <span>✨</span>
             <span>Do with AI</span>
-            <span style={{ fontSize: '0.75rem' }}>▼</span>
+            <span style={{ fontSize: '0.7rem' }}>▼</span>
           </button>
 
           <button
@@ -548,167 +599,78 @@ export default function AdminOrders() {
               background: '#7c3aed',
               color: '#ffffff',
               fontWeight: 700,
-              fontSize: '0.85rem',
+              fontSize: '0.82rem',
               display: 'inline-flex',
               alignItems: 'center',
               gap: '6px',
-              padding: '9px 18px',
-              borderRadius: '8px',
+              padding: '7px 16px',
+              borderRadius: '6px',
               border: 'none',
               cursor: 'pointer',
-              boxShadow: '0 4px 12px rgba(124,58,237,0.35)',
             }}
           >
-            <span style={{ fontSize: '1.1rem', lineHeight: 1 }}>+</span>
+            <span>+</span>
             <span>New order</span>
+          </button>
+
+          <button
+            type="button"
+            style={{
+              background: '#ffffff',
+              border: '1.5px solid #e2e8f0',
+              borderRadius: '6px',
+              padding: '7px 10px',
+              fontSize: '0.82rem',
+              color: '#64748b',
+              cursor: 'pointer'
+            }}
+          >
+            ···
           </button>
         </div>
       </div>
 
-      {/* ══ 2. SEARCH & FILTER CONTROLS ══ */}
-      <div style={{
-        background: '#ffffff',
-        border: '1px solid #e2e8f0',
-        borderRadius: '12px',
-        padding: '16px',
-        marginBottom: '20px',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px', marginBottom: '16px' }}>
-          {/* Search Box */}
-          <div style={{ position: 'relative', flex: '1', minWidth: '280px', maxWidth: '420px' }}>
-            <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: '0.9rem' }}>
-              🔍
-            </span>
-            <input
-              type="text"
-              placeholder="Name, phone, order # or email"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              style={{
-                width: '100%',
-                background: '#f8fafc',
-                border: '1px solid #cbd5e1',
-                borderRadius: '8px',
-                padding: '9px 12px 9px 36px',
-                fontSize: '0.88rem',
-                color: '#1e293b',
-                outline: 'none',
-              }}
-            />
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-            {/* Date Range Selector */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '6px 12px' }}>
-              <span style={{ fontSize: '0.82rem', color: '#64748b' }}>📅</span>
-              <select
-                value={dateFilter}
-                onChange={e => setDateFilter(e.target.value)}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  color: '#334155',
-                  cursor: 'pointer',
-                  outline: 'none',
-                }}
-              >
-                <option value="Last 7 Days">Last 7 Days</option>
-                <option value="Last 30 Days">Last 30 Days</option>
-                <option value="This Month">This Month</option>
-                <option value="All Time">All Time</option>
-              </select>
-            </div>
-
-            {/* Filter Funnel Button */}
+      {/* ══ 2. STATUS FILTER TABS ══ */}
+      <div style={{ display: 'flex', gap: '4px', overflowX: 'auto', marginBottom: '14px', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px' }}>
+        {statusTabs.map(tab => {
+          const isActive = statusFilter === tab;
+          return (
             <button
-              type="button"
+              key={tab}
+              onClick={() => setStatusFilter(tab)}
               style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                background: '#f8fafc',
-                border: '1px solid #cbd5e1',
-                borderRadius: '8px',
-                padding: '8px 14px',
-                fontSize: '0.85rem',
-                fontWeight: 600,
-                color: '#334155',
-                cursor: 'pointer'
+                padding: '5px 14px',
+                borderRadius: '16px',
+                fontSize: '0.8rem',
+                fontWeight: isActive ? 700 : 500,
+                background: isActive ? '#7c3aed' : 'transparent',
+                color: isActive ? '#ffffff' : '#475569',
+                border: 'none',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                transition: 'all 0.12s ease'
               }}
             >
-              <span>⚙️</span>
-              <span>Filters</span>
+              {tab}
             </button>
-          </div>
-        </div>
-
-        {/* ══ Status Tabs (All, Pending, Processing, Dispatched, Delivered, Cancelled, Returned) ══ */}
-        <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px' }}>
-          {statusTabs.map(tab => {
-            const isActive = statusFilter === tab;
-            const count = tab === 'All'
-              ? orders.length
-              : orders.filter(o => {
-                  const s = (o.status || '').toLowerCase();
-                  const t = tab.toLowerCase();
-                  if (t === 'dispatched') return s === 'dispatched' || s === 'shipped';
-                  return s === t;
-                }).length;
-
-            return (
-              <button
-                key={tab}
-                onClick={() => setStatusFilter(tab)}
-                style={{
-                  padding: '6px 16px',
-                  borderRadius: '20px',
-                  fontSize: '0.84rem',
-                  fontWeight: isActive ? 700 : 500,
-                  background: isActive ? '#7c3aed' : 'transparent',
-                  color: isActive ? '#ffffff' : '#64748b',
-                  border: isActive ? 'none' : '1px solid transparent',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  transition: 'all 0.15s ease',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                }}
-              >
-                <span>{tab}</span>
-                <span style={{
-                  fontSize: '0.74rem',
-                  opacity: isActive ? 0.9 : 0.65,
-                  background: isActive ? 'rgba(255,255,255,0.25)' : '#e2e8f0',
-                  color: isActive ? '#ffffff' : '#475569',
-                  padding: '1px 6px',
-                  borderRadius: '10px'
-                }}>
-                  {count}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+          );
+        })}
       </div>
 
-      {/* ══ 3. ORDERS TABLE MATCHING BLANXER ══ */}
+      {/* ══ 3. ORDERS TABLE (BLANXER EXACT COLUMNS & STYLING) ══ */}
       {filteredOrders.length === 0 ? (
-        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '60px 24px', textAlign: 'center', color: '#64748b' }}>
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '60px 24px', textAlign: 'center', color: '#64748b' }}>
           <div style={{ fontSize: '2.5rem', marginBottom: '10px' }}>📦</div>
           <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b', marginBottom: '6px' }}>No orders found</h3>
-          <p style={{ fontSize: '0.88rem', margin: 0 }}>Try clearing filters or search to view boutique client orders.</p>
+          <p style={{ fontSize: '0.88rem', margin: 0 }}>Try clearing filters or search to view orders.</p>
         </div>
       ) : (
-        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.84rem' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.8rem' }}>
               <thead>
-                <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', color: '#64748b', fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  <th style={{ padding: '12px 14px', width: '36px' }}>
+                <tr style={{ background: '#f8fafc', borderBottom: '1.5px solid #e2e8f0', color: '#64748b', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  <th style={{ padding: '10px 12px', width: '32px' }}>
                     <input
                       type="checkbox"
                       checked={selectedOrderIds.length > 0 && selectedOrderIds.length === filteredOrders.length}
@@ -716,37 +678,76 @@ export default function AdminOrders() {
                       style={{ cursor: 'pointer' }}
                     />
                   </th>
-                  <th style={{ padding: '12px 14px', fontWeight: 700 }}>#</th>
-                  <th style={{ padding: '12px 14px', fontWeight: 700 }}>Customer Name</th>
-                  <th style={{ padding: '12px 14px', fontWeight: 700 }}>Items</th>
-                  <th style={{ padding: '12px 14px', fontWeight: 700 }}>Total Amount</th>
-                  <th style={{ padding: '12px 14px', fontWeight: 700 }}>Due Amount</th>
-                  <th style={{ padding: '12px 14px', fontWeight: 700 }}>Labels</th>
-                  <th style={{ padding: '12px 14px', fontWeight: 700 }}>Payment Method</th>
-                  <th style={{ padding: '12px 14px', fontWeight: 700 }}>Order / Payment Status</th>
-                  <th style={{ padding: '12px 14px', fontWeight: 700 }}>Created</th>
-                  <th style={{ padding: '12px 14px', fontWeight: 700 }}>Updated</th>
-                  <th style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 700 }}>Actions</th>
+                  <th style={{ padding: '10px 12px', fontWeight: 700, whiteSpace: 'nowrap' }}># ↕</th>
+                  <th style={{ padding: '10px 12px', fontWeight: 700, whiteSpace: 'nowrap' }}>CUSTOMER NAME ↕</th>
+                  <th style={{ padding: '10px 12px', fontWeight: 700, whiteSpace: 'nowrap' }}>AVG RATING ↕</th>
+                  <th style={{ padding: '10px 12px', fontWeight: 700, whiteSpace: 'nowrap' }}>QUANTITY ↕</th>
+                  <th style={{ padding: '10px 12px', fontWeight: 700, whiteSpace: 'nowrap' }}>TOTAL ↕</th>
+                  <th style={{ padding: '10px 12px', fontWeight: 700, whiteSpace: 'nowrap' }}>DISCOUNT ↕</th>
+                  <th style={{ padding: '10px 12px', fontWeight: 700, whiteSpace: 'nowrap' }}>CHANNEL</th>
+                  <th style={{ padding: '10px 12px', fontWeight: 700, whiteSpace: 'nowrap' }}>PAYMENT METHOD</th>
+                  <th style={{ padding: '10px 12px', fontWeight: 700, whiteSpace: 'nowrap' }}>ORDER STATUS & PAYMENT STATUS</th>
+                  <th style={{ padding: '10px 12px', fontWeight: 700, whiteSpace: 'nowrap' }}>CREATED ↕</th>
+                  <th style={{ padding: '10px 12px', fontWeight: 700, whiteSpace: 'nowrap' }}>UPDATED ↕</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700, width: '40px' }}>ACTIONS ↕</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredOrders.map(order => {
-                  const itemCount = (order.items || []).reduce((acc, it) => acc + (it.quantity || 1), 0);
-                  const isPaid = order.paymentStatus === 'Paid';
-                  const dueAmount = isPaid ? 0 : order.total;
+                  const itemCount = (order.items || []).reduce((acc, it) => acc + (Number(it.quantity) || 1), 0);
                   const isSelected = selectedOrderIds.includes(order.id);
 
-                  // Badges styling
-                  const statusColors = {
-                    Pending: { bg: '#fef3c7', text: '#d97706', border: '#fde68a' },
-                    Processing: { bg: '#e0e7ff', text: '#4338ca', border: '#c7d2fe' },
-                    Dispatched: { bg: '#ccfbf1', text: '#0f766e', border: '#99f6e4' },
-                    Shipped: { bg: '#ccfbf1', text: '#0f766e', border: '#99f6e4' },
-                    Delivered: { bg: '#dcfce7', text: '#15803d', border: '#bbf7d0' },
-                    Cancelled: { bg: '#fee2e2', text: '#b91c1c', border: '#fecaca' },
-                    Returned: { bg: '#ffedd5', text: '#c2410c', border: '#fed7aa' },
+                  // Formatting Order ID like Blanxer (e.g. 1019)
+                  const cleanOrderId = (order.id || '').replace(/^ORD-/, '').replace(/^#/, '');
+
+                  // Channel badge styling
+                  const ch = (order.channel || 'WhatsApp').toLowerCase();
+                  let channelStyle = { bg: '#dcfce7', text: '#15803d', border: '#bbf7d0', label: 'WHATSAPP' };
+                  if (ch.includes('insta')) {
+                    channelStyle = { bg: '#fae8ff', text: '#a21caf', border: '#f0abfc', label: 'INSTAGRAM' };
+                  } else if (ch.includes('web')) {
+                    channelStyle = { bg: '#dbeafe', text: '#1d4ed8', border: '#bfdbfe', label: 'WEBSITE' };
+                  } else if (ch.includes('tik')) {
+                    channelStyle = { bg: '#f1f5f9', text: '#0f172a', border: '#cbd5e1', label: 'TIKTOK' };
+                  } else if (ch.includes('phone')) {
+                    channelStyle = { bg: '#f8fafc', text: '#475569', border: '#e2e8f0', label: 'PHONE' };
+                  }
+
+                  // Order Status badge styling
+                  const st = (order.status || 'Pending').toLowerCase();
+                  let orderStatusStyle = { bg: '#fef3c7', text: '#d97706', label: 'PENDING' };
+                  if (st === 'delivered') {
+                    orderStatusStyle = { bg: '#dcfce7', text: '#15803d', label: 'DELIVERED' };
+                  } else if (st === 'dispatched' || st === 'shipped') {
+                    orderStatusStyle = { bg: '#ccfbf1', text: '#0f766e', label: 'DISPATCHED' };
+                  } else if (st === 'processing') {
+                    orderStatusStyle = { bg: '#e0e7ff', text: '#4338ca', label: 'PROCESSING' };
+                  } else if (st === 'cancelled') {
+                    orderStatusStyle = { bg: '#fee2e2', text: '#b91c1c', label: 'CANCELLED' };
+                  } else if (st === 'returned') {
+                    orderStatusStyle = { bg: '#ffedd5', text: '#c2410c', label: 'RETURNED' };
+                  }
+
+                  // Payment Status badge styling
+                  const ps = (order.paymentStatus || (order.paymentMethod === 'COD' ? 'Unpaid' : 'Paid')).toLowerCase();
+                  let paymentStatusStyle = { bg: '#fef3c7', text: '#d97706', label: 'UNPAID' };
+                  if (ps.includes('full') || ps === 'paid') {
+                    paymentStatusStyle = { bg: '#dcfce7', text: '#15803d', label: 'PAID' };
+                  } else if (ps.includes('partial')) {
+                    paymentStatusStyle = { bg: '#dbeafe', text: '#2563eb', label: 'PARTIAL' };
+                  }
+
+                  // Date formatting (Oct 23, 2026 1:47 PM)
+                  const formatDate = (iso) => {
+                    if (!iso) return 'Oct 23, 2026 1:47 PM';
+                    try {
+                      const d = new Date(iso);
+                      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) +
+                        ' ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                    } catch {
+                      return iso;
+                    }
                   };
-                  const currentSt = statusColors[order.status] || statusColors.Pending;
 
                   return (
                     <tr
@@ -756,13 +757,13 @@ export default function AdminOrders() {
                         borderBottom: '1px solid #f1f5f9',
                         cursor: 'pointer',
                         background: isSelected ? '#f5f3ff' : '#ffffff',
-                        transition: 'background 0.12s ease'
+                        transition: 'background 0.1s ease'
                       }}
                       onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = '#f8fafc'; }}
                       onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = '#ffffff'; }}
                     >
                       {/* Checkbox */}
-                      <td style={{ padding: '12px 14px' }} onClick={e => e.stopPropagation()}>
+                      <td style={{ padding: '10px 12px' }} onClick={e => e.stopPropagation()}>
                         <input
                           type="checkbox"
                           checked={isSelected}
@@ -771,639 +772,139 @@ export default function AdminOrders() {
                         />
                       </td>
 
-                      {/* Order ID */}
-                      <td style={{ padding: '12px 14px', fontWeight: 800, color: '#7c3aed', fontFamily: 'monospace' }}>
-                        {order.id?.replace(/^ORD-/, '#') || `#${order.id}`}
+                      {/* 1. # ID */}
+                      <td style={{ padding: '10px 12px', fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap' }}>
+                        {cleanOrderId}
                       </td>
 
-                      {/* Customer Name + Phone */}
-                      <td style={{ padding: '12px 14px' }}>
-                        <div style={{ fontWeight: 700, color: '#0f172a' }}>
-                          {order.customer?.fullName || 'Walk-in Customer'}
+                      {/* 2. Customer Name & Phone + NEW Badge */}
+                      <td style={{ padding: '10px 12px' }}>
+                        <div style={{ fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span>{order.customer?.fullName || order.customer?.name || 'Walk-in Customer'}</span>
+                          <span style={{
+                            background: '#f3e8ff',
+                            color: '#7c3aed',
+                            fontSize: '0.62rem',
+                            fontWeight: 800,
+                            padding: '1px 5px',
+                            borderRadius: '3px'
+                          }}>
+                            NEW
+                          </span>
                         </div>
-                        <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: '2px', fontFamily: 'monospace' }}>
+                        <div style={{ fontSize: '0.74rem', color: '#64748b', marginTop: '1px' }}>
                           {order.customer?.phone || '-'}
                         </div>
                       </td>
 
-                      {/* Item Count */}
-                      <td style={{ padding: '12px 14px', color: '#334155', fontWeight: 600 }}>
+                      {/* 3. Avg Rating */}
+                      <td style={{ padding: '10px 12px', color: '#64748b', whiteSpace: 'nowrap' }}>
+                        <span style={{ color: '#f59e0b', marginRight: '3px' }}>★</span>
+                        <span>0 (0)</span>
+                      </td>
+
+                      {/* 4. Quantity */}
+                      <td style={{ padding: '10px 12px', fontWeight: 600, color: '#1e293b' }}>
                         {itemCount}
                       </td>
 
-                      {/* Total Amount */}
-                      <td style={{ padding: '12px 14px', fontWeight: 700, color: '#0f172a' }}>
+                      {/* 5. Total */}
+                      <td style={{ padding: '10px 12px', fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap' }}>
                         Rs {Number(order.total || 0).toLocaleString()}
                       </td>
 
-                      {/* Due Amount */}
-                      <td style={{ padding: '12px 14px', fontWeight: 600, color: dueAmount > 0 ? '#b45309' : '#15803d' }}>
-                        Rs {Number(dueAmount).toLocaleString()}
+                      {/* 6. Discount */}
+                      <td style={{ padding: '10px 12px', color: '#64748b', whiteSpace: 'nowrap' }}>
+                        Rs {Number(order.discountAmount || order.discount || 0).toLocaleString()}
                       </td>
 
-                      {/* Channel Label Badge */}
-                      <td style={{ padding: '12px 14px' }}>
+                      {/* 7. Channel */}
+                      <td style={{ padding: '10px 12px', whiteSpace: 'nowrap' }}>
                         <span style={{
-                          display: 'inline-block',
+                          background: channelStyle.bg,
+                          color: channelStyle.text,
+                          border: `1px solid ${channelStyle.border}`,
                           padding: '2px 8px',
                           borderRadius: '4px',
-                          fontSize: '0.72rem',
+                          fontSize: '0.68rem',
                           fontWeight: 700,
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.04em',
-                          background: order.channel === 'WhatsApp' ? '#ecfdf5' : order.channel === 'Instagram' ? '#fdf2f8' : '#eff6ff',
-                          color: order.channel === 'WhatsApp' ? '#059669' : order.channel === 'Instagram' ? '#db2777' : '#2563eb',
-                          border: `1px solid ${order.channel === 'WhatsApp' ? '#a7f3d0' : order.channel === 'Instagram' ? '#fbcfe8' : '#bfdbfe'}`,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px'
                         }}>
-                          {order.channel || 'Website'}
+                          {channelStyle.label === 'WHATSAPP' && <span>💬</span>}
+                          {channelStyle.label}
                         </span>
                       </td>
 
-                      {/* Payment Method */}
-                      <td style={{ padding: '12px 14px', color: '#475569', fontWeight: 600 }}>
-                        {order.customer?.paymentMethod || 'COD'}
+                      {/* 8. Payment Method */}
+                      <td style={{ padding: '10px 12px', color: '#334155', fontWeight: 500 }}>
+                        {order.customer?.paymentMethod || order.paymentMethod || 'COD'}
                       </td>
 
-                      {/* Status + Payment Badges */}
-                      <td style={{ padding: '12px 14px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                      {/* 9. Order Status & Payment Status Combined */}
+                      <td style={{ padding: '10px 12px', whiteSpace: 'nowrap' }}>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
                           <span style={{
-                            padding: '3px 8px',
-                            borderRadius: '6px',
-                            fontSize: '0.72rem',
-                            fontWeight: 700,
-                            textTransform: 'uppercase',
-                            background: currentSt.bg,
-                            color: currentSt.text,
-                            border: `1px solid ${currentSt.border}`,
+                            background: orderStatusStyle.bg,
+                            color: orderStatusStyle.text,
+                            padding: '2px 7px',
+                            borderRadius: '4px',
+                            fontSize: '0.68rem',
+                            fontWeight: 700
                           }}>
-                            {order.status || 'Pending'}
+                            {orderStatusStyle.label}
                           </span>
+                          <span style={{ color: '#94a3b8', fontSize: '0.74rem' }}>&</span>
                           <span style={{
-                            padding: '3px 8px',
-                            borderRadius: '6px',
-                            fontSize: '0.72rem',
-                            fontWeight: 700,
-                            textTransform: 'uppercase',
-                            background: isPaid ? '#dcfce7' : '#fef3c7',
-                            color: isPaid ? '#15803d' : '#b45309',
-                            border: `1px solid ${isPaid ? '#bbf7d0' : '#fde68a'}`,
+                            background: paymentStatusStyle.bg,
+                            color: paymentStatusStyle.text,
+                            padding: '2px 7px',
+                            borderRadius: '4px',
+                            fontSize: '0.68rem',
+                            fontWeight: 700
                           }}>
-                            {isPaid ? 'PAID' : 'UNPAID'}
+                            {paymentStatusStyle.label}
                           </span>
                         </div>
                       </td>
 
-                      {/* Created */}
-                      <td style={{ padding: '12px 14px', color: '#64748b', fontSize: '0.78rem', whiteSpace: 'nowrap' }}>
-                        {new Date(order.createdAt || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                        <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
-                          {new Date(order.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </div>
+                      {/* 10. Created */}
+                      <td style={{ padding: '10px 12px', color: '#64748b', whiteSpace: 'nowrap', fontSize: '0.74rem' }}>
+                        {formatDate(order.createdAt)}
                       </td>
 
-                      {/* Updated */}
-                      <td style={{ padding: '12px 14px', color: '#64748b', fontSize: '0.78rem', whiteSpace: 'nowrap' }}>
-                        {new Date(order.createdAt || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                        <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
-                          {new Date(order.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </div>
+                      {/* 11. Updated */}
+                      <td style={{ padding: '10px 12px', color: '#64748b', whiteSpace: 'nowrap', fontSize: '0.74rem' }}>
+                        {formatDate(order.updatedAt || order.createdAt)}
                       </td>
 
-                      {/* Actions */}
-                      <td style={{ padding: '12px 14px', textAlign: 'right' }} onClick={e => e.stopPropagation()}>
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                          <a
-                            href={getWaMessageLink(order)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            title="Chat on WhatsApp"
-                            style={{
-                              padding: '5px 7px',
-                              borderRadius: '6px',
-                              background: '#25D366',
-                              color: '#fff',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              textDecoration: 'none'
-                            }}
-                          >
-                            <WhatsAppIcon size={14} />
-                          </a>
-                          <button
-                            type="button"
-                            onClick={() => setPreviewOrder(order)}
-                            title="View Preview Details"
-                            style={{
-                              background: '#f1f5f9',
-                              border: '1px solid #cbd5e1',
-                              borderRadius: '6px',
-                              padding: '4px 8px',
-                              cursor: 'pointer',
-                              fontSize: '0.85rem',
-                              fontWeight: 700,
-                              color: '#334155'
-                            }}
-                          >
-                            •••
-                          </button>
-                        </div>
+                      {/* 12. Actions */}
+                      <td style={{ padding: '10px 12px', textAlign: 'center' }}>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPreviewOrder(order);
+                          }}
+                          style={{
+                            background: '#f8fafc',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '4px',
+                            padding: '2px 8px',
+                            color: '#64748b',
+                            cursor: 'pointer',
+                            fontSize: '0.8rem'
+                          }}
+                        >
+                          ···
+                        </button>
                       </td>
                     </tr>
                   );
                 })}
               </tbody>
             </table>
-          </div>
-
-          {/* Footer Pagination Bar */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: '#f8fafc', borderTop: '1px solid #e2e8f0', fontSize: '0.82rem', color: '#64748b' }}>
-            <div>
-              Showing {filteredOrders.length} of {orders.length} orders
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <button disabled style={{ padding: '4px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', cursor: 'not-allowed', color: '#94a3b8' }}>
-                ‹
-              </button>
-              <button style={{ padding: '4px 10px', borderRadius: '6px', border: 'none', background: '#7c3aed', color: '#ffffff', fontWeight: 700 }}>
-                1
-              </button>
-              <button disabled style={{ padding: '4px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', cursor: 'not-allowed', color: '#94a3b8' }}>
-                ›
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ══ 4. ORDER DETAIL / PREVIEW MODAL (MATCHES BLANXER REF #1018) ══ */}
-      {previewOrder && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(15, 23, 42, 0.65)',
-          backdropFilter: 'blur(4px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          padding: '20px'
-        }}>
-          <div style={{
-            background: '#ffffff',
-            borderRadius: '16px',
-            width: '100%',
-            maxWidth: '960px',
-            maxHeight: '90vh',
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden',
-            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
-            border: '1px solid #e2e8f0'
-          }}>
-            {/* Header */}
-            <div style={{
-              padding: '20px 24px',
-              borderBottom: '1px solid #e2e8f0',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-              background: '#ffffff'
-            }}>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0f172a', margin: 0, fontFamily: 'monospace' }}>
-                    {previewOrder.id?.replace(/^ORD-/, '#') || `#${previewOrder.id}`}
-                  </h2>
-                </div>
-                <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '4px', display: 'flex', gap: '16px' }}>
-                  <span>Created: <strong>{new Date(previewOrder.createdAt || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} {new Date(previewOrder.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong></span>
-                  <span>Modified: <strong>{new Date(previewOrder.createdAt || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} {new Date(previewOrder.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong></span>
-                </div>
-              </div>
-
-              {/* Action Icons */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <button
-                  type="button"
-                  onClick={() => window.print()}
-                  title="Print Invoice"
-                  style={{ background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '7px 10px', cursor: 'pointer', fontSize: '0.9rem' }}
-                >
-                  🖨️
-                </button>
-                <a
-                  href={getWaMessageLink(previewOrder)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title="Message on WhatsApp"
-                  style={{ background: '#25D366', color: '#fff', borderRadius: '8px', padding: '7px 10px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}
-                >
-                  <WhatsAppIcon size={16} />
-                </a>
-                <button
-                  type="button"
-                  onClick={() => setPreviewOrder(null)}
-                  style={{ background: '#f1f5f9', border: 'none', borderRadius: '8px', width: '34px', height: '34px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '1.1rem', color: '#64748b' }}
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-
-            {/* Scrollable Body */}
-            <div style={{ padding: '24px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              {/* Tracking URL */}
-              <div style={{
-                background: '#f8fafc',
-                border: '1px solid #e2e8f0',
-                borderRadius: '8px',
-                padding: '10px 14px',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                fontSize: '0.85rem'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
-                  <span style={{ fontWeight: 600, color: '#475569', whiteSpace: 'nowrap' }}>Tracking URL:</span>
-                  <span style={{ color: '#7c3aed', textDecoration: 'underline', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                    https://lovekod.com/track/{previewOrder.id}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    navigator.clipboard.writeText(`https://lovekod.com/track/${previewOrder.id}`);
-                    setCopiedTrack(true);
-                    setTimeout(() => setCopiedTrack(false), 2000);
-                  }}
-                  style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '4px 10px', fontSize: '0.78rem', cursor: 'pointer', fontWeight: 600, color: '#334155' }}
-                >
-                  {copiedTrack ? '✓ Copied' : 'Copy'}
-                </button>
-              </div>
-
-              {/* Order Status & Payment Dropdowns */}
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                flexWrap: 'wrap',
-                gap: '16px',
-                padding: '16px',
-                background: '#f8fafc',
-                border: '1px solid #e2e8f0',
-                borderRadius: '10px'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#64748b', marginBottom: '4px' }}>
-                      Order status
-                    </label>
-                    <select
-                      value={previewOrder.status || 'Pending'}
-                      onChange={e => {
-                        const nextSt = e.target.value;
-                        updateOrderStatus(previewOrder.id, nextSt);
-                        setPreviewOrder(prev => ({ ...prev, status: nextSt }));
-                      }}
-                      style={{
-                        background: '#ffffff',
-                        border: '1px solid #7c3aed',
-                        color: '#7c3aed',
-                        fontWeight: 700,
-                        padding: '6px 12px',
-                        borderRadius: '6px',
-                        fontSize: '0.85rem',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      <option value="Pending">Pending</option>
-                      <option value="Processing">Processing</option>
-                      <option value="Dispatched">Dispatched</option>
-                      <option value="Shipped">Shipped</option>
-                      <option value="Delivered">Delivered</option>
-                      <option value="Cancelled">Cancelled</option>
-                      <option value="Returned">Returned</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#64748b', marginBottom: '4px' }}>
-                      Payment status
-                    </label>
-                    <select
-                      value={previewOrder.paymentStatus || 'Unpaid'}
-                      onChange={e => {
-                        const nextPs = e.target.value;
-                        updateOrderPaymentStatus(previewOrder.id, nextPs);
-                        setPreviewOrder(prev => ({ ...prev, paymentStatus: nextPs }));
-                      }}
-                      style={{
-                        background: '#ffffff',
-                        border: '1px solid #cbd5e1',
-                        color: previewOrder.paymentStatus === 'Paid' ? '#15803d' : '#b45309',
-                        fontWeight: 700,
-                        padding: '6px 12px',
-                        borderRadius: '6px',
-                        fontSize: '0.85rem',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      <option value="Unpaid">Unpaid</option>
-                      <option value="Paid">Paid</option>
-                      <option value="Partial">Partial</option>
-                      <option value="Refunded">Refunded</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b', marginBottom: '4px' }}>
-                      Payment Method
-                    </div>
-                    <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.88rem' }}>
-                      {previewOrder.customer?.paymentMethod || 'COD'}
-                    </div>
-                  </div>
-
-                  <div>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b', marginBottom: '4px' }}>
-                      Created By
-                    </div>
-                    <div style={{ fontWeight: 600, color: '#334155', fontSize: '0.88rem' }}>
-                      LoveKod Store
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => alert(`Exchange / Return workflow initiated for ${previewOrder.id}`)}
-                  style={{
-                    padding: '8px 16px',
-                    borderRadius: '8px',
-                    border: '1px solid #8b5cf6',
-                    background: '#ffffff',
-                    color: '#7c3aed',
-                    fontWeight: 700,
-                    fontSize: '0.82rem',
-                    cursor: 'pointer'
-                  }}
-                >
-                  ↺ Return / Exchange
-                </button>
-              </div>
-
-              {/* Two-Column Grid: Left: ORDER SUMMARY | Right: CUSTOMER DETAILS */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '20px' }}>
-                {/* Left Card: ORDER SUMMARY */}
-                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '18px' }}>
-                  <div style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748b', marginBottom: '14px' }}>
-                    Order Summary
-                  </div>
-
-                  <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', marginBottom: '10px' }}>
-                    Cart Items
-                  </div>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
-                    {(previewOrder.items || []).map((item, idx) => (
-                      <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <div style={{ position: 'relative' }}>
-                            <img
-                              src={item.image || '/images/kurtha-charcoal.jpg'}
-                              alt={item.name}
-                              style={{ width: '42px', height: '42px', objectFit: 'cover', borderRadius: '6px' }}
-                            />
-                            <span style={{
-                              position: 'absolute',
-                              top: '-6px',
-                              right: '-6px',
-                              background: '#7c3aed',
-                              color: '#fff',
-                              borderRadius: '50%',
-                              width: '18px',
-                              height: '18px',
-                              fontSize: '0.68rem',
-                              fontWeight: 800,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center'
-                            }}>
-                              {item.quantity || 1}
-                            </span>
-                          </div>
-                          <div>
-                            <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.85rem' }}>{item.name}</div>
-                            <div style={{ fontSize: '0.74rem', color: '#64748b' }}>Variant: {item.size || 'M'}</div>
-                          </div>
-                        </div>
-
-                        <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontSize: '0.78rem', color: '#64748b' }}>
-                            Rs {Number(item.price || 0).toLocaleString()} x {item.quantity || 1}
-                          </div>
-                          <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.88rem' }}>
-                            Rs {Number((item.price || 0) * (item.quantity || 1)).toLocaleString()}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Calculations */}
-                  <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.84rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b' }}>
-                      <span>Sub-total</span>
-                      <span style={{ fontWeight: 600, color: '#0f172a' }}>Rs {Number(previewOrder.total || 0) - (previewOrder.deliveryCharge || 150) + (previewOrder.discountAmount || 0)}</span>
-                    </div>
-                    {previewOrder.discountAmount > 0 && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#dc2626' }}>
-                        <span>Discount</span>
-                        <span>(Rs {Number(previewOrder.discountAmount).toLocaleString()})</span>
-                      </div>
-                    )}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b' }}>
-                      <span>Delivery Charge</span>
-                      <span style={{ fontWeight: 600, color: '#0f172a' }}>Rs {previewOrder.deliveryCharge || 150}</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem', fontWeight: 800, color: '#0f172a', borderTop: '1px dashed #cbd5e1', paddingTop: '8px', marginTop: '4px' }}>
-                      <span>Total</span>
-                      <span style={{ color: '#7c3aed' }}>Rs {Number(previewOrder.total || 0).toLocaleString()}</span>
-                    </div>
-                  </div>
-
-                  {/* Bottom Tabs: Comments, Activity, Stock Movements */}
-                  <div style={{ marginTop: '20px', borderTop: '1px solid #e2e8f0', paddingTop: '16px' }}>
-                    <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
-                      {['Comments', 'Activity', 'Stock Movements'].map(tab => (
-                        <button
-                          key={tab}
-                          type="button"
-                          onClick={() => setActivePreviewTab(tab)}
-                          style={{
-                            padding: '4px 12px',
-                            borderRadius: '6px',
-                            fontSize: '0.76rem',
-                            fontWeight: 700,
-                            background: activePreviewTab === tab ? '#7c3aed' : '#ffffff',
-                            color: activePreviewTab === tab ? '#ffffff' : '#64748b',
-                            border: '1px solid',
-                            borderColor: activePreviewTab === tab ? '#7c3aed' : '#e2e8f0',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          {tab}
-                        </button>
-                      ))}
-                    </div>
-
-                    {activePreviewTab === 'Comments' && (
-                      <div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '10px', maxHeight: '120px', overflowY: 'auto' }}>
-                          {(orderComments[previewOrder.id] || []).length === 0 ? (
-                            <div style={{ fontSize: '0.76rem', color: '#94a3b8', fontStyle: 'italic' }}>No comments recorded yet.</div>
-                          ) : (
-                            (orderComments[previewOrder.id] || []).map((c, i) => (
-                              <div key={i} style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '6px 10px', fontSize: '0.78rem' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', fontSize: '0.7rem' }}>
-                                  <strong>{c.author}</strong>
-                                  <span>{c.date} {c.time}</span>
-                                </div>
-                                <div style={{ color: '#1e293b', marginTop: '2px' }}>{c.text}</div>
-                              </div>
-                            ))
-                          )}
-                        </div>
-
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                          <input
-                            type="text"
-                            placeholder="Write comment here..."
-                            value={newCommentText}
-                            onChange={e => setNewCommentText(e.target.value)}
-                            onKeyDown={e => { if (e.key === 'Enter') handleAddComment(previewOrder.id); }}
-                            style={{
-                              flex: 1,
-                              background: '#ffffff',
-                              border: '1px solid #cbd5e1',
-                              borderRadius: '6px',
-                              padding: '6px 10px',
-                              fontSize: '0.8rem',
-                              outline: 'none'
-                            }}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => handleAddComment(previewOrder.id)}
-                            style={{
-                              background: '#7c3aed',
-                              color: '#fff',
-                              border: 'none',
-                              borderRadius: '6px',
-                              padding: '6px 12px',
-                              fontSize: '0.78rem',
-                              fontWeight: 700,
-                              cursor: 'pointer'
-                            }}
-                          >
-                            Post
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    {activePreviewTab === 'Activity' && (
-                      <div style={{ fontSize: '0.78rem', color: '#64748b', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <div>• Order created from <strong>{previewOrder.channel || 'Website'}</strong></div>
-                        <div>• Customer verified with phone <strong>{previewOrder.customer?.phone}</strong></div>
-                        <div>• Initial status set to <strong>{previewOrder.status}</strong></div>
-                      </div>
-                    )}
-
-                    {activePreviewTab === 'Stock Movements' && (
-                      <div style={{ fontSize: '0.78rem', color: '#64748b' }}>
-                        • Reserved {previewOrder.items?.length || 1} units from warehouse stock.
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Right Card: CUSTOMER DETAILS */}
-                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '18px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748b' }}>
-                      Customer Details
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => alert(`Customer contact: ${previewOrder.customer?.phone}`)}
-                      style={{ background: 'none', border: 'none', color: '#7c3aed', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 700 }}
-                    >
-                      ✏️ Edit
-                    </button>
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr', rowGap: '10px', fontSize: '0.84rem' }}>
-                    <div style={{ color: '#64748b', fontWeight: 600 }}>Name:</div>
-                    <div style={{ fontWeight: 700, color: '#0f172a' }}>{previewOrder.customer?.fullName || '-'}</div>
-
-                    <div style={{ color: '#64748b', fontWeight: 600 }}>Email:</div>
-                    <div style={{ color: '#334155' }}>{previewOrder.customer?.email || '-'}</div>
-
-                    <div style={{ color: '#64748b', fontWeight: 600 }}>Phone Number:</div>
-                    <div style={{ fontWeight: 700, color: '#7c3aed', fontFamily: 'monospace' }}>
-                      {previewOrder.customer?.phone || '-'}
-                    </div>
-
-                    <div style={{ color: '#64748b', fontWeight: 600 }}>Alt Phone Number:</div>
-                    <div style={{ color: '#334155' }}>{previewOrder.customer?.altPhone || '-'}</div>
-
-                    <div style={{ color: '#64748b', fontWeight: 600 }}>Province:</div>
-                    <div style={{ color: '#334155' }}>Bagmati Province</div>
-
-                    <div style={{ color: '#64748b', fontWeight: 600 }}>City:</div>
-                    <div style={{ fontWeight: 600, color: '#0f172a' }}>{previewOrder.customer?.district || 'Kathmandu Inside Ring Road'}</div>
-
-                    <div style={{ color: '#64748b', fontWeight: 600 }}>Address:</div>
-                    <div style={{ color: '#334155' }}>{previewOrder.customer?.address || 'Divya Marg'}</div>
-
-                    <div style={{ color: '#64748b', fontWeight: 600 }}>Landmark:</div>
-                    <div style={{ color: '#334155' }}>{previewOrder.customer?.landmark || '-'}</div>
-
-                    <div style={{ color: '#64748b', fontWeight: 600 }}>Order Note:</div>
-                    <div style={{ color: '#334155', fontStyle: 'italic' }}>{previewOrder.customer?.note || 'Fast delivery'}</div>
-                  </div>
-
-                  <div style={{ marginTop: '20px', borderTop: '1px solid #e2e8f0', paddingTop: '16px' }}>
-                    <a
-                      href={getWaMessageLink(previewOrder)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '8px',
-                        width: '100%',
-                        padding: '10px',
-                        background: '#25D366',
-                        color: '#ffffff',
-                        fontWeight: 700,
-                        fontSize: '0.84rem',
-                        borderRadius: '8px',
-                        textDecoration: 'none'
-                      }}
-                    >
-                      <WhatsAppIcon size={16} />
-                      <span>Chat on WhatsApp</span>
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       )}

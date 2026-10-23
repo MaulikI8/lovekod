@@ -534,7 +534,8 @@ export default function AdminOrders() {
           <button
             onClick={() => {
               setFormData(initialForm);
-              setCustomerLookupStatus(null);
+              setSelectedCustomer(null);
+              setCustomerSearchPhone("");
               setShowCreateModal(true);
             }}
             className="admin-btn"

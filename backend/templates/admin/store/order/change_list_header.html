@@ -1,11 +1,13 @@
 <style>
+/* ══ LoveKod Custom Admin Orders Design System (Blanxer Parity) ══ */
 #blanxer-create-order-modal, #blanxer-product-picker-modal {
     z-index: 9999999 !important;
 }
-#blanxer-create-order-modal svg, #blanxer-product-picker-modal svg {
+#blanxer-create-order-modal svg, #blanxer-product-picker-modal svg, .blanxer-orders-wrapper svg {
     max-width: 20px !important;
     max-height: 20px !important;
     display: inline-block !important;
+    flex-shrink: 0 !important;
 }
 .blanxer-icon-xs {
     width: 14px !important;
@@ -17,20 +19,102 @@
     height: 18px !important;
     min-width: 18px !important;
 }
+
+/* Status Filter Pills */
+.blanxer-pill-active {
+    background-color: #7c3aed !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    border-radius: 9999px !important;
+    padding: 6px 14px !important;
+    font-size: 0.78rem !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    box-shadow: 0 1px 2px rgba(124, 58, 237, 0.25) !important;
+}
+.blanxer-pill-inactive {
+    background-color: #f1f5f9 !important;
+    color: #475569 !important;
+    font-weight: 600 !important;
+    border-radius: 9999px !important;
+    padding: 6px 14px !important;
+    font-size: 0.78rem !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+}
+.blanxer-pill-inactive:hover {
+    background-color: #e2e8f0 !important;
+    color: #1e293b !important;
+}
+
+/* Top Navigation Tabs */
+.blanxer-nav-active {
+    background-color: #f5f3ff !important;
+    color: #6d28d9 !important;
+    border: 1px solid #ddd6fe !important;
+    border-radius: 10px !important;
+    font-weight: 700 !important;
+    padding: 6px 14px !important;
+    font-size: 0.78rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    text-decoration: none !important;
+}
+.blanxer-nav-inactive {
+    background-color: transparent !important;
+    color: #64748b !important;
+    border: 1px solid transparent !important;
+    border-radius: 10px !important;
+    font-weight: 600 !important;
+    padding: 6px 14px !important;
+    font-size: 0.78rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    text-decoration: none !important;
+}
+.blanxer-nav-inactive:hover {
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
+}
+
+/* Modal Inputs & Grids */
+.blanxer-input {
+    width: 100% !important;
+    height: 38px !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    padding: 0 12px !important;
+    font-size: 0.82rem !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    box-sizing: border-box !important;
+    outline: none !important;
+}
+.blanxer-input:focus {
+    border-color: #7c3aed !important;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2) !important;
+}
+.blanxer-input-icon {
+    padding-left: 36px !important;
+}
 </style>
 <div class="blanxer-orders-wrapper mb-6" id="blanxer-orders-app">
     <!-- Top Tabs: Orders | Abandoned Carts | Customers -->
     <div class="flex items-center justify-between flex-wrap gap-4 mb-4">
         <div class="flex items-center gap-2">
-            <a href="{% url 'admin:store_order_changelist' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-50 text-purple-700 border border-purple-200/90 font-bold text-xs shadow-2xs">
+            <a href="{% url 'admin:store_order_changelist' %}" class="blanxer-nav-active">
                 <span>📦</span>
                 <span>Orders</span>
             </a>
-            <a href="#" onclick="alert('Abandoned Carts tracked via Webhook (0 active)'); return false;" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-100 font-semibold text-xs transition-colors">
+            <a href="#" onclick="alert('Abandoned Carts tracked via Webhook (0 active)'); return false;" class="blanxer-nav-inactive">
                 <span>🛒</span>
                 <span>Abandoned Carts</span>
             </a>
-            <a href="{% url 'admin:store_customer_changelist' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-100 font-semibold text-xs transition-colors">
+            <a href="{% url 'admin:store_customer_changelist' %}" class="blanxer-nav-inactive">
                 <span>👥</span>
                 <span>Customers</span>
             </a>
@@ -83,22 +167,22 @@
     <div class="flex items-center justify-between flex-wrap gap-3 pb-3 border-b border-gray-100">
         <!-- Status Tabs -->
         <div class="flex items-center gap-1.5 overflow-x-auto py-1">
-            <a href="{% url 'admin:store_order_changelist' %}" class="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-semibold {% if not request.GET.status and not request.GET.is_deleted %}bg-purple-600 text-white font-bold shadow-xs{% else %}text-gray-600 bg-gray-100 hover:bg-gray-200{% endif %}">
+            <a href="{% url 'admin:store_order_changelist' %}" class="{% if not request.GET.status and not request.GET.is_deleted %}blanxer-pill-active{% else %}blanxer-pill-inactive{% endif %}">
                 All
             </a>
-            <a href="{% url 'admin:store_order_changelist' %}?status=Pending" class="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-semibold {% if request.GET.status == 'Pending' %}bg-purple-600 text-white font-bold shadow-xs{% else %}text-gray-600 bg-gray-100 hover:bg-gray-200{% endif %}">
+            <a href="{% url 'admin:store_order_changelist' %}?status=Pending" class="{% if request.GET.status == 'Pending' %}blanxer-pill-active{% else %}blanxer-pill-inactive{% endif %}">
                 Pending
             </a>
-            <a href="{% url 'admin:store_order_changelist' %}?status=Processing" class="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-semibold {% if request.GET.status == 'Processing' %}bg-purple-600 text-white font-bold shadow-xs{% else %}text-gray-600 bg-gray-100 hover:bg-gray-200{% endif %}">
+            <a href="{% url 'admin:store_order_changelist' %}?status=Processing" class="{% if request.GET.status == 'Processing' %}blanxer-pill-active{% else %}blanxer-pill-inactive{% endif %}">
                 Processing
             </a>
-            <a href="{% url 'admin:store_order_changelist' %}?status=Dispatched" class="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-semibold {% if request.GET.status == 'Dispatched' %}bg-purple-600 text-white font-bold shadow-xs{% else %}text-gray-600 bg-gray-100 hover:bg-gray-200{% endif %}">
+            <a href="{% url 'admin:store_order_changelist' %}?status=Dispatched" class="{% if request.GET.status == 'Dispatched' %}blanxer-pill-active{% else %}blanxer-pill-inactive{% endif %}">
                 Dispatched
             </a>
-            <a href="{% url 'admin:store_order_changelist' %}?status=Delivered" class="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-semibold {% if request.GET.status == 'Delivered' %}bg-purple-600 text-white font-bold shadow-xs{% else %}text-gray-600 bg-gray-100 hover:bg-gray-200{% endif %}">
+            <a href="{% url 'admin:store_order_changelist' %}?status=Delivered" class="{% if request.GET.status == 'Delivered' %}blanxer-pill-active{% else %}blanxer-pill-inactive{% endif %}">
                 Delivered
             </a>
-            <a href="{% url 'admin:store_order_changelist' %}?status=Cancelled" class="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-semibold {% if request.GET.status == 'Cancelled' %}bg-purple-600 text-white font-bold shadow-xs{% else %}text-gray-600 bg-gray-100 hover:bg-gray-200{% endif %}">
+            <a href="{% url 'admin:store_order_changelist' %}?status=Cancelled" class="{% if request.GET.status == 'Cancelled' %}blanxer-pill-active{% else %}blanxer-pill-inactive{% endif %}">
                 Cancelled
             </a>
         </div>
@@ -160,7 +244,7 @@
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
                                 <svg class="w-4 h-4 blanxer-icon-xs" style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                             </div>
-                            <input type="text" id="cust-search-input" placeholder="9841234567 / 9818765432" class="w-full pl-9 pr-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-gray-50/50">
+                            <input type="text" id="cust-search-input" placeholder="9841234567 / 9818765432" class="blanxer-input blanxer-input-icon">
                         </div>
                         <button type="button" onclick="window.searchCustomer()" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-purple-600 text-purple-600 hover:bg-purple-50 text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap">
                             <svg class="w-3.5 h-3.5 blanxer-icon-xs" style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
@@ -267,7 +351,7 @@
                     <div class="grid grid-cols-2 gap-3 mb-3 text-xs">
                         <div>
                             <label class="block font-semibold text-gray-700 mb-1">City / District <span class="text-red-500">*</span></label>
-                            <select id="order-district" class="w-full px-3 py-2 border border-gray-200 rounded-lg bg-white text-xs font-medium focus:ring-2 focus:ring-purple-500">
+                            <select id="order-district" class="blanxer-input">
                                 <option value="Kathmandu" selected>Kathmandu</option>
                                 <option value="Lalitpur">Lalitpur</option>
                                 <option value="Bhaktapur">Bhaktapur</option>
@@ -283,17 +367,17 @@
                         </div>
                         <div>
                             <label class="block font-semibold text-gray-700 mb-1">Address <span class="text-red-500">*</span></label>
-                            <input type="text" id="order-address" placeholder="Ward 4, New Baneshwor, Kathmandu" class="w-full px-3 py-2 border border-gray-200 rounded-lg bg-white text-xs">
+                            <input type="text" id="order-address" placeholder="Ward 4, New Baneshwor, Kathmandu" class="blanxer-input">
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-3 text-xs">
                         <div>
                             <label class="block font-semibold text-gray-700 mb-1">Landmark</label>
-                            <input type="text" id="order-landmark" placeholder="Near Bhatbhateni Supermarket" class="w-full px-3 py-2 border border-gray-200 rounded-lg bg-white text-xs">
+                            <input type="text" id="order-landmark" placeholder="Near Bhatbhateni Supermarket" class="blanxer-input">
                         </div>
                         <div>
                             <label class="block font-semibold text-gray-700 mb-1">Alternative Phone (Optional)</label>
-                            <input type="text" id="order-alt-phone" placeholder="9841234567" class="w-full px-3 py-2 border border-gray-200 rounded-lg bg-white text-xs">
+                            <input type="text" id="order-alt-phone" placeholder="9841234567" class="blanxer-input">
                         </div>
                     </div>
                 </div>
@@ -303,20 +387,20 @@
                     <div class="grid grid-cols-3 gap-3 text-xs">
                         <div>
                             <label class="block font-semibold text-gray-700 mb-1">Order Note</label>
-                            <input type="text" id="order-note" placeholder="Call before arrival" class="w-full px-3 py-2 border border-gray-200 rounded-lg bg-white text-xs">
+                            <input type="text" id="order-note" placeholder="Call before arrival" class="blanxer-input">
                         </div>
                         <div>
                             <label class="block font-semibold text-gray-700 mb-1">Discount</label>
                             <div class="relative">
                                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 text-xs">Rs.</span>
-                                <input type="number" id="order-discount" value="0" min="0" oninput="window.recalcTotal()" class="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg bg-white text-xs">
+                                <input type="number" id="order-discount" value="0" min="0" oninput="window.recalcTotal()" class="blanxer-input blanxer-input-icon">
                             </div>
                         </div>
                         <div>
                             <label class="block font-semibold text-gray-700 mb-1">Delivery Charge</label>
                             <div class="relative">
                                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 text-xs">Rs.</span>
-                                <input type="text" id="order-delivery-charge" placeholder="Auto" value="0" class="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg bg-white text-xs">
+                                <input type="text" id="order-delivery-charge" placeholder="Auto" value="0" class="blanxer-input blanxer-input-icon">
                             </div>
                         </div>
                     </div>

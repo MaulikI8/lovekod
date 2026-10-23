@@ -1736,8 +1736,100 @@
             }
         };
 
-        // Fully Dynamic Combinations Matrix (Red -> Red M -> Red M, Red L, Red XL)
+        // Harvest all latest values typed by the user directly from the table DOM rows
+        function blanxerHarvestTableInputs() {
+            const tbody = document.getElementById("blanxerSkuTableBody");
+            if (!tbody) return;
+            const rows = tbody.querySelectorAll("tr");
+            rows.forEach(function(tr, idx) {
+                const titleSpan = tr.querySelector(".blanxer-variant-title");
+                const variantName = titleSpan ? titleSpan.textContent.trim() : null;
+                const inputs = tr.querySelectorAll("input[type='number'], input[type='text']:not([type='file'])");
+                if (inputs.length >= 6) {
+                    let targetCombo = null;
+                    if (variantName) {
+                        targetCombo = skuCombinations.find(function(c) {
+                            return c.variant && c.variant.trim().toLowerCase() === variantName.toLowerCase();
+                        });
+                    }
+                    if (!targetCombo && skuCombinations[idx]) {
+                        targetCombo = skuCombinations[idx];
+                    }
+                    if (targetCombo) {
+                        if (inputs[0].value !== "") targetCombo.crossed_price = parseFloat(inputs[0].value) || 0;
+                        if (inputs[1].value !== "") targetCombo.selling_price = parseFloat(inputs[1].value) || 0;
+                        if (inputs[2].value !== "") targetCombo.cost_price = parseFloat(inputs[2].value) || 0;
+                        if (inputs[3].value !== "") targetCombo.weight = parseFloat(inputs[3].value) || 0;
+                        if (inputs[4].value !== "") targetCombo.quantity = parseInt(inputs[4].value) || 0;
+                        if (inputs[5].value !== "") targetCombo.sku = inputs[5].value.trim();
+                    }
+                }
+            });
+        }
+
+        // Get smart reference values so new/editing variants ALWAYS retain prior values
+        function blanxerGetReferenceValues() {
+            let refCrossed = 0;
+            let refSelling = 0;
+            let refCost = 0;
+            let refWeight = 0;
+            let refQty = 0;
+
+            // 1. Check existing combinations for any filled row
+            const filledCombo = skuCombinations.slice().reverse().find(function(c) {
+                return (parseFloat(c.selling_price) || 0) > 0 || 
+                       (parseFloat(c.crossed_price) || 0) > 0 || 
+                       (parseFloat(c.cost_price) || 0) > 0 ||
+                       (parseInt(c.quantity) || 0) > 0;
+            });
+
+            if (filledCombo) {
+                refCrossed = filledCombo.crossed_price !== undefined ? filledCombo.crossed_price : 0;
+                refSelling = filledCombo.selling_price !== undefined ? filledCombo.selling_price : 0;
+                refCost = filledCombo.cost_price !== undefined ? filledCombo.cost_price : 0;
+                refWeight = filledCombo.weight !== undefined ? filledCombo.weight : 0;
+                refQty = filledCombo.quantity !== undefined ? filledCombo.quantity : 0;
+            }
+
+            // 2. Fallback to base product inputs / native Django fields if any field is still 0
+            const uiSelling = document.getElementById("blanxerUiSellingPrice");
+            const nativePrice = document.getElementById("id_price");
+            const baseSelling = (uiSelling && uiSelling.value) ? parseFloat(uiSelling.value) : (nativePrice && nativePrice.value ? parseFloat(nativePrice.value) : 0);
+            if (!refSelling && baseSelling) refSelling = baseSelling;
+
+            const uiCrossed = document.getElementById("blanxerUiCrossedPrice");
+            const nativeCrossed = document.getElementById("id_original_price");
+            const baseCrossed = (uiCrossed && uiCrossed.value) ? parseFloat(uiCrossed.value) : (nativeCrossed && nativeCrossed.value ? parseFloat(nativeCrossed.value) : 0);
+            if (!refCrossed && baseCrossed) refCrossed = baseCrossed;
+
+            const uiCost = document.getElementById("blanxerUiCostPrice");
+            const nativeCost = document.getElementById("id_cost_price");
+            const baseCost = (uiCost && uiCost.value) ? parseFloat(uiCost.value) : (nativeCost && nativeCost.value ? parseFloat(nativeCost.value) : 0);
+            if (!refCost && baseCost) refCost = baseCost;
+
+            const uiWeight = document.getElementById("blanxerUiWeight");
+            const nativeWeight = document.getElementById("id_weight");
+            const baseWeight = (uiWeight && uiWeight.value) ? parseFloat(uiWeight.value) : (nativeWeight && nativeWeight.value ? parseFloat(nativeWeight.value) : 0);
+            if (!refWeight && baseWeight) refWeight = baseWeight;
+
+            const uiQty = document.getElementById("blanxerUiQuantity");
+            const nativeQty = document.getElementById("id_quantity");
+            const baseQty = (uiQty && uiQty.value) ? parseInt(uiQty.value) : (nativeQty && nativeQty.value ? parseInt(nativeQty.value) : 0);
+            if (!refQty && baseQty) refQty = baseQty;
+
+            return {
+                crossed_price: refCrossed,
+                selling_price: refSelling,
+                cost_price: refCost,
+                weight: refWeight,
+                quantity: refQty
+            };
+        }
+
+        // Fully Dynamic Combinations Matrix (Preserves prior values & applies smart reference)
         window.blanxerUpdateCombinationsTable = function() {
+            blanxerHarvestTableInputs();
+
             const vList = variantTags.length > 0 ? variantTags : [];
             const sList = sizeTags.length > 0 ? sizeTags : [];
 
@@ -1765,28 +1857,47 @@
                 });
             }
 
-            const defaultCrossed = document.getElementById("blanxerUiCrossedPrice") ? (document.getElementById("blanxerUiCrossedPrice").value || 0) : 0;
-            const defaultSelling = document.getElementById("blanxerUiSellingPrice") ? (document.getElementById("blanxerUiSellingPrice").value || 0) : 0;
-            const defaultCost = document.getElementById("blanxerUiCostPrice") ? (document.getElementById("blanxerUiCostPrice").value || 0) : 0;
-            const defaultWeight = document.getElementById("blanxerUiWeight") ? (document.getElementById("blanxerUiWeight").value || 0) : 0;
-            const defaultQty = document.getElementById("blanxerUiQuantity") ? (document.getElementById("blanxerUiQuantity").value || 0) : 0;
+            const ref = blanxerGetReferenceValues();
 
             const updated = targetItems.map(function(item) {
-                const existing = skuCombinations.find(function(c) { 
-                    return c.variant.toLowerCase() === item.variant.toLowerCase(); 
+                // Match existing combination by variant string or color+size
+                const existing = skuCombinations.find(function(c) {
+                    if (!c) return false;
+                    const vMatch = c.variant && item.variant && c.variant.trim().toLowerCase() === item.variant.trim().toLowerCase();
+                    if (vMatch) return true;
+                    if (c.color && item.color && c.size && item.size) {
+                        return c.color.trim().toLowerCase() === item.color.trim().toLowerCase() &&
+                               c.size.trim().toLowerCase() === item.size.trim().toLowerCase();
+                    }
+                    return false;
                 });
+
                 if (existing) {
-                    return existing;
+                    // Retain every single existing value!
+                    return {
+                        variant: item.variant,
+                        color: item.color,
+                        size: item.size,
+                        crossed_price: (existing.crossed_price !== undefined && existing.crossed_price !== null && existing.crossed_price !== "") ? existing.crossed_price : ref.crossed_price,
+                        selling_price: (existing.selling_price !== undefined && existing.selling_price !== null && existing.selling_price !== "") ? existing.selling_price : ref.selling_price,
+                        cost_price: (existing.cost_price !== undefined && existing.cost_price !== null && existing.cost_price !== "") ? existing.cost_price : ref.cost_price,
+                        weight: (existing.weight !== undefined && existing.weight !== null && existing.weight !== "") ? existing.weight : ref.weight,
+                        quantity: (existing.quantity !== undefined && existing.quantity !== null && existing.quantity !== "") ? existing.quantity : ref.quantity,
+                        sku: existing.sku || "",
+                        image: existing.image || ""
+                    };
                 }
+
+                // New combination: pre-populate with reference values!
                 return {
                     variant: item.variant,
                     color: item.color,
                     size: item.size,
-                    crossed_price: defaultCrossed,
-                    selling_price: defaultSelling,
-                    cost_price: defaultCost,
-                    weight: defaultWeight,
-                    quantity: defaultQty,
+                    crossed_price: ref.crossed_price,
+                    selling_price: ref.selling_price,
+                    cost_price: ref.cost_price,
+                    weight: ref.weight,
+                    quantity: ref.quantity,
                     sku: "",
                     image: ""
                 };
@@ -1914,27 +2025,36 @@
                 tdVariant.appendChild(variantCell);
                 tr.appendChild(tdVariant);
 
-                // Helper for numeric inputs
+                // Helper for numeric inputs with default reference preservation
+                const ref = blanxerGetReferenceValues();
                 function addInputCell(field, defaultVal, isFloat) {
                     const td = document.createElement("td");
                     const input = document.createElement("input");
                     input.type = "number";
                     if (isFloat) input.step = "0.01";
                     input.className = "blanxer-cell-input";
-                    input.value = (combo[field] !== undefined && combo[field] !== null && combo[field] !== "") ? combo[field] : defaultVal;
+                    const val = combo[field];
+                    input.value = (val !== undefined && val !== null && val !== "") ? val : defaultVal;
                     input.min = "0";
                     input.oninput = function() {
-                        window.blanxerUpdateCombo(idx, field, input.value);
+                        const parsedVal = input.value !== "" ? (isFloat ? parseFloat(input.value) : (field === 'quantity' ? parseInt(input.value) : parseFloat(input.value))) : "";
+                        window.blanxerUpdateCombo(idx, field, parsedVal);
+                    };
+                    input.onblur = function() {
+                        if (input.value === "" && defaultVal !== undefined) {
+                            input.value = defaultVal;
+                            window.blanxerUpdateCombo(idx, field, defaultVal);
+                        }
                     };
                     td.appendChild(input);
                     tr.appendChild(td);
                 }
 
-                addInputCell("crossed_price", 0, false);
-                addInputCell("selling_price", 0, false);
-                addInputCell("cost_price", 0, false);
-                addInputCell("weight", 0, true);
-                addInputCell("quantity", 0, false);
+                addInputCell("crossed_price", ref.crossed_price, false);
+                addInputCell("selling_price", ref.selling_price, false);
+                addInputCell("cost_price", ref.cost_price, false);
+                addInputCell("weight", ref.weight, true);
+                addInputCell("quantity", ref.quantity, false);
 
                 // SKU input
                 const tdSku = document.createElement("td");
@@ -1956,6 +2076,7 @@
 
         // ── Generate SKUs Button ──
         window.blanxerGenerateSkus = function() {
+            blanxerHarvestTableInputs();
             const nativeSku = document.getElementById("id_product_id");
             const baseSku = (nativeSku && nativeSku.value) ? nativeSku.value.trim() : ("PROD-NP-" + Math.floor(100 + Math.random() * 900));
             if (nativeSku && !nativeSku.value) nativeSku.value = baseSku;
@@ -2297,36 +2418,7 @@
                 });
             }
 
-            // Initialize existing colors from native field
-            const nativeColors = document.getElementById("id_colors");
-            if (nativeColors && nativeColors.value) {
-                window.blanxerAddVariantTag(nativeColors.value);
-            }
-
-            // Initialize existing sizes from native field
-            const nativeSizes = document.getElementById("id_sizes");
-            if (nativeSizes && nativeSizes.value) {
-                window.blanxerAddSizeTag(nativeSizes.value);
-            }
-
-            // Initialize existing combinations if available
-            const hiddenSizes = document.getElementById("id_custom_sizes");
-            if (hiddenSizes && hiddenSizes.value) {
-                try {
-                    let parsed = hiddenSizes.value;
-                    if (typeof parsed === "string") {
-                        parsed = JSON.parse(parsed);
-                    }
-                    if (Array.isArray(parsed) && parsed.length > 0) {
-                        skuCombinations = parsed;
-                        renderCombinationsTable();
-                    }
-                } catch(e) {}
-            } else if (variantTags.length > 0 || sizeTags.length > 0) {
-                window.blanxerUpdateCombinationsTable();
-            }
-
-            // Simple fields two-way synchronization
+            // 1. FIRST: Two-way synchronization of simple fields from native form to UI
             const pairs = [
                 { ui: "blanxerUiCrossedPrice", native: "id_original_price" },
                 { ui: "blanxerUiSellingPrice", native: "id_price" },
@@ -2365,6 +2457,67 @@
                     });
                 }
             });
+
+            // 2. SECOND: Load saved custom_sizes from database BEFORE modifying any tags!
+            let hasLoadedSavedCombinations = false;
+            const hiddenSizes = document.getElementById("id_custom_sizes");
+            if (hiddenSizes && hiddenSizes.value) {
+                try {
+                    let parsed = hiddenSizes.value;
+                    if (typeof parsed === "string") {
+                        parsed = JSON.parse(parsed);
+                    }
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        skuCombinations = parsed;
+                        hasLoadedSavedCombinations = true;
+                        parsed.forEach(function(c) {
+                            if (c.color && !variantTags.some(function(t) { return t.toLowerCase() === c.color.toLowerCase(); })) {
+                                variantTags.push(c.color);
+                            }
+                            if (c.size && !sizeTags.some(function(t) { return t.toUpperCase() === c.size.toUpperCase(); })) {
+                                sizeTags.push(c.size.toUpperCase());
+                            }
+                        });
+                    }
+                } catch(e) {
+                    console.error("Error parsing saved custom_sizes", e);
+                }
+            }
+
+            // 3. THIRD: Initialize any additional colors from native field
+            const nativeColors = document.getElementById("id_colors");
+            if (nativeColors && nativeColors.value) {
+                const parts = nativeColors.value.split(/[,\s]+/);
+                parts.forEach(function(p) {
+                    const clean = p.trim();
+                    if (clean && !variantTags.some(function(t) { return t.toLowerCase() === clean.toLowerCase(); })) {
+                        variantTags.push(clean);
+                    }
+                });
+            }
+
+            // 4. FOURTH: Initialize any additional sizes from native field
+            const nativeSizes = document.getElementById("id_sizes");
+            if (nativeSizes && nativeSizes.value) {
+                const parts = nativeSizes.value.split(/[,\s]+/);
+                parts.forEach(function(p) {
+                    const clean = p.trim().toUpperCase();
+                    if (clean && !sizeTags.some(function(t) { return t.toUpperCase() === clean; })) {
+                        sizeTags.push(clean);
+                    }
+                });
+            }
+
+            // 5. Render tag chips
+            renderVariantTags();
+            renderSizeTags();
+
+            // 6. Render combinations table
+            if (hasLoadedSavedCombinations && skuCombinations.length > 0) {
+                renderCombinationsTable();
+            } else if (variantTags.length > 0 || sizeTags.length > 0) {
+                window.blanxerUpdateCombinationsTable();
+            }
 
             // Checkbox sync: Enable variants
             const uiVariants = document.getElementById("blanxerUiEnableVariants");

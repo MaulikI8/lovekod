@@ -18,6 +18,58 @@ export default function AdminDashboard() {
   const totalRevenue = orders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
   const todayAov = todayOrders.length > 0 ? Math.round(todayRevenue / todayOrders.length) : (orders.length > 0 ? Math.round(totalRevenue / orders.length) : 0);
 
+  // Dynamic Hourly Order Statistics (00:00 to 23:00) calculated from orders
+  const hourlyCounts = Array(24).fill(0);
+  todayOrders.forEach(o => {
+    if (o.createdAt) {
+      const h = new Date(o.createdAt).getHours();
+      if (h >= 0 && h < 24) hourlyCounts[h]++;
+    }
+  });
+
+  const maxHourly = Math.max(4, ...hourlyCounts);
+  const hourlyPoints = hourlyCounts.map((count, h) => {
+    const cx = 25 + h * 21.5;
+    const cy = 105 - (count / maxHourly) * 85;
+    return `${cx},${cy}`;
+  }).join(' ');
+
+  // Dynamic Weekly Sales (Sunday to Saturday) calculated from orders
+  const now = new Date();
+  const daysSinceSunday = (now.getDay()) % 7; // Sunday is 0
+  const startOfWeek = new Date(now);
+  startOfWeek.setDate(now.getDate() - daysSinceSunday);
+  startOfWeek.setHours(0, 0, 0, 0);
+
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  let thisWeekTotal = 0;
+
+  const weeklyDays = dayNames.map((dname, idx) => {
+    const dStart = new Date(startOfWeek);
+    dStart.setDate(startOfWeek.getDate() + idx);
+    const dEnd = new Date(dStart);
+    dEnd.setDate(dStart.getDate() + 1);
+
+    const dRev = orders
+      .filter(o => {
+        if (!o.createdAt) return false;
+        const od = new Date(o.createdAt);
+        return od >= dStart && od < dEnd;
+      })
+      .reduce((s, o) => s + (Number(o.total) || 0), 0);
+
+    thisWeekTotal += dRev;
+
+    return {
+      day: dname,
+      isToday: idx === daysSinceSunday,
+      rev: dRev,
+    };
+  });
+
+  const maxWeeklyRev = Math.max(10000, totalRevenue, ...weeklyDays.map(d => d.rev));
+  const displayWeeklyTotal = thisWeekTotal > 0 ? thisWeekTotal : totalRevenue;
+
   // Low stock products (total stock <= 5 units)
   const lowStockItems = [];
   products.forEach(p => {
@@ -48,10 +100,10 @@ export default function AdminDashboard() {
         </p>
       </div>
 
-      {/* ══ 2. THREE TOP METRIC CARDS ══ */}
+      {/* ══ 2. THREE TOP METRIC CARDS (FULLY LINKED TO ORDERS) ══ */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px', marginBottom: '24px' }}>
         {/* Card 1: Revenue */}
-        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+        <Link to="/admin/orders" style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', textDecoration: 'none' }}>
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: '0.86rem', fontWeight: 700, color: '#334155' }}>Revenue</span>
@@ -66,12 +118,12 @@ export default function AdminDashboard() {
             </div>
           </div>
           <div style={{ marginTop: '16px', height: '4px', background: '#f1f5f9', borderRadius: '2px', overflow: 'hidden' }}>
-            <div style={{ width: '65%', height: '100%', background: 'linear-gradient(90deg, #c084fc, #7c3aed)', borderRadius: '2px' }}></div>
+            <div style={{ width: todayRevenue > 0 ? '80%' : '20%', height: '100%', background: 'linear-gradient(90deg, #c084fc, #7c3aed)', borderRadius: '2px' }}></div>
           </div>
-        </div>
+        </Link>
 
         {/* Card 2: Orders */}
-        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+        <Link to="/admin/orders" style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', textDecoration: 'none' }}>
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: '0.86rem', fontWeight: 700, color: '#334155' }}>Orders</span>
@@ -89,10 +141,10 @@ export default function AdminDashboard() {
               <div key={i} style={{ flex: 1, height: '4px', borderRadius: '2px', background: i < (orders.length || 1) ? '#7c3aed' : '#e2e8f0' }} />
             ))}
           </div>
-        </div>
+        </Link>
 
         {/* Card 3: Average Order Value */}
-        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+        <Link to="/admin/orders" style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', textDecoration: 'none' }}>
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: '0.86rem', fontWeight: 700, color: '#334155' }}>Average Order Value</span>
@@ -109,15 +161,18 @@ export default function AdminDashboard() {
           <div style={{ marginTop: '16px', height: '4px', background: '#f1f5f9', borderRadius: '2px', overflow: 'hidden' }}>
             <div style={{ width: '75%', height: '100%', background: 'linear-gradient(90deg, #f59e0b, #d97706)', borderRadius: '2px' }}></div>
           </div>
-        </div>
+        </Link>
       </div>
 
-      {/* ══ 3. TWO CHARTS (HOURLY ORDER STATS + WEEKLY SALES) ══ */}
+      {/* ══ 3. TWO DYNAMIC CHARTS (HOURLY STATS + WEEKLY SALES) ══ */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '20px', marginBottom: '24px' }}>
         {/* Chart 1: Hourly Order Statistics */}
         <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-          <div style={{ marginBottom: '14px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
             <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: '#0f172a' }}>Hourly Order Statistics</h3>
+            <Link to="/admin/orders" style={{ fontSize: '0.78rem', color: '#7c3aed', fontWeight: 700, textDecoration: 'none' }}>
+              View Orders →
+            </Link>
           </div>
 
           <div style={{ width: '100%', height: '150px' }}>
@@ -132,10 +187,16 @@ export default function AdminDashboard() {
               <text x="8" y="78" fontSize="9" fill="#94a3b8">2</text>
               <text x="8" y="108" fontSize="9" fill="#94a3b8">0</text>
 
-              <line x1="25" y1="105" x2="530" y2="105" stroke="#7c3aed" strokeWidth="2" />
-              {[...Array(24)].map((_, i) => (
-                <circle key={i} cx={25 + i * 21.5} cy={105} r="3" fill="#7c3aed" />
-              ))}
+              <line x1="25" y1="105" x2="530" y2="105" stroke="#7c3aed" strokeWidth="1.5" />
+              <polyline fill="none" stroke="#7c3aed" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" points={hourlyPoints} />
+
+              {hourlyCounts.map((count, h) => {
+                const cx = 25 + h * 21.5;
+                const cy = 105 - (count / maxHourly) * 85;
+                return (
+                  <circle key={h} cx={cx} cy={cy} r={count > 0 ? 4 : 2.5} fill={count > 0 ? '#ffffff' : '#7c3aed'} stroke="#7c3aed" strokeWidth={count > 0 ? 2.5 : 1} />
+                );
+              })}
             </svg>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', fontFamily: 'monospace', color: '#94a3b8', padding: '0 10px', marginTop: '4px' }}>
               <span>00:00</span>
@@ -157,8 +218,7 @@ export default function AdminDashboard() {
               <p style={{ margin: '2px 0 0', fontSize: '0.75rem', color: '#64748b' }}>Sunday to today, against the same days last week</p>
               <div style={{ marginTop: '6px', display: 'flex', alignItems: 'baseline', gap: '4px' }}>
                 <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>Rs</span>
-                <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a' }}>91,250</span>
-                <span style={{ fontSize: '0.7rem', color: '#94a3b8', marginLeft: '6px' }}>No sales in same days last week</span>
+                <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a' }}>{displayWeeklyTotal.toLocaleString()}</span>
               </div>
             </div>
 
@@ -168,7 +228,7 @@ export default function AdminDashboard() {
                 This week
               </span>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                <span style={{ width: '8px', height: '8px', borderRadius: '2px', background: '#e2e8f0' }}></span>
+                <span style={{ width: '8px', height: '8px', borderRadius: '2px', background: '#e9d5ff' }}></span>
                 Last week
               </span>
             </div>
@@ -177,29 +237,25 @@ export default function AdminDashboard() {
           <div style={{ width: '100%', height: '140px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
             <svg viewBox="0 0 520 100" style={{ width: '100%', height: '100px', overflow: 'visible' }}>
               <line x1="20" y1="90" x2="500" y2="90" stroke="#e2e8f0" strokeWidth="1" />
-              {/* Sun */}
-              <rect x="50" y="25" width="14" height="65" rx="3" fill="#7c3aed" />
-              {/* Mon */}
-              <rect x="118" y="10" width="14" height="80" rx="3" fill="#7c3aed" />
-              {/* Tue */}
-              <rect x="186" y="60" width="14" height="30" rx="3" fill="#7c3aed" />
-              {/* Wed */}
-              <rect x="254" y="88" width="14" height="2" rx="1" fill="#e2e8f0" />
-              {/* Thu */}
-              <rect x="322" y="80" width="14" height="10" rx="2" fill="#7c3aed" />
-              {/* Fri (Today) */}
-              <rect x="390" y="88" width="14" height="2" rx="1" fill="#e2e8f0" />
-              {/* Sat */}
-              <rect x="458" y="88" width="14" height="2" rx="1" fill="#e2e8f0" />
+              {weeklyDays.map((d, i) => {
+                const xThis = 40 + i * 68;
+                const xLast = 54 + i * 68;
+                const hThis = d.rev > 0 ? Math.max(8, (d.rev / maxWeeklyRev) * 75) : 3;
+                const hLast = 3;
+                return (
+                  <g key={d.day}>
+                    <rect x={xLast} y={90 - hLast} width="10" height={hLast} rx="2" fill="#e9d5ff" />
+                    <rect x={xThis} y={90 - hThis} width="10" height={hThis} rx="2" fill={d.isToday ? '#9333ea' : '#7c3aed'} />
+                  </g>
+                );
+              })}
             </svg>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.74rem', color: '#64748b', padding: '0 20px', marginTop: '4px' }}>
-              <span>Sun</span>
-              <span>Mon</span>
-              <span>Tue</span>
-              <span>Wed</span>
-              <span>Thu</span>
-              <span style={{ fontWeight: 800, color: '#7c3aed' }}>Today</span>
-              <span>Sat</span>
+              {weeklyDays.map(d => (
+                <span key={d.day} style={{ fontWeight: d.isToday ? 800 : 500, color: d.isToday ? '#7c3aed' : '#64748b' }}>
+                  {d.isToday ? 'Today' : d.day}
+                </span>
+              ))}
             </div>
           </div>
         </div>
@@ -300,7 +356,7 @@ export default function AdminDashboard() {
 
           <div style={{ marginTop: '14px', paddingTop: '10px', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: '#64748b' }}>
             <span>2 active promotions</span>
-            <span style={{ color: '#7c3aed', fontWeight: 700, cursor: 'pointer' }}>Manage All Coupons →</span>
+            <Link to="/admin/orders" style={{ color: '#7c3aed', fontWeight: 700, textDecoration: 'none' }}>Manage All Coupons →</Link>
           </div>
         </div>
       </div>

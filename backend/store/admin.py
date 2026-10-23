@@ -1096,7 +1096,7 @@ class OrderAdmin(ModelAdmin):
 # BLANXER MERCHANT DASHBOARD CONTEXT CALLBACK
 # ═══════════════════════════════════════════════════════════════════════════
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.db.models import Sum
 
 def blanxer_dashboard_callback(request, context):
@@ -1110,19 +1110,85 @@ def blanxer_dashboard_callback(request, context):
         greeting = "Good Evening"
 
     today_str = now.strftime("%b %d, %Y")
-    # Clean store branding for Aatankari
     admin_name = "LoveKod" if not request.user.first_name else request.user.first_name
 
-    # Calculate live real metrics from database
+    # 1. Real active orders and products
     active_orders = Order.objects.filter(is_deleted=False)
     total_orders = active_orders.count()
     total_revenue_num = active_orders.aggregate(total=Sum('total'))['total'] or 0
     aov_num = int(total_revenue_num / total_orders) if total_orders > 0 else 0
 
-    milestone_target = 100
-    milestone_current = min(milestone_target, total_orders)
-    milestone_to_go = max(0, milestone_target - total_orders)
-    milestone_pct = int((milestone_current / milestone_target) * 100) if milestone_target > 0 else 0
+    # Today's start
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    today_orders = active_orders.filter(created_at__gte=today_start)
+    today_orders_count = today_orders.count()
+    today_revenue_num = today_orders.aggregate(total=Sum('total'))['total'] or 0
+
+    # 2. Hourly Order Statistics (Hours 00:00 to 23:00)
+    hourly_counts = [0] * 24
+    for o in today_orders:
+        h = o.created_at.hour
+        if 0 <= h < 24:
+            hourly_counts[h] += 1
+
+    # Max value for hourly chart scale
+    max_hourly = max(max(hourly_counts), 4)
+    # Calculate SVG points for 540x120 viewBox
+    hourly_points = []
+    hourly_dots = []
+    for h in range(24):
+        cx = 25 + h * 21.5
+        cy = 105 - (hourly_counts[h] / max_hourly) * 90
+        hourly_points.append(f"{cx},{cy}")
+        hourly_dots.append({'cx': cx, 'cy': cy, 'count': hourly_counts[h], 'hour': f"{h:02d}:00"})
+
+    hourly_polyline = " ".join(hourly_points)
+
+    # 3. Weekly Sales (Sunday to Saturday)
+    # Calculate days from Sunday
+    # Python weekday(): Monday is 0 and Sunday is 6
+    days_since_sunday = (now.weekday() + 1) % 7
+    start_of_week = (today_start - timedelta(days=days_since_sunday))
+    start_of_last_week = start_of_week - timedelta(days=7)
+
+    week_orders = active_orders.filter(created_at__gte=start_of_week)
+    last_week_orders = active_orders.filter(created_at__gte=start_of_last_week, created_at__lt=start_of_week)
+
+    day_names = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+    weekly_days = []
+    this_week_total = 0
+
+    for i, dname in enumerate(day_names):
+        d_start = start_of_week + timedelta(days=i)
+        d_end = d_start + timedelta(days=1)
+        d_rev = week_orders.filter(created_at__gte=d_start, created_at__lt=d_end).aggregate(t=Sum('total'))['t'] or 0
+        this_week_total += d_rev
+
+        lw_start = start_of_last_week + timedelta(days=i)
+        lw_end = lw_start + timedelta(days=1)
+        lw_rev = last_week_orders.filter(created_at__gte=lw_start, created_at__lt=lw_end).aggregate(t=Sum('total'))['t'] or 0
+
+        # Calculate heights (max 85px)
+        max_weekly_scale = max(this_week_total, 10000, total_revenue_num)
+        h_this = max(2, int((d_rev / max_weekly_scale) * 85)) if d_rev > 0 else 2
+        h_last = max(2, int((lw_rev / max_weekly_scale) * 85)) if lw_rev > 0 else 2
+
+        weekly_days.append({
+            'day': dname,
+            'is_today': (i == days_since_sunday),
+            'this_week_rev': d_rev,
+            'last_week_rev': lw_rev,
+            'height_this': h_this,
+            'y_this': 95 - h_this,
+            'height_last': h_last,
+            'y_last': 95 - h_last,
+            'x_this': 40 + i * 68,
+            'x_last': 54 + i * 68,
+        })
+
+    # Fallback to store total if week is just starting
+    display_weekly_total = this_week_total if this_week_total > 0 else total_revenue_num
+    weekly_total_formatted = f"{display_weekly_total:,}" if display_weekly_total > 0 else "0"
 
     products_count = Product.objects.filter(is_deleted=False).count()
     categories_count = Category.objects.filter(is_deleted=False).count()
@@ -1154,14 +1220,12 @@ def blanxer_dashboard_callback(request, context):
         'admin_name': admin_name,
         'today_date': today_str,
         'total_revenue': f"{total_revenue_num:,}",
+        'today_revenue': f"{today_revenue_num:,}",
         'total_revenue_num': total_revenue_num,
         'total_orders': total_orders,
+        'today_orders_count': today_orders_count,
         'aov': f"{aov_num:,}",
         'aov_num': aov_num,
-        'milestone_target': milestone_target,
-        'milestone_current': milestone_current,
-        'milestone_to_go': milestone_to_go,
-        'milestone_pct': milestone_pct,
         'products_count': products_count,
         'categories_count': categories_count,
         'recent_orders': recent_orders,
@@ -1169,16 +1233,9 @@ def blanxer_dashboard_callback(request, context):
         'low_stock_products': low_stock_products,
         'active_coupons': active_coupons,
         'coupons_count': coupons_count,
-        'weekly_total': "91,250" if total_revenue_num == 0 else f"{total_revenue_num:,}",
-        'weekly_days': [
-            {'day': 'Sun', 'this_week': 38, 'last_week': 20},
-            {'day': 'Mon', 'this_week': 48, 'last_week': 15},
-            {'day': 'Tue', 'this_week': 12, 'last_week': 25},
-            {'day': 'Wed', 'this_week': 0, 'last_week': 18},
-            {'day': 'Thu', 'this_week': 4, 'last_week': 30},
-            {'day': 'Fri', 'this_week': 0, 'last_week': 42},
-            {'day': 'Sat', 'this_week': 0, 'last_week': 35},
-        ],
-        'hourly_hours': [f"{h:02d}:00" for h in range(24)],
+        'weekly_total': weekly_total_formatted,
+        'weekly_days': weekly_days,
+        'hourly_polyline': hourly_polyline,
+        'hourly_dots': hourly_dots,
     })
     return context

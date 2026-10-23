@@ -551,7 +551,7 @@ export default function AdminOrders() {
             </span>
             <input
               type="text"
-              placeholder="Name, phone, order # or email"
+              placeholder="9841234567, Pooja Sharma, #ORD..."
               value={search}
               onChange={e => setSearch(e.target.value)}
               style={{
@@ -1045,7 +1045,7 @@ export default function AdminOrders() {
                         <div style={{ position: 'relative', flex: 1 }}>
                           <input
                             type="tel"
-                            placeholder="Search or enter customer phone number (e.g. 9812345678)..."
+                            placeholder="9841234567 / 9818765432..."
                             value={customerSearchPhone}
                             onChange={e => setCustomerSearchPhone(e.target.value)}
                             onKeyDown={e => {
@@ -1550,7 +1550,7 @@ export default function AdminOrders() {
                       </label>
                       <input
                         type="text"
-                        placeholder="e.g. Ward 4, Baluwatar near embassy"
+                        placeholder="Ward 4, New Baneshwor, Kathmandu"
                         value={formData.address}
                         onChange={e => setFormData({ ...formData, address: e.target.value })}
                         style={{
@@ -1570,7 +1570,7 @@ export default function AdminOrders() {
                       </label>
                       <input
                         type="text"
-                        placeholder="e.g. Opposite Bhatbhateni supermarket"
+                        placeholder="Near Bhatbhateni Supermarket"
                         value={formData.landmark}
                         onChange={e => setFormData({ ...formData, landmark: e.target.value })}
                         style={{
@@ -1590,7 +1590,7 @@ export default function AdminOrders() {
                       </label>
                       <input
                         type="tel"
-                        placeholder="Optional backup contact number"
+                        placeholder="9860123456"
                         value={formData.altPhone}
                         onChange={e => setFormData({ ...formData, altPhone: e.target.value })}
                         style={{
@@ -1611,7 +1611,7 @@ export default function AdminOrders() {
                     </label>
                     <input
                       type="text"
-                      placeholder="e.g. Call before delivery, gift wrap..."
+                      placeholder="Call before arrival"
                       value={formData.note}
                       onChange={e => setFormData({ ...formData, note: e.target.value })}
                       style={{
@@ -1855,7 +1855,7 @@ export default function AdminOrders() {
                     type="text"
                     required
                     autoFocus
-                    placeholder="e.g. Aarav Sharma"
+                    placeholder="Pooja Sharma"
                     value={newCustForm.name}
                     onChange={e => setNewCustForm({ ...newCustForm, name: e.target.value })}
                     style={{
@@ -1874,7 +1874,7 @@ export default function AdminOrders() {
                   </label>
                   <input
                     type="email"
-                    placeholder="customer@example.com"
+                    placeholder="pooja.sharma98@gmail.com"
                     value={newCustForm.email}
                     onChange={e => setNewCustForm({ ...newCustForm, email: e.target.value })}
                     style={{
@@ -1893,7 +1893,7 @@ export default function AdminOrders() {
                   </label>
                   <input
                     type="tel"
-                    placeholder="Optional backup phone"
+                    placeholder="9860123456"
                     value={newCustForm.altPhone}
                     onChange={e => setNewCustForm({ ...newCustForm, altPhone: e.target.value })}
                     style={{
@@ -2093,7 +2093,7 @@ export default function AdminOrders() {
               <div style={{ position: 'relative' }}>
                 <input
                   type="text"
-                  placeholder="🔍 Search product name, SKU, or fabric type..."
+                  placeholder="Search product name, SKU, or variant..."
                   value={productSearch}
                   onChange={e => setProductSearch(e.target.value)}
                   style={{

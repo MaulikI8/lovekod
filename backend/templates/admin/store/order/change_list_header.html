@@ -160,7 +160,7 @@
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
                                 <svg class="w-4 h-4 blanxer-icon-xs" style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                             </div>
-                            <input type="text" id="cust-search-input" placeholder="Search by phone" class="w-full pl-9 pr-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-gray-50/50">
+                            <input type="text" id="cust-search-input" placeholder="9841234567 / 9818765432" class="w-full pl-9 pr-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-gray-50/50">
                         </div>
                         <button type="button" onclick="window.searchCustomer()" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-purple-600 text-purple-600 hover:bg-purple-50 text-xs font-semibold transition-colors cursor-pointer">
                             <svg class="w-3.5 h-3.5 blanxer-icon-xs" style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
@@ -201,19 +201,19 @@
                         <div class="grid grid-cols-2 gap-3 text-xs">
                             <div>
                                 <label class="block text-gray-600 mb-1 font-semibold">Full Name *</label>
-                                <input type="text" id="new-cust-name" placeholder="e.g. Aaryata Ghimire" class="w-full px-3 py-1.5 border border-gray-200 rounded-lg bg-white">
+                                <input type="text" id="new-cust-name" placeholder="Pooja Sharma" class="w-full px-3 py-1.5 border border-gray-200 rounded-lg bg-white">
                             </div>
                             <div>
                                 <label class="block text-gray-600 mb-1 font-semibold">Phone *</label>
-                                <input type="text" id="new-cust-phone" placeholder="98XXXXXXXX" class="w-full px-3 py-1.5 border border-gray-200 rounded-lg bg-white">
+                                <input type="text" id="new-cust-phone" placeholder="9841234567" class="w-full px-3 py-1.5 border border-gray-200 rounded-lg bg-white">
                             </div>
                             <div>
                                 <label class="block text-gray-600 mb-1 font-semibold">WhatsApp (Optional)</label>
-                                <input type="text" id="new-cust-whatsapp" placeholder="98XXXXXXXX" class="w-full px-3 py-1.5 border border-gray-200 rounded-lg bg-white">
+                                <input type="text" id="new-cust-whatsapp" placeholder="9841234567" class="w-full px-3 py-1.5 border border-gray-200 rounded-lg bg-white">
                             </div>
                             <div>
                                 <label class="block text-gray-600 mb-1 font-semibold">Email (Optional)</label>
-                                <input type="email" id="new-cust-email" placeholder="customer@example.com" class="w-full px-3 py-1.5 border border-gray-200 rounded-lg bg-white">
+                                <input type="email" id="new-cust-email" placeholder="pooja.sharma98@gmail.com" class="w-full px-3 py-1.5 border border-gray-200 rounded-lg bg-white">
                             </div>
                         </div>
                         <div class="flex justify-end gap-2 pt-1">
@@ -255,7 +255,7 @@
                     </button>
                     <div id="coupon-accordion-body" class="hidden mt-3 p-3 bg-gray-50 rounded-xl space-y-2">
                         <div class="flex items-center gap-2">
-                            <input type="text" id="coupon-input" placeholder="Enter Coupon Code (e.g. FESTIVE500)" class="flex-1 px-3 py-1.5 text-xs border border-gray-200 rounded-lg uppercase bg-white">
+                            <input type="text" id="coupon-input" placeholder="FESTIVE500" class="flex-1 px-3 py-1.5 text-xs border border-gray-200 rounded-lg uppercase bg-white">
                             <button type="button" onclick="window.applyCoupon()" class="px-4 py-1.5 bg-gray-900 text-white rounded-lg text-xs font-semibold hover:bg-black">Apply</button>
                         </div>
                         <div id="coupon-applied-msg" class="hidden text-[11px] font-bold text-emerald-600"></div>
@@ -283,17 +283,17 @@
                         </div>
                         <div>
                             <label class="block font-semibold text-gray-700 mb-1">Address <span class="text-red-500">*</span></label>
-                            <input type="text" id="order-address" placeholder="e.g. Ward 4, New Baneshwor" class="w-full px-3 py-2 border border-gray-200 rounded-lg bg-white text-xs">
+                            <input type="text" id="order-address" placeholder="Ward 4, New Baneshwor, Kathmandu" class="w-full px-3 py-2 border border-gray-200 rounded-lg bg-white text-xs">
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-3 text-xs">
                         <div>
                             <label class="block font-semibold text-gray-700 mb-1">Landmark</label>
-                            <input type="text" id="order-landmark" placeholder="Near Krishna Temple" class="w-full px-3 py-2 border border-gray-200 rounded-lg bg-white text-xs">
+                            <input type="text" id="order-landmark" placeholder="Near Bhatbhateni Supermarket" class="w-full px-3 py-2 border border-gray-200 rounded-lg bg-white text-xs">
                         </div>
                         <div>
                             <label class="block font-semibold text-gray-700 mb-1">Alternative Phone (Optional)</label>
-                            <input type="text" id="order-alt-phone" placeholder="98XXXXXXXX" class="w-full px-3 py-2 border border-gray-200 rounded-lg bg-white text-xs">
+                            <input type="text" id="order-alt-phone" placeholder="9841234567" class="w-full px-3 py-2 border border-gray-200 rounded-lg bg-white text-xs">
                         </div>
                     </div>
                 </div>
@@ -303,7 +303,7 @@
                     <div class="grid grid-cols-3 gap-3 text-xs">
                         <div>
                             <label class="block font-semibold text-gray-700 mb-1">Order Note</label>
-                            <input type="text" id="order-note" placeholder="Deliver after 2 PM" class="w-full px-3 py-2 border border-gray-200 rounded-lg bg-white text-xs">
+                            <input type="text" id="order-note" placeholder="Call before arrival" class="w-full px-3 py-2 border border-gray-200 rounded-lg bg-white text-xs">
                         </div>
                         <div>
                             <label class="block font-semibold text-gray-700 mb-1">Discount</label>
@@ -386,7 +386,7 @@
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
                         <svg class="w-4 h-4 blanxer-icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     </div>
-                    <input type="text" id="picker-search-input" oninput="window.filterPickerProducts()" placeholder="Search products" class="w-full pl-9 pr-3 py-2 text-xs border border-gray-200 rounded-lg bg-white focus:ring-2 focus:ring-purple-500">
+                    <input type="text" id="picker-search-input" oninput="window.filterPickerProducts()" placeholder="Search product name, SKU, or variant..." class="w-full pl-9 pr-3 py-2 text-xs border border-gray-200 rounded-lg bg-white focus:ring-2 focus:ring-purple-500">
                 </div>
             </div>
 

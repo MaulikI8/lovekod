@@ -906,20 +906,23 @@ class OrderAdmin(ModelAdmin):
     class Media:
         js = ('js/order_customer_lookup.js',)
 
+    list_before_template = "admin/store/order/change_list_header.html"
+    change_form_template = "admin/store/order/change_form.html"
+
     list_display = (
-        'order_id',
-        'channel_badge',
-        'customer_name_display',
-        'phone',
-        'district',
-        'payment_method',
+        'blanxer_order_id',
+        'blanxer_customer',
+        'avg_rating_display',
+        'quantity_display',
         'total_display',
-        'status_badge',
-        'trash_status',
+        'discount_display',
+        'channel_badge',
+        'payment_method_display',
+        'order_payment_status_badge',
+        'created_display',
         'whatsapp_chat_action',
-        'created_at',
     )
-    list_filter = (TrashStatusFilter, 'channel', 'status', 'district', 'payment_method', 'created_at')
+    list_filter = (TrashStatusFilter, 'channel', 'status', 'payment_status', 'district', 'payment_method', 'created_at')
     search_fields = ('order_id', 'customer_name', 'phone', 'email', 'whatsapp', 'district', 'city', 'address', 'channel')
     list_editable = ()
     inlines = [OrderItemInline]
@@ -929,6 +932,9 @@ class OrderAdmin(ModelAdmin):
     actions_on_top = True
     actions_on_bottom = True
     actions_list = ["manual_create_order_action"]
+
+    def add_view(self, request, form_url='', extra_context=None):
+        return redirect(reverse('admin:store_order_changelist') + '?create_order=1')
 
     def get_fieldsets(self, request, obj=None):
         if not obj:
@@ -996,7 +1002,81 @@ class OrderAdmin(ModelAdmin):
         url_path="create-order",
     )
     def manual_create_order_action(self, request):
-        return redirect("admin:store_order_add")
+        return redirect(reverse("admin:store_order_changelist") + "?create_order=1")
+
+    def blanxer_order_id(self, obj):
+        val = obj.order_id or str(obj.id)
+        if val.startswith('ORD-'):
+            val = val.replace('ORD-', '')
+        return format_html('<span style="font-weight: 700; color: #111827; font-family: monospace; font-size: 0.85rem;"># {}</span>', val)
+    blanxer_order_id.short_description = "#"
+
+    def blanxer_customer(self, obj):
+        name = obj.customer_name or "Valued Customer"
+        phone = obj.phone or ""
+        badge = '<span style="background: #EEF2FF; color: #4F46E5; font-size: 0.65rem; font-weight: 700; padding: 1px 5px; border-radius: 4px; margin-left: 4px;">NEW</span>'
+        if obj.customer_id:
+            from django.urls import reverse
+            url = reverse('admin:store_customer_change', args=[obj.customer_id])
+            link = f'<a href="{url}" style="font-weight: 700; color: #111827; text-decoration: none;">{name}</a>'
+        else:
+            link = f'<span style="font-weight: 700; color: #111827;">{name}</span>'
+        return format_html(
+            '<div><div>{}{}&nbsp;</div><div style="font-size: 0.72rem; color: #6B7280; margin-top: 2px;">{}</div></div>',
+            format_html(link),
+            format_html(badge),
+            phone
+        )
+    blanxer_customer.short_description = "CUSTOMER NAME"
+
+    def avg_rating_display(self, obj):
+        return format_html('<span style="color: #6B7280; font-size: 0.75rem;">⭐ 0 (0)</span>')
+    avg_rating_display.short_description = "AVG RATING"
+
+    def quantity_display(self, obj):
+        qty = sum(item.quantity or 1 for item in obj.items.all()) or 1
+        return format_html('<span style="font-weight: 600; color: #374151;">{}</span>', qty)
+    quantity_display.short_description = "QUANTITY"
+
+    def discount_display(self, obj):
+        disc = obj.discount_amount or 0
+        return format_html('<span style="color: #6B7280; font-size: 0.78rem;">Rs {}</span>', disc)
+    discount_display.short_description = "DISCOUNT"
+
+    def payment_method_display(self, obj):
+        pm = obj.payment_method or "COD"
+        return format_html('<span style="color: #4B5563; font-size: 0.78rem;">{}</span>', pm)
+    payment_method_display.short_description = "PAYMENT METHOD"
+
+    def order_payment_status_badge(self, obj):
+        st = (obj.status or "Pending").upper()
+        ps = (obj.payment_status or "Unpaid").upper()
+        st_colors = {
+            'PENDING': '#D97706',
+            'CONFIRMED': '#2563EB',
+            'PROCESSING': '#0284C7',
+            'DISPATCHED': '#7C3AED',
+            'SHIPPED': '#7C3AED',
+            'DELIVERED': '#059669',
+            'CANCELLED': '#DC2626',
+        }
+        ps_colors = {
+            'PAID': '#059669',
+            'UNPAID': '#D97706',
+            'REFUNDED': '#DC2626',
+            'PARTIAL': '#2563EB',
+        }
+        st_col = st_colors.get(st, '#4B5563')
+        ps_col = ps_colors.get(ps, '#4B5563')
+        return format_html(
+            '<div style="font-size: 0.72rem; font-weight: 700; white-space: nowrap;"><span style="color: {};">{}</span> <span style="color: #9CA3AF;">&</span> <span style="color: {};">{}</span></div>',
+            st_col, st, ps_col, ps
+        )
+    order_payment_status_badge.short_description = "ORDER STATUS & PAYMENT STATUS"
+
+    def created_display(self, obj):
+        return format_html('<span style="font-size: 0.75rem; color: #6B7280; white-space: nowrap;">{}</span>', obj.created_at.strftime('%b %d, %Y %I:%M %p'))
+    created_display.short_description = "CREATED"
 
     def trash_status(self, obj):
         return deletion_badge(obj)

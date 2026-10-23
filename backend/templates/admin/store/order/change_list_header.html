@@ -1,0 +1,826 @@
+<div class="blanxer-orders-wrapper mb-6" id="blanxer-orders-app">
+    <!-- Top Tabs: Orders | Abandoned Carts | Customers -->
+    <div class="flex items-center justify-between flex-wrap gap-4 mb-4">
+        <div class="flex items-center gap-2">
+            <a href="{% url 'admin:store_order_changelist' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-50 text-purple-700 border border-purple-200/90 font-bold text-xs shadow-2xs">
+                <span>📦</span>
+                <span>Orders</span>
+            </a>
+            <a href="#" onclick="alert('Abandoned Carts tracked via Webhook (0 active)'); return false;" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-100 font-semibold text-xs transition-colors">
+                <span>🛒</span>
+                <span>Abandoned Carts</span>
+            </a>
+            <a href="{% url 'admin:store_customer_changelist' %}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-100 font-semibold text-xs transition-colors">
+                <span>👥</span>
+                <span>Customers</span>
+            </a>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-purple-500/30 text-purple-700 bg-purple-50/50 text-xs font-semibold">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>AGENT MODE</span>
+            </span>
+        </div>
+    </div>
+
+    <!-- Heading Row & Actions -->
+    <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
+        <div class="flex items-center gap-3">
+            <h1 class="text-2xl font-extrabold text-gray-900 tracking-tight">
+                Orders
+            </h1>
+        </div>
+
+        <div class="flex items-center gap-2.5">
+            <!-- Do with AI Dropdown -->
+            <div class="relative inline-block text-left" id="ai-dropdown-container">
+                <button onclick="document.getElementById('ai-dropdown-menu').classList.toggle('hidden');" type="button" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-xs font-semibold shadow-xs transition-all">
+                    <span>✨ Do with AI</span>
+                    <svg class="w-3 h-3 text-purple-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <div id="ai-dropdown-menu" class="hidden absolute right-0 mt-2 w-56 rounded-xl bg-white shadow-xl border border-gray-100 py-1.5 z-50 text-xs text-gray-700">
+                    <a href="javascript:void(0)" onclick="alert('AI: Analyzing 24h order dispatch queue...');" class="block px-4 py-2 hover:bg-purple-50">✨ Auto-Verify Pending Orders</a>
+                    <a href="javascript:void(0)" onclick="alert('AI: Draft WhatsApp batch notes created!');" class="block px-4 py-2 hover:bg-purple-50">💬 Draft WhatsApp Dispatches</a>
+                    <a href="javascript:void(0)" onclick="alert('AI: Stock check clean across 4 kurtha variants.');" class="block px-4 py-2 hover:bg-purple-50">📊 Check Low Stock Line Items</a>
+                </div>
+            </div>
+
+            <!-- New Order Popup Trigger (Matching Blanxer) -->
+            <button id="btn-open-blanxer-order-popup" type="button" onclick="window.openBlanxerOrderModal()" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold shadow-xs transition-all cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                <span>+ New order</span>
+            </button>
+
+            <!-- More Actions -->
+            <button type="button" onclick="alert('Actions: Export Orders CSV, Batch Print Invoices');" class="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 text-sm font-bold">
+                ···
+            </button>
+        </div>
+    </div>
+
+    <!-- Filter & Status Bar (Matching Blanxer) -->
+    <div class="flex items-center justify-between flex-wrap gap-3 pb-3 border-b border-gray-100">
+        <!-- Status Tabs -->
+        <div class="flex items-center gap-1.5 overflow-x-auto py-1">
+            <a href="{% url 'admin:store_order_changelist' %}" class="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-semibold {% if not request.GET.status and not request.GET.is_deleted %}bg-purple-600 text-white font-bold shadow-xs{% else %}text-gray-600 bg-gray-100 hover:bg-gray-200{% endif %}">
+                All
+            </a>
+            <a href="{% url 'admin:store_order_changelist' %}?status=Pending" class="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-semibold {% if request.GET.status == 'Pending' %}bg-purple-600 text-white font-bold shadow-xs{% else %}text-gray-600 bg-gray-100 hover:bg-gray-200{% endif %}">
+                Pending
+            </a>
+            <a href="{% url 'admin:store_order_changelist' %}?status=Processing" class="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-semibold {% if request.GET.status == 'Processing' %}bg-purple-600 text-white font-bold shadow-xs{% else %}text-gray-600 bg-gray-100 hover:bg-gray-200{% endif %}">
+                Processing
+            </a>
+            <a href="{% url 'admin:store_order_changelist' %}?status=Dispatched" class="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-semibold {% if request.GET.status == 'Dispatched' %}bg-purple-600 text-white font-bold shadow-xs{% else %}text-gray-600 bg-gray-100 hover:bg-gray-200{% endif %}">
+                Dispatched
+            </a>
+            <a href="{% url 'admin:store_order_changelist' %}?status=Delivered" class="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-semibold {% if request.GET.status == 'Delivered' %}bg-purple-600 text-white font-bold shadow-xs{% else %}text-gray-600 bg-gray-100 hover:bg-gray-200{% endif %}">
+                Delivered
+            </a>
+            <a href="{% url 'admin:store_order_changelist' %}?status=Cancelled" class="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-semibold {% if request.GET.status == 'Cancelled' %}bg-purple-600 text-white font-bold shadow-xs{% else %}text-gray-600 bg-gray-100 hover:bg-gray-200{% endif %}">
+                Cancelled
+            </a>
+        </div>
+
+        <!-- Date Range Filter -->
+        <div class="flex items-center gap-2 text-xs">
+            <div class="relative inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-gray-700 shadow-2xs">
+                <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <select class="bg-transparent border-none text-xs font-medium focus:ring-0 cursor-pointer pr-4">
+                    <option selected>Last 7 days</option>
+                    <option>Today</option>
+                    <option>Yesterday</option>
+                    <option>This Month</option>
+                    <option>All Time</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- BLANXER CREATE ORDER POPUP MODAL -->
+<!-- ========================================================================= -->
+<div id="blanxer-create-order-modal" class="fixed inset-0 z-99999 hidden overflow-y-auto" style="background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px);">
+    <div class="min-h-screen px-4 py-8 flex items-center justify-center">
+        <div class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-gray-100 overflow-hidden flex flex-col relative transition-all duration-300 my-auto text-gray-900">
+            
+            <!-- Modal Header -->
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white sticky top-0 z-10">
+                <h3 class="text-lg font-bold text-gray-900">Create Order</h3>
+                <button type="button" onclick="window.closeBlanxerOrderModal()" class="text-gray-400 hover:text-gray-600 rounded-lg p-1 hover:bg-gray-100 transition-colors cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6 space-y-6 overflow-y-auto max-h-[75vh]">
+                
+                <!-- Duplicate Order Warning Guard -->
+                <div id="duplicate-order-alert" class="hidden rounded-xl border border-amber-300 bg-amber-50 p-4 text-xs text-amber-800 flex items-start gap-3 shadow-xs">
+                    <span class="text-base leading-none">⚠️</span>
+                    <div class="flex-1">
+                        <div class="font-bold mb-1">Recent Order Found within 24 Hours!</div>
+                        <div id="duplicate-alert-msg" class="text-amber-700 mb-2">This customer already placed an order recently.</div>
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="window.dismissDuplicateWarning()" class="px-3 py-1 bg-white border border-amber-300 rounded text-amber-800 font-semibold hover:bg-amber-100">Dismiss</button>
+                            <button type="button" onclick="window.forceProceedWithOrder()" class="px-3 py-1 bg-amber-600 text-white rounded font-bold hover:bg-amber-700">Force Create Order</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 1. Customer Section -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-2">Customer</label>
+                    
+                    <!-- Search Input Row -->
+                    <div id="customer-search-row" class="flex items-center gap-2">
+                        <div class="relative flex-1">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                            </div>
+                            <input type="text" id="cust-search-input" placeholder="Search by phone" class="w-full pl-9 pr-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-gray-50/50">
+                        </div>
+                        <button type="button" onclick="window.searchCustomer()" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-purple-600 text-purple-600 hover:bg-purple-50 text-xs font-semibold transition-colors cursor-pointer">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                            <span>Search Customer</span>
+                        </button>
+                        <button type="button" onclick="window.openCustomItemPrompt()" class="px-3 py-2 rounded-lg bg-pink-50 text-pink-600 hover:bg-pink-100 text-xs font-semibold transition-colors">
+                            Add Custom Item
+                        </button>
+                    </div>
+
+                    <!-- Selected Customer Card -->
+                    <div id="customer-selected-card" class="hidden mt-3 p-3.5 rounded-xl border border-purple-200 bg-purple-50/40 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-full bg-purple-600 text-white font-bold flex items-center justify-center text-xs" id="cust-card-avatar">
+                                C
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-bold text-xs text-gray-900" id="cust-card-name">Customer Name</span>
+                                    <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-700">NEW</span>
+                                </div>
+                                <div class="text-[11px] text-gray-500 mt-0.5">
+                                    <span id="cust-card-phone">9800000000</span> • <span id="cust-card-email">email@example.com</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" onclick="window.clearSelectedCustomer()" class="text-xs font-semibold text-purple-600 hover:underline">
+                            Change
+                        </button>
+                    </div>
+
+                    <!-- Customer Not Found Form -->
+                    <div id="customer-create-subform" class="hidden mt-3 p-4 rounded-xl border border-pink-200 bg-pink-50/50 space-y-3">
+                        <div class="flex items-center gap-2 text-xs font-bold text-pink-700">
+                            <span>⚠️</span>
+                            <span id="cust-not-found-msg">No customer with phone found. Fill in details to register:</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3 text-xs">
+                            <div>
+                                <label class="block text-gray-600 mb-1 font-semibold">Full Name *</label>
+                                <input type="text" id="new-cust-name" placeholder="e.g. Aaryata Ghimire" class="w-full px-3 py-1.5 border border-gray-200 rounded-lg bg-white">
+                            </div>
+                            <div>
+                                <label class="block text-gray-600 mb-1 font-semibold">Phone *</label>
+                                <input type="text" id="new-cust-phone" placeholder="98XXXXXXXX" class="w-full px-3 py-1.5 border border-gray-200 rounded-lg bg-white">
+                            </div>
+                            <div>
+                                <label class="block text-gray-600 mb-1 font-semibold">WhatsApp (Optional)</label>
+                                <input type="text" id="new-cust-whatsapp" placeholder="98XXXXXXXX" class="w-full px-3 py-1.5 border border-gray-200 rounded-lg bg-white">
+                            </div>
+                            <div>
+                                <label class="block text-gray-600 mb-1 font-semibold">Email (Optional)</label>
+                                <input type="email" id="new-cust-email" placeholder="customer@example.com" class="w-full px-3 py-1.5 border border-gray-200 rounded-lg bg-white">
+                            </div>
+                        </div>
+                        <div class="flex justify-end gap-2 pt-1">
+                            <button type="button" onclick="document.getElementById('customer-create-subform').classList.add('hidden');" class="px-3 py-1 text-xs text-gray-500 hover:text-gray-700">Cancel</button>
+                            <button type="button" onclick="window.saveNewCustomer()" class="px-4 py-1.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-lg shadow-2xs">Save & Select Customer</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Products Section -->
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="text-xs font-bold text-gray-700">Products (<span id="selected-products-count">0</span>)</label>
+                        <button type="button" onclick="window.openProductPicker()" id="btn-add-more-products" class="hidden text-xs font-semibold text-purple-600 hover:underline">
+                            + Add more products
+                        </button>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div id="products-empty-state" class="border border-dashed border-gray-200 rounded-xl p-8 text-center bg-gray-50/50">
+                        <p class="text-xs text-gray-500 mb-3">No products selected</p>
+                        <button type="button" onclick="window.openProductPicker()" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-purple-200 text-purple-600 hover:bg-purple-50 text-xs font-bold transition-all shadow-2xs cursor-pointer">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <span>Add Products</span>
+                        </button>
+                    </div>
+
+                    <!-- Selected Items List -->
+                    <div id="selected-products-list" class="hidden space-y-2">
+                        <!-- Product Item Rows rendered dynamically -->
+                    </div>
+                </div>
+
+                <!-- 3. Offers & code (optional) Accordion -->
+                <div class="border-t border-gray-100 pt-3">
+                    <button type="button" onclick="document.getElementById('coupon-accordion-body').classList.toggle('hidden');" class="flex items-center gap-1.5 text-xs font-semibold text-purple-600 hover:text-purple-700">
+                        <span>Offers & code (optional)</span>
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div id="coupon-accordion-body" class="hidden mt-3 p-3 bg-gray-50 rounded-xl space-y-2">
+                        <div class="flex items-center gap-2">
+                            <input type="text" id="coupon-input" placeholder="Enter Coupon Code (e.g. FESTIVE500)" class="flex-1 px-3 py-1.5 text-xs border border-gray-200 rounded-lg uppercase bg-white">
+                            <button type="button" onclick="window.applyCoupon()" class="px-4 py-1.5 bg-gray-900 text-white rounded-lg text-xs font-semibold hover:bg-black">Apply</button>
+                        </div>
+                        <div id="coupon-applied-msg" class="hidden text-[11px] font-bold text-emerald-600"></div>
+                    </div>
+                </div>
+
+                <!-- 4. Delivery Destination in Nepal -->
+                <div class="border-t border-gray-100 pt-3">
+                    <div class="grid grid-cols-2 gap-3 mb-3 text-xs">
+                        <div>
+                            <label class="block font-semibold text-gray-700 mb-1">City / District <span class="text-red-500">*</span></label>
+                            <select id="order-district" class="w-full px-3 py-2 border border-gray-200 rounded-lg bg-white text-xs font-medium focus:ring-2 focus:ring-purple-500">
+                                <option value="Kathmandu" selected>Kathmandu</option>
+                                <option value="Lalitpur">Lalitpur</option>
+                                <option value="Bhaktapur">Bhaktapur</option>
+                                <option value="Pokhara">Pokhara</option>
+                                <option value="Chitwan">Chitwan</option>
+                                <option value="Butwal">Butwal</option>
+                                <option value="Biratnagar">Biratnagar</option>
+                                <option value="Dharan">Dharan</option>
+                                <option value="Nepalgunj">Nepalgunj</option>
+                                <option value="Jhapa">Jhapa</option>
+                                <option value="Other">Other Destination</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-gray-700 mb-1">Address <span class="text-red-500">*</span></label>
+                            <input type="text" id="order-address" placeholder="e.g. Ward 4, New Baneshwor" class="w-full px-3 py-2 border border-gray-200 rounded-lg bg-white text-xs">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 text-xs">
+                        <div>
+                            <label class="block font-semibold text-gray-700 mb-1">Landmark</label>
+                            <input type="text" id="order-landmark" placeholder="Near Krishna Temple" class="w-full px-3 py-2 border border-gray-200 rounded-lg bg-white text-xs">
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-gray-700 mb-1">Alternative Phone (Optional)</label>
+                            <input type="text" id="order-alt-phone" placeholder="98XXXXXXXX" class="w-full px-3 py-2 border border-gray-200 rounded-lg bg-white text-xs">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. Order Note, Discount & Delivery Charge -->
+                <div class="border-t border-gray-100 pt-3">
+                    <div class="grid grid-cols-3 gap-3 text-xs">
+                        <div>
+                            <label class="block font-semibold text-gray-700 mb-1">Order Note</label>
+                            <input type="text" id="order-note" placeholder="Deliver after 2 PM" class="w-full px-3 py-2 border border-gray-200 rounded-lg bg-white text-xs">
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-gray-700 mb-1">Discount</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 text-xs">Rs.</span>
+                                <input type="number" id="order-discount" value="0" min="0" oninput="window.recalcTotal()" class="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg bg-white text-xs">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-gray-700 mb-1">Delivery Charge</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 text-xs">Rs.</span>
+                                <input type="text" id="order-delivery-charge" placeholder="Auto" value="0" class="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg bg-white text-xs">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6. Payment Status & Channel -->
+                <div class="border-t border-gray-100 pt-3">
+                    <div class="grid grid-cols-2 gap-3 text-xs">
+                        <div>
+                            <label class="block font-semibold text-gray-700 mb-1">Payment Status</label>
+                            <select id="order-payment-status" class="w-full px-3 py-2 border border-gray-200 rounded-lg bg-white text-xs font-semibold text-gray-800">
+                                <option value="Unpaid" selected>Unpaid</option>
+                                <option value="Paid">Paid</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-gray-700 mb-1">Order Channel / Label</label>
+                            <select id="order-channel" class="w-full px-3 py-2 border border-gray-200 rounded-lg bg-white text-xs font-semibold text-gray-800">
+                                <option value="WhatsApp" selected>WhatsApp</option>
+                                <option value="Instagram">Instagram</option>
+                                <option value="Website">Website</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Modal Footer (Matching Blanxer) -->
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between sticky bottom-0 z-10">
+                <span class="text-[11px] text-gray-500" id="modal-footer-hint">
+                    Add a customer and at least one product to create the order.
+                </span>
+                <div class="flex items-center gap-3">
+                    <button type="button" onclick="window.closeBlanxerOrderModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-100 transition-colors">
+                        Cancel
+                    </button>
+                    <button type="button" id="btn-submit-create-order" onclick="window.submitCreateOrder()" disabled class="px-5 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold rounded-lg shadow-sm transition-all flex items-center gap-2">
+                        <span>Create Order</span>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- PRODUCT PICKER SUB-MODAL -->
+<!-- ========================================================================= -->
+<div id="blanxer-product-picker-modal" class="fixed inset-0 z-100000 hidden overflow-y-auto" style="background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(4px);">
+    <div class="min-h-screen px-4 py-8 flex items-center justify-center">
+        <div class="bg-white rounded-2xl max-w-xl w-full shadow-2xl border border-gray-100 overflow-hidden flex flex-col my-auto text-gray-900">
+            
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                <h3 class="text-base font-bold text-gray-900">Select Products</h3>
+                <button type="button" onclick="window.closeProductPicker()" class="text-gray-400 hover:text-gray-600 rounded-lg p-1 hover:bg-gray-100">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <!-- Search in Picker -->
+            <div class="p-4 border-b border-gray-100 bg-gray-50/50">
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </div>
+                    <input type="text" id="picker-search-input" oninput="window.filterPickerProducts()" placeholder="Search products by name or SKU..." class="w-full pl-9 pr-3 py-2 text-xs border border-gray-200 rounded-lg bg-white">
+                </div>
+            </div>
+
+            <!-- Products List -->
+            <div class="p-4 space-y-2 overflow-y-auto max-h-[50vh]" id="picker-product-list">
+                <div class="text-center py-6 text-gray-400 text-xs">Loading store products...</div>
+            </div>
+
+            <div class="px-6 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+                <span class="text-xs text-gray-500" id="picker-selected-summary">0 selected</span>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="window.closeProductPicker()" class="px-3.5 py-1.5 border border-gray-300 rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-100">Cancel</button>
+                    <button type="button" onclick="window.confirmProductSelection()" class="px-4 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-lg shadow-2xs">Done</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    window.blanxerState = {
+        customer: null,
+        selectedProducts: [],
+        availableProducts: [],
+        discountAmount: 0,
+        couponCode: '',
+        forceCreate: false,
+    };
+
+    window.openBlanxerOrderModal = function() {
+        document.getElementById('blanxer-create-order-modal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        fetchAvailableProducts();
+    };
+
+    window.closeBlanxerOrderModal = function() {
+        document.getElementById('blanxer-create-order-modal').classList.add('hidden');
+        document.body.style.overflow = '';
+        const url = new URL(window.location);
+        if (url.searchParams.has('create_order')) {
+            url.searchParams.delete('create_order');
+            window.history.replaceState({}, '', url);
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('create_order') === '1' || params.get('create') === '1') {
+            setTimeout(window.openBlanxerOrderModal, 150);
+        }
+    });
+
+    window.searchCustomer = async function() {
+        const query = document.getElementById('cust-search-input').value.trim();
+        if (!query) {
+            alert('Please enter a phone number to search.');
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/customers/lookup/?query=' + encodeURIComponent(query));
+            if (res.ok) {
+                const data = await res.json();
+                if (data && (data.phone || data.id)) {
+                    selectCustomer(data);
+                    checkCustomerRecentOrders(data.phone);
+                    return;
+                }
+            }
+        } catch(e) {}
+
+        document.getElementById('customer-create-subform').classList.remove('hidden');
+        document.getElementById('new-cust-phone').value = query;
+        document.getElementById('new-cust-name').focus();
+        document.getElementById('cust-not-found-msg').innerText = 'No customer with phone ' + query + ' found. Fill in details:';
+    };
+
+    function selectCustomer(cust) {
+        window.blanxerState.customer = cust;
+        document.getElementById('customer-selected-card').classList.remove('hidden');
+        document.getElementById('customer-search-row').classList.add('hidden');
+        document.getElementById('customer-create-subform').classList.add('hidden');
+
+        document.getElementById('cust-card-name').innerText = cust.name || 'Valued Customer';
+        document.getElementById('cust-card-phone').innerText = cust.phone || '';
+        document.getElementById('cust-card-email').innerText = cust.email || 'No email';
+        document.getElementById('cust-card-avatar').innerText = (cust.name || 'C').charAt(0).toUpperCase();
+
+        if (cust.district) document.getElementById('order-district').value = cust.district;
+        if (cust.address) document.getElementById('order-address').value = cust.address;
+
+        validateFormReady();
+    }
+
+    window.clearSelectedCustomer = function() {
+        window.blanxerState.customer = null;
+        document.getElementById('customer-selected-card').classList.add('hidden');
+        document.getElementById('customer-search-row').classList.remove('hidden');
+        document.getElementById('duplicate-order-alert').classList.add('hidden');
+        validateFormReady();
+    };
+
+    window.saveNewCustomer = async function() {
+        const name = document.getElementById('new-cust-name').value.trim();
+        const phone = document.getElementById('new-cust-phone').value.trim();
+        const whatsapp = document.getElementById('new-cust-whatsapp').value.trim();
+        const email = document.getElementById('new-cust-email').value.trim();
+
+        if (!name || !phone) {
+            alert('Please provide customer name and phone.');
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/customers/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, phone, whatsapp: whatsapp || phone, email })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                selectCustomer(data);
+            } else {
+                selectCustomer({ name, phone, whatsapp: whatsapp || phone, email });
+            }
+        } catch(e) {
+            selectCustomer({ name, phone, whatsapp: whatsapp || phone, email });
+        }
+    };
+
+    async function checkCustomerRecentOrders(phone) {
+        try {
+            const res = await fetch('/api/orders/?include_deleted=false');
+            if (res.ok) {
+                const orders = await res.json();
+                const now = new Date().getTime();
+                const recent = orders.find(o => {
+                    if (o.phone === phone || (o.customer && o.customer.phone === phone)) {
+                        const t = new Date(o.createdAt || o.created_at).getTime();
+                        return (now - t) < (24 * 60 * 60 * 1000);
+                    }
+                    return false;
+                });
+
+                if (recent) {
+                    const alertBox = document.getElementById('duplicate-order-alert');
+                    document.getElementById('duplicate-alert-msg').innerText = 'This customer placed order ' + (recent.order_id || recent.id) + ' within the last 24 hours (Total: Rs. ' + (recent.total || 0) + ').';
+                    alertBox.classList.remove('hidden');
+                }
+            }
+        } catch(e) {}
+    }
+
+    window.dismissDuplicateWarning = function() {
+        document.getElementById('duplicate-order-alert').classList.add('hidden');
+    };
+
+    window.forceProceedWithOrder = function() {
+        window.blanxerState.forceCreate = true;
+        document.getElementById('duplicate-order-alert').classList.add('hidden');
+    };
+
+    async function fetchAvailableProducts() {
+        if (window.blanxerState.availableProducts.length > 0) return;
+        try {
+            const res = await fetch('/api/products/');
+            if (res.ok) {
+                window.blanxerState.availableProducts = await res.json();
+                renderPickerList();
+            }
+        } catch(e) {
+            console.error('Failed fetching products', e);
+        }
+    }
+
+    window.openProductPicker = function() {
+        document.getElementById('blanxer-product-picker-modal').classList.remove('hidden');
+        renderPickerList();
+    };
+
+    window.closeProductPicker = function() {
+        document.getElementById('blanxer-product-picker-modal').classList.add('hidden');
+    };
+
+    function renderPickerList() {
+        const container = document.getElementById('picker-product-list');
+        const q = (document.getElementById('picker-search-input')?.value || '').toLowerCase();
+        const prods = window.blanxerState.availableProducts.filter(p => {
+            return (p.name || '').toLowerCase().includes(q) || (p.product_id || p.id || '').toLowerCase().includes(q);
+        });
+
+        if (prods.length === 0) {
+            container.innerHTML = '<div class="text-center py-6 text-gray-400 text-xs">No matching products found.</div>';
+            return;
+        }
+
+        container.innerHTML = prods.map(p => {
+            const isSelected = window.blanxerState.selectedProducts.some(sp => sp.product_id === p.product_id || sp.id === p.id);
+            const stock = p.stock || 15;
+            const img = p.image || '/images/kurtha-charcoal.jpg';
+            const borderCol = isSelected ? 'border-purple-500 bg-purple-50/30' : 'border-gray-200 bg-white';
+            const btnClass = isSelected ? 'bg-purple-600 text-white' : 'border border-purple-600 text-purple-600 hover:bg-purple-50';
+            const btnText = isSelected ? 'Added ✓' : 'Add +';
+            const stockBadge = stock > 0 ? ('In Stock (' + stock + ')') : 'Out of Stock';
+            const stockClass = stock > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700';
+
+            return '<div class="p-3 rounded-xl border ' + borderCol + ' flex items-center justify-between gap-3 text-xs">' +
+                '<div class="flex items-center gap-3">' +
+                    '<img src="' + img + '" class="w-10 h-10 object-cover rounded-lg border border-gray-100" onerror="this.src=\'/images/kurtha-charcoal.jpg\'">' +
+                    '<div>' +
+                        '<div class="font-bold text-gray-900">' + p.name + '</div>' +
+                        '<div class="flex items-center gap-2 mt-0.5">' +
+                            '<span class="text-[10px] text-gray-400 font-mono">SKU: ' + (p.product_id || 'LK-001') + '</span>' +
+                            '<span class="px-1.5 py-0.2 rounded text-[10px] font-bold ' + stockClass + '">' + stockBadge + '</span>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="flex items-center gap-3">' +
+                    '<span class="font-bold text-gray-900">Rs. ' + p.price + '</span>' +
+                    '<button type="button" onclick="window.toggleProductPick(\'' + (p.product_id || p.id) + '\')" class="px-3 py-1.5 rounded-lg text-xs font-bold ' + btnClass + '">' + btnText + '</button>' +
+                '</div>' +
+            '</div>';
+        }).join('');
+    }
+
+    window.filterPickerProducts = function() {
+        renderPickerList();
+    };
+
+    window.toggleProductPick = function(pid) {
+        const p = window.blanxerState.availableProducts.find(x => (x.product_id || x.id) === pid);
+        if (!p) return;
+
+        const idx = window.blanxerState.selectedProducts.findIndex(x => (x.product_id || x.id) === pid);
+        if (idx >= 0) {
+            window.blanxerState.selectedProducts.splice(idx, 1);
+        } else {
+            window.blanxerState.selectedProducts.push({
+                product_id: p.product_id || p.id,
+                name: p.name,
+                price: p.price,
+                image: p.image || '/images/kurtha-charcoal.jpg',
+                size: 'M',
+                quantity: 1
+            });
+        }
+        renderPickerList();
+        renderSelectedProducts();
+    };
+
+    window.confirmProductSelection = function() {
+        window.closeProductPicker();
+        renderSelectedProducts();
+    };
+
+    function renderSelectedProducts() {
+        const items = window.blanxerState.selectedProducts;
+        document.getElementById('selected-products-count').innerText = items.length;
+
+        const empty = document.getElementById('products-empty-state');
+        const list = document.getElementById('selected-products-list');
+        const addMore = document.getElementById('btn-add-more-products');
+
+        if (items.length === 0) {
+            empty.classList.remove('hidden');
+            list.classList.add('hidden');
+            addMore.classList.add('hidden');
+        } else {
+            empty.classList.add('hidden');
+            list.classList.remove('hidden');
+            addMore.classList.remove('hidden');
+
+            list.innerHTML = items.map((it, idx) => {
+                return '<div class="p-3 rounded-xl border border-gray-200 bg-white flex items-center justify-between gap-3 text-xs">' +
+                    '<div class="flex items-center gap-3">' +
+                        '<img src="' + it.image + '" class="w-11 h-11 object-cover rounded-lg border border-gray-100" onerror="this.src=\'/images/kurtha-charcoal.jpg\'">' +
+                        '<div>' +
+                            '<div class="font-bold text-gray-900">' + it.name + '</div>' +
+                            '<div class="text-[11px] text-gray-500 mt-0.5 flex items-center gap-2">' +
+                                '<span>Variant: ' + it.size + '</span>' +
+                                '<span>•</span>' +
+                                '<span class="font-semibold text-gray-700">Rs. ' + it.price + ' each</span>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="flex items-center gap-4">' +
+                        '<div class="flex items-center border border-gray-200 rounded-lg overflow-hidden bg-gray-50">' +
+                            '<button type="button" onclick="window.stepQty(' + idx + ', -1)" class="w-7 h-7 flex items-center justify-center bg-pink-50 text-pink-600 hover:bg-pink-100 font-bold text-sm">-</button>' +
+                            '<span class="w-8 text-center font-bold text-xs bg-white py-1">' + it.quantity + '</span>' +
+                            '<button type="button" onclick="window.stepQty(' + idx + ', 1)" class="w-7 h-7 flex items-center justify-center bg-purple-50 text-purple-600 hover:bg-purple-100 font-bold text-sm">+</button>' +
+                        '</div>' +
+                        '<span class="font-bold text-gray-900 w-16 text-right">Rs. ' + (it.price * it.quantity) + '</span>' +
+                        '<button type="button" onclick="window.removeProductItem(' + idx + ')" class="text-gray-400 hover:text-red-500 p-1 cursor-pointer">' +
+                            '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>' +
+                        '</button>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        }
+        recalcTotal();
+        validateFormReady();
+    }
+
+    window.stepQty = function(idx, delta) {
+        const it = window.blanxerState.selectedProducts[idx];
+        if (!it) return;
+        it.quantity = Math.max(1, it.quantity + delta);
+        renderSelectedProducts();
+    };
+
+    window.removeProductItem = function(idx) {
+        window.blanxerState.selectedProducts.splice(idx, 1);
+        renderSelectedProducts();
+    };
+
+    window.openCustomItemPrompt = function() {
+        const title = prompt('Enter custom item name:', 'Festive Kurtha Set (Custom)');
+        if (!title) return;
+        const priceStr = prompt('Enter price in Rs.:', '2500');
+        const price = parseInt(priceStr) || 2500;
+        window.blanxerState.selectedProducts.push({
+            product_id: 'CUSTOM-' + Date.now().toString().slice(-4),
+            name: title,
+            price: price,
+            image: '/images/kurtha-charcoal.jpg',
+            size: 'Free Size',
+            quantity: 1
+        });
+        renderSelectedProducts();
+    };
+
+    window.applyCoupon = async function() {
+        const code = document.getElementById('coupon-input').value.trim().toUpperCase();
+        if (!code) return;
+        try {
+            const res = await fetch('/api/coupons/validate/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code })
+            });
+            const data = await res.json();
+            if (data.valid) {
+                const disc = data.discountAmount || data.discount_amount || 500;
+                window.blanxerState.discountAmount = disc;
+                window.blanxerState.couponCode = code;
+                document.getElementById('order-discount').value = disc;
+                const msg = document.getElementById('coupon-applied-msg');
+                msg.innerText = 'Coupon ' + code + ' applied! Rs. ' + disc + ' discount.';
+                msg.classList.remove('hidden');
+                recalcTotal();
+            } else {
+                alert(data.message || 'Invalid coupon code.');
+            }
+        } catch(e) {
+            alert('Error validating coupon.');
+        }
+    };
+
+    window.recalcTotal = function() {
+        const discInput = parseInt(document.getElementById('order-discount').value) || 0;
+        window.blanxerState.discountAmount = discInput;
+        validateFormReady();
+    };
+
+    function validateFormReady() {
+        const hasCust = !!window.blanxerState.customer;
+        const hasProds = window.blanxerState.selectedProducts.length > 0;
+        const btn = document.getElementById('btn-submit-create-order');
+        const hint = document.getElementById('modal-footer-hint');
+
+        if (hasCust && hasProds) {
+            btn.disabled = false;
+            hint.innerText = 'Ready to place order.';
+            hint.className = 'text-[11px] text-emerald-600 font-semibold';
+        } else {
+            btn.disabled = true;
+            hint.innerText = 'Add a customer and at least one product to create the order.';
+            hint.className = 'text-[11px] text-gray-500';
+        }
+    }
+
+    window.submitCreateOrder = async function() {
+        const cust = window.blanxerState.customer;
+        const items = window.blanxerState.selectedProducts;
+        if (!cust || items.length === 0) return;
+
+        const btn = document.getElementById('btn-submit-create-order');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="animate-spin">⏳</span> Placing Order...';
+
+        const district = document.getElementById('order-district').value;
+        const address = document.getElementById('order-address').value;
+        const landmark = document.getElementById('order-landmark').value;
+        const altPhone = document.getElementById('order-alt-phone').value;
+        const note = document.getElementById('order-note').value;
+        const discount = parseInt(document.getElementById('order-discount').value) || 0;
+        const paymentStatus = document.getElementById('order-payment-status').value;
+        const channel = document.getElementById('order-channel').value;
+
+        const fullAddress = address + (landmark ? ' (Landmark: ' + landmark + ')' : '');
+        const itemsTotal = items.reduce((sum, it) => sum + (it.price * it.quantity), 0);
+        const finalTotal = Math.max(0, itemsTotal - discount);
+
+        const payload = {
+            customer: {
+                name: cust.name,
+                phone: cust.phone,
+                whatsapp: cust.whatsapp || cust.phone,
+                email: cust.email || '',
+                district: district,
+                city: district,
+                address: fullAddress,
+                note: note + (altPhone ? ' [Alt: ' + altPhone + ']' : ''),
+                paymentMethod: 'COD'
+            },
+            items: items.map(it => ({
+                productId: it.product_id,
+                name: it.name,
+                size: it.size,
+                quantity: it.quantity,
+                price: it.price,
+                image: it.image
+            })),
+            total: finalTotal,
+            discountAmount: discount,
+            couponCode: window.blanxerState.couponCode,
+            paymentStatus: paymentStatus,
+            channel: channel,
+            status: 'Pending'
+        };
+
+        try {
+            const res = await fetch('/api/orders/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                const orderData = await res.json();
+                alert('Order #' + (orderData.order_id || orderData.id) + ' created successfully!');
+                window.closeBlanxerOrderModal();
+                window.location.reload();
+            } else {
+                const err = await res.json();
+                alert('Error creating order: ' + (err.error || 'Server error'));
+                btn.disabled = false;
+                btn.innerText = 'Create Order';
+            }
+        } catch(e) {
+            alert('Failed to connect to backend: ' + e.message);
+            btn.disabled = false;
+            btn.innerText = 'Create Order';
+        }
+    };
+})();
+</script>

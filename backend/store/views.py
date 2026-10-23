@@ -621,6 +621,7 @@ def order_list_create(request):
             if not order_id or (order_id.startswith('ORD-') and len(order_id) > 10):
                 order_id = ""
 
+            p_status = data.get('payment_status') or data.get('paymentStatus') or 'Unpaid'
             order = Order.objects.create(
                 order_id=order_id,
                 customer_name=c_name,
@@ -637,7 +638,25 @@ def order_list_create(request):
                 coupon_code=coupon_code,
                 discount_amount=discount_amount,
                 status=data.get('status', 'Pending'),
+                payment_status=p_status,
             )
+            if c_phone:
+                try:
+                    cust = Customer.objects.filter(phone=c_phone, is_deleted=False).first()
+                    if not cust:
+                        cust = Customer.objects.create(
+                            name=c_name,
+                            phone=c_phone,
+                            email=c_email,
+                            whatsapp=c_whatsapp or c_phone,
+                            district=c_district,
+                            city=c_city,
+                            address=c_address,
+                        )
+                    order.customer = cust
+                    order.save(update_fields=['customer'])
+                except Exception as cust_err:
+                    pass
 
             if coupon_code:
                 c_obj = Coupon.objects.filter(code=coupon_code, is_deleted=False).first()

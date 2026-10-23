@@ -1,0 +1,45 @@
+{% extends "admin/change_form.html" %}
+{% load i18n admin_urls static admin_modify unfold %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+/* ── Clean Blanxer Form Enhancements ── */
+.blanxer-notice-card {
+    background: #FDF4FF;
+    border: 1px solid #F0ABFC;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+</style>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // If user is adding an order, immediately redirect or show the popup
+    const isAdd = window.location.pathname.endsWith('/add/');
+    if (isAdd) {
+        window.location.replace("{% url 'admin:store_order_changelist' %}?create_order=1");
+    }
+});
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="blanxer-notice-card">
+    <div class="flex items-center gap-3">
+        <span class="text-xl">✨</span>
+        <div>
+            <div class="font-bold text-xs text-purple-900">Blanxer Order Management Active</div>
+            <div class="text-[11px] text-purple-700">Orders are created and managed via the Blanxer interactive modal popup.</div>
+        </div>
+    </div>
+    <a href="{% url 'admin:store_order_changelist' %}?create_order=1" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-lg shadow-sm">
+        + Open Create Order Popup
+    </a>
+</div>
+
+{{ block.super }}
+{% endblock %}

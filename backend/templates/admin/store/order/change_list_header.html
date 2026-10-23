@@ -432,12 +432,43 @@
         }
     };
 
-    document.addEventListener('DOMContentLoaded', function() {
-        const params = new URLSearchParams(window.location.search);
-        if (params.get('create_order') === '1' || params.get('create') === '1') {
-            setTimeout(window.openBlanxerOrderModal, 150);
+    // Global interceptor: Any click on ANY 'Add Order' button or link immediately opens the popup!
+    document.addEventListener('click', function(e) {
+        if (e.target.id === 'btn-submit-create-order' || e.target.closest('#blanxer-create-order-modal')) {
+            return;
         }
-    });
+        const aOrBtn = e.target.closest('a, button');
+        if (!aOrBtn) return;
+
+        const href = aOrBtn.getAttribute('href') || '';
+        const txt = (aOrBtn.innerText || aOrBtn.getAttribute('aria-label') || '').toLowerCase().trim();
+
+        const matchesHref = href.includes('/store/order/add/') || href.includes('create-order');
+        const matchesText = txt.includes('add order') || txt.includes('+ new order') || txt.includes('manually create order');
+
+        if (matchesHref || matchesText || aOrBtn.id === 'btn-open-blanxer-order-popup') {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('[Blanxer] Opening Create Order popup!');
+            window.openBlanxerOrderModal();
+            return false;
+        }
+    }, true);
+
+    // Auto-open if query param ?create_order=1 or ?create=1
+    function checkAutoOpen() {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('create_order') === '1' || params.get('create') === '1' || params.get('e') === '1') {
+            window.openBlanxerOrderModal();
+        }
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', checkAutoOpen);
+    } else {
+        checkAutoOpen();
+    }
+    setTimeout(checkAutoOpen, 200);
+    setTimeout(checkAutoOpen, 600);
 
     window.searchCustomer = async function() {
         const query = document.getElementById('cust-search-input').value.trim();

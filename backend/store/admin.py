@@ -934,7 +934,7 @@ class OrderAdmin(ModelAdmin):
     actions_list = ["manual_create_order_action"]
 
     def add_view(self, request, form_url='', extra_context=None):
-        return redirect(reverse('admin:store_order_changelist') + '?create_order=1')
+        return redirect('/api/django-admin/store/order/?create_order=1')
 
     def get_fieldsets(self, request, obj=None):
         if not obj:
@@ -1002,7 +1002,7 @@ class OrderAdmin(ModelAdmin):
         url_path="create-order",
     )
     def manual_create_order_action(self, request):
-        return redirect(reverse("admin:store_order_changelist") + "?create_order=1")
+        return redirect("/api/django-admin/store/order/?create_order=1")
 
     def blanxer_order_id(self, obj):
         val = obj.order_id or str(obj.id)

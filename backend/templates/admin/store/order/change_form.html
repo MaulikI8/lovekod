@@ -4,7 +4,6 @@
 {% block extrahead %}
 {{ block.super }}
 <style>
-/* ── Clean Blanxer Form Enhancements ── */
 .blanxer-notice-card {
     background: #FDF4FF;
     border: 1px solid #F0ABFC;
@@ -17,13 +16,13 @@
 }
 </style>
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-    // If user is adding an order, immediately redirect or show the popup
-    const isAdd = window.location.pathname.endsWith('/add/');
-    if (isAdd) {
-        window.location.replace("{% url 'admin:store_order_changelist' %}?create_order=1");
+(function() {
+    // If user is on /add/, immediately redirect to changelist with ?create_order=1 so the Blanxer popup opens
+    if (window.location.pathname.includes('/store/order/add/')) {
+        const targetUrl = window.location.pathname.replace('/add/', '/') + '?create_order=1';
+        window.location.replace(targetUrl);
     }
-});
+})();
 </script>
 {% endblock %}
 
@@ -36,7 +35,7 @@ document.addEventListener("DOMContentLoaded", function() {
             <div class="text-[11px] text-purple-700">Orders are created and managed via the Blanxer interactive modal popup.</div>
         </div>
     </div>
-    <a href="{% url 'admin:store_order_changelist' %}?create_order=1" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-lg shadow-sm">
+    <a href="/api/django-admin/store/order/?create_order=1" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-lg shadow-sm">
         + Open Create Order Popup
     </a>
 </div>

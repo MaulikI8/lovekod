@@ -182,41 +182,76 @@ export default function AdminOrders() {
     }
   };
 
-  // ── Product Picker & Inventory Selection ──
-  const filteredProducts = useMemo(() => {
-    if (!productSearch.trim()) return products;
-    const q = productSearch.toLowerCase();
-    return (products || []).filter(p =>
-      (p.name || '').toLowerCase().includes(q) ||
-      (p.id || '').toLowerCase().includes(q) ||
-      (p.fabricType || '').toLowerCase().includes(q)
-    );
-  }, [products, productSearch]);
+  // ── Product Picker & Inventory Selection (Blanxer variant unpack) ──
+  const allVariantRows = useMemo(() => {
+    const rows = [];
+    (products || []).forEach(p => {
+      const combos = Array.isArray(p.customSizes) && p.customSizes.length > 0
+        ? p.customSizes
+        : (Array.isArray(p.combinations) && p.combinations.length > 0 ? p.combinations : null);
 
-  const togglePickerItem = (product) => {
+      if (combos) {
+        combos.forEach((c, idx) => {
+          const varLabel = c.name || [c.color, c.size].filter(Boolean).join(" / ") || c.size || "Standard";
+          rows.push({
+            key: `${p.id}_${varLabel}_${c.sku || idx}`,
+            product: p,
+            productId: p.id,
+            productName: p.name,
+            variant: varLabel,
+            sku: c.sku || `${p.id}-${varLabel}`.toLowerCase().replace(/\s+/g, "-"),
+            stock: Number(c.quantity || c.stock || 0),
+            price: Number(c.price || p.price || 0),
+            image: c.image || p.image || "/images/kurtha-charcoal.jpg",
+            isFirst: idx === 0,
+          });
+        });
+      } else if (p.sizes && typeof p.sizes === "object" && Object.keys(p.sizes).length > 0) {
+        const sizeKeys = Object.keys(p.sizes);
+        sizeKeys.forEach((sKey, idx) => {
+          const val = p.sizes[sKey];
+          const stock = typeof val === "object" ? Number(val.stock || val.quantity || 0) : Number(val || 0);
+          const price = (typeof val === "object" && val.price) ? Number(val.price) : Number(p.price || 0);
+          rows.push({
+            key: `${p.id}_${sKey}`,
+            product: p,
+            productId: p.id,
+            productName: p.name,
+            variant: sKey,
+            sku: `${p.id}-${sKey}`.toLowerCase().replace(/\s+/g, "-"),
+            stock: stock,
+            price: price,
+            image: p.image || "/images/kurtha-charcoal.jpg",
+            isFirst: idx === 0,
+          });
+        });
+      } else {
+        rows.push({
+          key: `${p.id}_standard`,
+          product: p,
+          productId: p.id,
+          productName: p.name,
+          variant: "Standard",
+          sku: `${p.id}-std`.toLowerCase(),
+          stock: Number(p.stock || p.totalStock || 0),
+          price: Number(p.price || 0),
+          image: p.image || "/images/kurtha-charcoal.jpg",
+          isFirst: true,
+        });
+      }
+    });
+    return rows;
+  }, [products]);
+
+  const togglePickerVariantRow = (row) => {
     setPickerSelected(prev => {
       const copy = { ...prev };
-      if (copy[product.id]) {
-        delete copy[product.id];
+      if (copy[row.key]) {
+        delete copy[row.key];
       } else {
-        const firstSize = (product.sizes && Object.keys(product.sizes)[0]) || 'M';
-        copy[product.id] = {
-          product,
-          size: firstSize,
-          quantity: 1,
-        };
+        copy[row.key] = row;
       }
       return copy;
-    });
-  };
-
-  const updatePickerSize = (productId, size) => {
-    setPickerSelected(prev => {
-      if (!prev[productId]) return prev;
-      return {
-        ...prev,
-        [productId]: { ...prev[productId], size }
-      };
     });
   };
 
@@ -227,16 +262,17 @@ export default function AdminOrders() {
       return;
     }
     const newItems = selectedList.map(item => {
-      const p = item.product;
+      const p = item.product || {};
       return {
-        productId: p.id,
-        name: p.name,
-        size: item.size || 'M',
-        quantity: item.quantity || 1,
-        price: p.price || 0,
-        image: p.image || '/images/kurtha-charcoal.jpg',
+        productId: item.productId || p.id,
+        name: item.productName || p.name,
+        size: item.variant || "Standard",
+        sku: item.sku || "",
+        quantity: 1,
+        price: item.price ?? p.price ?? 0,
+        image: item.image || p.image || "/images/kurtha-charcoal.jpg",
         discount: 0,
-        discountType: 'fixed',
+        discountType: "fixed",
       };
     });
     setFormData(prev => ({
@@ -2072,101 +2108,119 @@ export default function AdminOrders() {
               </div>
             </div>
 
-            {/* Products Table */}
+            {/* Blanxer Table: Checkbox | Im... | Product | Variant | SKU | Quantity | Unit Price */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '14px 22px' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1.5px solid #e2e8f0', color: '#64748b', fontSize: '0.76rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                    <th style={{ padding: '8px', width: '36px' }}></th>
-                    <th style={{ padding: '8px' }}>Product</th>
-                    <th style={{ padding: '8px' }}>Variant / Size</th>
-                    <th style={{ padding: '8px' }}>SKU</th>
-                    <th style={{ padding: '8px' }}>Stock</th>
-                    <th style={{ padding: '8px', textAlign: 'right' }}>Unit Price</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredProducts.map(p => {
-                    const isChecked = !!pickerSelected[p.id];
-                    const selectedSize = pickerSelected[p.id]?.size || (p.sizes && Object.keys(p.sizes)[0]) || 'M';
-                    const availableSizes = p.sizes ? Object.keys(p.sizes) : ['S', 'M', 'L', 'XL', 'XXL'];
-                    const totalStock = p.sizes ? Object.values(p.sizes).reduce((a, b) => a + b, 0) : 15;
+              {(() => {
+                const searchQ = (productSearch || '').toLowerCase().trim();
+                const filteredRows = allVariantRows.filter(r => 
+                  r.productName.toLowerCase().includes(searchQ) ||
+                  r.variant.toLowerCase().includes(searchQ) ||
+                  r.sku.toLowerCase().includes(searchQ)
+                );
 
-                    return (
-                      <tr
-                        key={p.id}
-                        style={{
-                          borderBottom: '1px solid #f1f5f9',
-                          background: isChecked ? '#f5f3ff' : 'transparent',
-                          transition: 'background 0.15s'
-                        }}
-                      >
-                        <td style={{ padding: '10px 8px' }}>
+                const allChecked = filteredRows.length > 0 && filteredRows.every(r => !!pickerSelected[r.key]);
+
+                const handleToggleAll = (checked) => {
+                  setPickerSelected(prev => {
+                    const copy = { ...prev };
+                    filteredRows.forEach(r => {
+                      if (checked) copy[r.key] = r;
+                      else delete copy[r.key];
+                    });
+                    return copy;
+                  });
+                };
+
+                return (
+                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.82rem' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1.5px solid #e2e8f0', color: '#64748b', fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.04em', background: '#f8fafc' }}>
+                        <th style={{ padding: '10px 8px', width: '36px' }}>
                           <input
                             type="checkbox"
-                            checked={isChecked}
-                            onChange={() => togglePickerItem(p)}
-                            style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#7c3aed' }}
+                            checked={allChecked}
+                            onChange={e => handleToggleAll(e.target.checked)}
+                            style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#7c3aed' }}
                           />
-                        </td>
-                        <td style={{ padding: '10px 8px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <img
-                              src={p.image || '/images/kurtha-charcoal.jpg'}
-                              alt=""
-                              style={{ width: '42px', height: '42px', borderRadius: '6px', objectFit: 'cover' }}
-                            />
-                            <div>
-                              <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#0f172a' }}>{p.name}</div>
-                              <div style={{ fontSize: '0.74rem', color: '#64748b' }}>{p.fabricType || 'Kurtha Set'}</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td style={{ padding: '10px 8px' }}>
-                          <select
-                            value={selectedSize}
-                            disabled={!isChecked}
-                            onChange={e => updatePickerSize(p.id, e.target.value)}
-                            style={{
-                              padding: '4px 8px',
-                              borderRadius: '4px',
-                              border: '1px solid #cbd5e1',
-                              fontSize: '0.8rem',
-                              background: '#ffffff',
-                              cursor: isChecked ? 'pointer' : 'not-allowed'
-                            }}
-                          >
-                            {availableSizes.map(s => (
-                              <option key={s} value={s}>{s}</option>
-                            ))}
-                          </select>
-                        </td>
-                        <td style={{ padding: '10px 8px', fontSize: '0.78rem', color: '#64748b', fontFamily: 'monospace' }}>
-                          {p.id}
-                        </td>
-                        <td style={{ padding: '10px 8px' }}>
-                          <span style={{
-                            fontSize: '0.72rem',
-                            fontWeight: 700,
-                            padding: '2px 8px',
-                            borderRadius: '4px',
-                            background: totalStock > 0 ? '#dcfce7' : '#fee2e2',
-                            color: totalStock > 0 ? '#16a34a' : '#ef4444'
-                          }}>
-                            {totalStock > 0 ? `✓ ${totalStock} in stock` : 'Out of stock'}
-                          </span>
-                        </td>
-                        <td style={{ padding: '10px 8px', textAlign: 'right', fontWeight: 700, color: '#0f172a', fontSize: '0.88rem' }}>
-                          Rs {Number(p.price).toLocaleString()}
-                        </td>
+                        </th>
+                        <th style={{ padding: '10px 8px', width: '50px' }}>Im...</th>
+                        <th style={{ padding: '10px 8px' }}>Product</th>
+                        <th style={{ padding: '10px 8px' }}>Variant</th>
+                        <th style={{ padding: '10px 8px' }}>SKU</th>
+                        <th style={{ padding: '10px 8px', textAlign: 'center' }}>Quantity</th>
+                        <th style={{ padding: '10px 8px', textAlign: 'right' }}>Unit Price</th>
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                    </thead>
+                    <tbody>
+                      {filteredRows.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} style={{ textAlign: 'center', padding: '30px', color: '#94a3b8' }}>
+                            No matching products or variants found.
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredRows.map(row => {
+                          const isChecked = !!pickerSelected[row.key];
+                          return (
+                            <tr
+                              key={row.key}
+                              style={{
+                                borderBottom: '1px solid #f1f5f9',
+                                background: isChecked ? '#f5f3ff' : 'transparent',
+                                transition: 'background 0.15s'
+                              }}
+                            >
+                              <td style={{ padding: '10px 8px' }}>
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked}
+                                  onChange={() => togglePickerVariantRow(row)}
+                                  style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#7c3aed' }}
+                                />
+                              </td>
+                              <td style={{ padding: '10px 8px' }}>
+                                <img
+                                  src={row.image}
+                                  alt=""
+                                  style={{ width: '36px', height: '36px', borderRadius: '4px', objectFit: 'cover', border: '1px solid #e2e8f0' }}
+                                  onError={e => { e.target.src = '/images/kurtha-charcoal.jpg'; }}
+                                />
+                              </td>
+                              <td style={{ padding: '10px 8px' }}>
+                                {row.isFirst ? (
+                                  <div style={{ fontWeight: 700, color: '#0f172a' }}>{row.productName}</div>
+                                ) : (
+                                  <div style={{ color: '#94a3b8', fontFamily: 'monospace', fontSize: '1rem' }}>"</div>
+                                )}
+                              </td>
+                              <td style={{ padding: '10px 8px', fontFamily: 'monospace', fontSize: '0.8rem', color: '#475569' }}>
+                                {row.variant}
+                              </td>
+                              <td style={{ padding: '10px 8px', fontFamily: 'monospace', fontSize: '0.78rem', color: '#64748b' }}>
+                                {row.sku}
+                              </td>
+                              <td style={{ padding: '10px 8px', textAlign: 'center' }}>
+                                <span style={{
+                                  fontWeight: 700,
+                                  color: row.stock > 0 ? '#0f172a' : '#ef4444'
+                                }}>
+                                  {row.stock}
+                                </span>
+                              </td>
+                              <td style={{ padding: '10px 8px', textAlign: 'right', fontWeight: 700, color: '#0f172a' }}>
+                                Rs {Number(row.price).toLocaleString()}
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                );
+              })()}
             </div>
 
-            {/* Footer */}
+            {/* Footer Matching Blanxer: 1 - 10 / 25 | Confirm Select [X] Products */}
             <div style={{
               padding: '14px 22px',
               borderTop: '1px solid #f1f5f9',
@@ -2175,8 +2229,8 @@ export default function AdminOrders() {
               alignItems: 'center',
               background: '#f8fafc'
             }}>
-              <span style={{ fontSize: '0.84rem', color: '#475569', fontWeight: 600 }}>
-                Selected {Object.keys(pickerSelected).length} product(s)
+              <span style={{ fontSize: '0.82rem', color: '#64748b' }}>
+                1 - {Math.min(10, allVariantRows.length)} / {allVariantRows.length}
               </span>
 
               <div style={{ display: 'flex', gap: '10px' }}>
@@ -2198,19 +2252,20 @@ export default function AdminOrders() {
                 <button
                   type="button"
                   onClick={handleConfirmProductPicker}
+                  disabled={Object.keys(pickerSelected).length === 0}
                   style={{
-                    background: '#7c3aed',
+                    background: Object.keys(pickerSelected).length === 0 ? '#c4b5fd' : '#7c3aed',
                     color: '#ffffff',
                     border: 'none',
                     borderRadius: '8px',
                     padding: '8px 20px',
                     fontSize: '0.88rem',
                     fontWeight: 800,
-                    cursor: 'pointer',
+                    cursor: Object.keys(pickerSelected).length === 0 ? 'not-allowed' : 'pointer',
                     boxShadow: '0 4px 6px -1px rgba(124, 58, 237, 0.3)'
                   }}
                 >
-                  Confirm Select {Object.keys(pickerSelected).length > 0 ? `(${Object.keys(pickerSelected).length})` : ''} Products
+                  Confirm Select [{Object.keys(pickerSelected).length}] Products
                 </button>
               </div>
             </div>

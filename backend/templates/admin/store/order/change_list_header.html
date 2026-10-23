@@ -364,40 +364,67 @@
     </div>
 </div>
 
-<!-- ========================================================================= -->
-<!-- PRODUCT PICKER SUB-MODAL -->
-<!-- ========================================================================= -->
+<!-- PRODUCT PICKER SUB-MODAL (MATCHING BLANXER 100% WITH VARIANTS TABLE) -->
 <div id="blanxer-product-picker-modal" class="fixed inset-0 z-100000 hidden overflow-y-auto" style="background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(4px);">
     <div class="min-h-screen px-4 py-8 flex items-center justify-center">
-        <div class="bg-white rounded-2xl max-w-xl w-full shadow-2xl border border-gray-100 overflow-hidden flex flex-col my-auto text-gray-900">
+        <div class="bg-white rounded-2xl max-w-3xl w-full shadow-2xl border border-gray-100 overflow-hidden flex flex-col my-auto text-gray-900">
             
+            <!-- Header -->
             <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
                 <h3 class="text-base font-bold text-gray-900">Select Products</h3>
-                <button type="button" onclick="window.closeProductPicker()" class="text-gray-400 hover:text-gray-600 rounded-lg p-1 hover:bg-gray-100">
-                    <svg class="w-5 h-5 blanxer-icon-sm" style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                <button type="button" onclick="window.closeProductPicker()" class="text-gray-400 hover:text-gray-600 rounded-lg p-1 hover:bg-gray-100 cursor-pointer">
+                    <svg class="w-5 h-5 blanxer-icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
 
-            <!-- Search in Picker -->
-            <div class="p-4 border-b border-gray-100 bg-gray-50/50">
-                <div class="relative">
+            <!-- Search Bar Row with Back Arrow (Matching Blanxer) -->
+            <div class="px-6 py-3 border-b border-gray-100 bg-gray-50/50 flex items-center gap-2">
+                <button type="button" onclick="window.closeProductPicker()" class="p-1.5 border border-gray-200 rounded-lg hover:bg-gray-100 text-gray-500 cursor-pointer">
+                    <svg class="w-4 h-4 blanxer-icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                </button>
+                <div class="relative flex-1">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                        <svg class="w-4 h-4 blanxer-icon-xs" style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        <svg class="w-4 h-4 blanxer-icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     </div>
-                    <input type="text" id="picker-search-input" oninput="window.filterPickerProducts()" placeholder="Search products by name or SKU..." class="w-full pl-9 pr-3 py-2 text-xs border border-gray-200 rounded-lg bg-white">
+                    <input type="text" id="picker-search-input" oninput="window.filterPickerProducts()" placeholder="Search products" class="w-full pl-9 pr-3 py-2 text-xs border border-gray-200 rounded-lg bg-white focus:ring-2 focus:ring-purple-500">
                 </div>
             </div>
 
-            <!-- Products List -->
-            <div class="p-4 space-y-2 overflow-y-auto max-h-[50vh]" id="picker-product-list">
-                <div class="text-center py-6 text-gray-400 text-xs">Loading store products...</div>
+            <!-- Variant Table (Matching Blanxer: Checkbox | Im... | Product | Variant | SKU | Quantity | Unit Price) -->
+            <div class="overflow-x-auto max-h-[50vh] overflow-y-auto">
+                <table class="w-full text-xs text-left text-gray-700">
+                    <thead class="text-[11px] text-gray-500 uppercase bg-gray-50/90 sticky top-0 border-b border-gray-100 z-10">
+                        <tr>
+                            <th class="w-10 px-4 py-2.5">
+                                <input type="checkbox" id="picker-select-all" onchange="window.toggleSelectAllVariants(this.checked)" class="rounded border-gray-300 text-purple-600 focus:ring-purple-500">
+                            </th>
+                            <th class="w-14 px-3 py-2.5">Im...</th>
+                            <th class="px-3 py-2.5">Product</th>
+                            <th class="px-3 py-2.5">Variant</th>
+                            <th class="px-3 py-2.5">SKU</th>
+                            <th class="px-3 py-2.5 text-center">Quantity</th>
+                            <th class="px-4 py-2.5 text-right">Unit Price</th>
+                        </tr>
+                    </thead>
+                    <tbody id="picker-variant-tbody" class="divide-y divide-gray-100">
+                        <!-- Populated dynamically with each variant row -->
+                    </tbody>
+                </table>
             </div>
 
+            <!-- Footer with Pagination & Confirm Button (Matching Blanxer) -->
             <div class="px-6 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
-                <span class="text-xs text-gray-500" id="picker-selected-summary">0 selected</span>
-                <div class="flex items-center gap-2">
-                    <button type="button" onclick="window.closeProductPicker()" class="px-3.5 py-1.5 border border-gray-300 rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-100">Cancel</button>
-                    <button type="button" onclick="window.confirmProductSelection()" class="px-4 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-lg shadow-2xs">Done</button>
+                <div class="flex items-center gap-3 text-xs text-gray-500">
+                    <span id="picker-pagination-info">1 - 10 / 25</span>
+                    <div class="flex items-center gap-1" id="picker-pagination-controls">
+                        <!-- Pagination buttons -->
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <button type="button" id="btn-confirm-select-products" onclick="window.confirmSelectedVariants()" disabled class="px-5 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold rounded-lg shadow-sm transition-all cursor-pointer">
+                        Confirm Select [0] Products
+                    </button>
                 </div>
             </div>
 
@@ -405,15 +432,20 @@
     </div>
 </div>
 
+
 <script>
 (function() {
     window.blanxerState = {
         customer: null,
         selectedProducts: [],
         availableProducts: [],
+        flattenedVariants: [],
+        selectedVariantKeys: new Set(),
         discountAmount: 0,
         couponCode: '',
         forceCreate: false,
+        pickerPage: 1,
+        pageSize: 10
     };
 
     window.openBlanxerOrderModal = function() {
@@ -455,7 +487,6 @@
         }
     }, true);
 
-    // Auto-open if query param ?create_order=1 or ?create=1
     function checkAutoOpen() {
         const params = new URLSearchParams(window.location.search);
         if (params.get('create_order') === '1' || params.get('create') === '1' || params.get('e') === '1') {
@@ -470,6 +501,7 @@
     setTimeout(checkAutoOpen, 200);
     setTimeout(checkAutoOpen, 600);
 
+    // Customer Lookup
     window.searchCustomer = async function() {
         const query = document.getElementById('cust-search-input').value.trim();
         if (!query) {
@@ -580,95 +612,242 @@
         document.getElementById('duplicate-order-alert').classList.add('hidden');
     };
 
+    // ── PRODUCTS & VARIANTS LOGIC (BLANXER MATCHING 100%) ──
     async function fetchAvailableProducts() {
         if (window.blanxerState.availableProducts.length > 0) return;
         try {
             const res = await fetch('/api/products/');
             if (res.ok) {
                 window.blanxerState.availableProducts = await res.json();
-                renderPickerList();
+                flattenProductVariants();
             }
         } catch(e) {
             console.error('Failed fetching products', e);
         }
     }
 
+    function flattenProductVariants() {
+        const variants = [];
+        window.blanxerState.availableProducts.forEach(p => {
+            const pName = p.name || 'Festive Kurtha';
+            const img = p.image || '/images/kurtha-charcoal.jpg';
+            const price = p.price || 0;
+            const sku = p.product_id || p.id || 'LK-001';
+
+            // 1. Check combinations / customSizes
+            let combs = [];
+            if (Array.isArray(p.customSizes) && p.customSizes.length > 0) {
+                combs = p.customSizes;
+            } else if (Array.isArray(p.combinations) && p.combinations.length > 0) {
+                combs = p.combinations;
+            }
+
+            if (combs.length > 0) {
+                combs.forEach((c, idx) => {
+                    const color = c.color || '';
+                    const size = c.size || '';
+                    const vName = color && size ? `${color}/${size}` : (size || color || '-');
+                    variants.push({
+                        key: `${sku}_comb_${idx}_${vName}`,
+                        productId: sku,
+                        productName: pName,
+                        isFirst: idx === 0,
+                        image: c.image || img,
+                        variant: vName,
+                        size: size || 'M',
+                        color: color,
+                        sku: c.sku || `${sku}-${size || idx}`,
+                        stock: parseInt(c.quantity) || 0,
+                        price: parseInt(c.price) || price
+                    });
+                });
+            } else if (p.sizes && typeof p.sizes === 'object' && Object.keys(p.sizes).length > 0) {
+                // 2. Sizes dict (e.g. { M: 4, L: 5, XL: 3 })
+                const sizeKeys = Object.keys(p.sizes);
+                sizeKeys.forEach((sz, idx) => {
+                    const qty = parseInt(p.sizes[sz]) || 0;
+                    variants.push({
+                        key: `${sku}_sz_${sz}`,
+                        productId: sku,
+                        productName: pName,
+                        isFirst: idx === 0,
+                        image: img,
+                        variant: sz,
+                        size: sz,
+                        color: '',
+                        sku: `${sku}-${sz}`,
+                        stock: qty,
+                        price: price
+                    });
+                });
+            } else {
+                // 3. Simple product
+                variants.push({
+                    key: `${sku}_simple`,
+                    productId: sku,
+                    productName: pName,
+                    isFirst: true,
+                    image: img,
+                    variant: '-',
+                    size: 'Free Size',
+                    color: '',
+                    sku: sku,
+                    stock: p.quantity || p.stock || 15,
+                    price: price
+                });
+            }
+        });
+
+        window.blanxerState.flattenedVariants = variants;
+    }
+
     window.openProductPicker = function() {
         document.getElementById('blanxer-product-picker-modal').classList.remove('hidden');
-        renderPickerList();
+        if (window.blanxerState.flattenedVariants.length === 0) {
+            flattenProductVariants();
+        }
+        renderVariantTable();
     };
 
     window.closeProductPicker = function() {
         document.getElementById('blanxer-product-picker-modal').classList.add('hidden');
     };
 
-    function renderPickerList() {
-        const container = document.getElementById('picker-product-list');
-        const q = (document.getElementById('picker-search-input')?.value || '').toLowerCase();
-        const prods = window.blanxerState.availableProducts.filter(p => {
-            return (p.name || '').toLowerCase().includes(q) || (p.product_id || p.id || '').toLowerCase().includes(q);
+    window.filterPickerProducts = function() {
+        window.blanxerState.pickerPage = 1;
+        renderVariantTable();
+    };
+
+    function renderVariantTable() {
+        const tbody = document.getElementById('picker-variant-tbody');
+        const q = (document.getElementById('picker-search-input')?.value || '').toLowerCase().trim();
+
+        const filtered = window.blanxerState.flattenedVariants.filter(v => {
+            return v.productName.toLowerCase().includes(q) ||
+                   v.variant.toLowerCase().includes(q) ||
+                   v.sku.toLowerCase().includes(q);
         });
 
-        if (prods.length === 0) {
-            container.innerHTML = '<div class="text-center py-6 text-gray-400 text-xs">No matching products found.</div>';
+        const total = filtered.length;
+        const page = window.blanxerState.pickerPage;
+        const size = window.blanxerState.pageSize;
+        const start = (page - 1) * size;
+        const end = Math.min(start + size, total);
+        const pageItems = filtered.slice(start, end);
+
+        // Update pagination info (e.g. 1 - 10 / 25)
+        document.getElementById('picker-pagination-info').innerText = total > 0 ? `${start + 1} - ${end} / ${total}` : '0 / 0';
+
+        const totalPages = Math.ceil(total / size) || 1;
+        const controls = document.getElementById('picker-pagination-controls');
+        controls.innerHTML = `
+            <button type="button" onclick="window.changePickerPage(${page - 1})" ${page <= 1 ? 'disabled' : ''} class="w-6 h-6 flex items-center justify-center border border-gray-200 rounded text-gray-500 disabled:opacity-30">‹</button>
+            ${Array.from({ length: totalPages }, (_, i) => i + 1).map(pNum => `
+                <button type="button" onclick="window.changePickerPage(${pNum})" class="w-6 h-6 flex items-center justify-center rounded text-xs font-semibold ${pNum === page ? 'bg-purple-600 text-white' : 'text-gray-700 hover:bg-gray-100'}">${pNum}</button>
+            `).join('')}
+            <button type="button" onclick="window.changePickerPage(${page + 1})" ${page >= totalPages ? 'disabled' : ''} class="w-6 h-6 flex items-center justify-center border border-gray-200 rounded text-gray-500 disabled:opacity-30">›</button>
+        `;
+
+        if (pageItems.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-gray-400">No matching products found.</td></tr>';
             return;
         }
 
-        container.innerHTML = prods.map(p => {
-            const isSelected = window.blanxerState.selectedProducts.some(sp => sp.product_id === p.product_id || sp.id === p.id);
-            const stock = p.stock || 15;
-            const img = p.image || '/images/kurtha-charcoal.jpg';
-            const borderCol = isSelected ? 'border-purple-500 bg-purple-50/30' : 'border-gray-200 bg-white';
-            const btnClass = isSelected ? 'bg-purple-600 text-white' : 'border border-purple-600 text-purple-600 hover:bg-purple-50';
-            const btnText = isSelected ? 'Added ✓' : 'Add +';
-            const stockBadge = stock > 0 ? ('In Stock (' + stock + ')') : 'Out of Stock';
-            const stockClass = stock > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700';
+        tbody.innerHTML = pageItems.map(v => {
+            const isChecked = window.blanxerState.selectedVariantKeys.has(v.key);
+            const stockCol = v.stock > 0 ? 'text-gray-900 font-semibold' : 'text-red-500 font-semibold';
+            const displayProdName = v.isFirst ? `<span class="font-bold text-gray-900">${v.productName}</span>` : `<span class="text-gray-400 font-mono">"</span>`;
 
-            return '<div class="p-3 rounded-xl border ' + borderCol + ' flex items-center justify-between gap-3 text-xs">' +
-                '<div class="flex items-center gap-3">' +
-                    '<img src="' + img + '" class="w-10 h-10 object-cover rounded-lg border border-gray-100" onerror="this.src=\'/images/kurtha-charcoal.jpg\'">' +
-                    '<div>' +
-                        '<div class="font-bold text-gray-900">' + p.name + '</div>' +
-                        '<div class="flex items-center gap-2 mt-0.5">' +
-                            '<span class="text-[10px] text-gray-400 font-mono">SKU: ' + (p.product_id || 'LK-001') + '</span>' +
-                            '<span class="px-1.5 py-0.2 rounded text-[10px] font-bold ' + stockClass + '">' + stockBadge + '</span>' +
-                        '</div>' +
-                    '</div>' +
-                '</div>' +
-                '<div class="flex items-center gap-3">' +
-                    '<span class="font-bold text-gray-900">Rs. ' + p.price + '</span>' +
-                    '<button type="button" onclick="window.toggleProductPick(\'' + (p.product_id || p.id) + '\')" class="px-3 py-1.5 rounded-lg text-xs font-bold ' + btnClass + '">' + btnText + '</button>' +
-                '</div>' +
-            '</div>';
+            return `
+                <tr class="hover:bg-purple-50/20 transition-colors">
+                    <td class="w-10 px-4 py-2.5">
+                        <input type="checkbox" onchange="window.toggleVariantRow('${v.key}', this.checked)" ${isChecked ? 'checked' : ''} class="rounded border-gray-300 text-purple-600 focus:ring-purple-500 cursor-pointer">
+                    </td>
+                    <td class="w-14 px-3 py-2.5">
+                        <img src="${v.image}" class="w-9 h-9 rounded object-cover border border-gray-200" onerror="this.src='/images/kurtha-charcoal.jpg'">
+                    </td>
+                    <td class="px-3 py-2.5">
+                        ${displayProdName}
+                    </td>
+                    <td class="px-3 py-2.5">
+                        <span class="font-mono text-[11px] text-gray-600">${v.variant}</span>
+                    </td>
+                    <td class="px-3 py-2.5">
+                        <span class="font-mono text-[11px] text-gray-500">${v.sku}</span>
+                    </td>
+                    <td class="px-3 py-2.5 text-center">
+                        <span class="${stockCol}">${v.stock}</span>
+                    </td>
+                    <td class="px-4 py-2.5 text-right font-bold text-gray-900">
+                        Rs ${v.price}
+                    </td>
+                </tr>
+            `;
         }).join('');
+
+        updateConfirmButton();
     }
 
-    window.filterPickerProducts = function() {
-        renderPickerList();
+    window.changePickerPage = function(p) {
+        window.blanxerState.pickerPage = p;
+        renderVariantTable();
     };
 
-    window.toggleProductPick = function(pid) {
-        const p = window.blanxerState.availableProducts.find(x => (x.product_id || x.id) === pid);
-        if (!p) return;
-
-        const idx = window.blanxerState.selectedProducts.findIndex(x => (x.product_id || x.id) === pid);
-        if (idx >= 0) {
-            window.blanxerState.selectedProducts.splice(idx, 1);
+    window.toggleVariantRow = function(key, checked) {
+        if (checked) {
+            window.blanxerState.selectedVariantKeys.add(key);
         } else {
-            window.blanxerState.selectedProducts.push({
-                product_id: p.product_id || p.id,
-                name: p.name,
-                price: p.price,
-                image: p.image || '/images/kurtha-charcoal.jpg',
-                size: 'M',
-                quantity: 1
-            });
+            window.blanxerState.selectedVariantKeys.delete(key);
         }
-        renderPickerList();
-        renderSelectedProducts();
+        updateConfirmButton();
     };
 
-    window.confirmProductSelection = function() {
+    window.toggleSelectAllVariants = function(checked) {
+        const q = (document.getElementById('picker-search-input')?.value || '').toLowerCase().trim();
+        const filtered = window.blanxerState.flattenedVariants.filter(v => {
+            return v.productName.toLowerCase().includes(q) || v.variant.toLowerCase().includes(q) || v.sku.toLowerCase().includes(q);
+        });
+
+        filtered.forEach(v => {
+            if (checked) window.blanxerState.selectedVariantKeys.add(v.key);
+            else window.blanxerState.selectedVariantKeys.delete(v.key);
+        });
+        renderVariantTable();
+    };
+
+    function updateConfirmButton() {
+        const count = window.blanxerState.selectedVariantKeys.size;
+        const btn = document.getElementById('btn-confirm-select-products');
+        btn.innerText = `Confirm Select [${count}] Products`;
+        btn.disabled = count === 0;
+    }
+
+    window.confirmSelectedVariants = function() {
+        const keys = Array.from(window.blanxerState.selectedVariantKeys);
+        keys.forEach(k => {
+            const v = window.blanxerState.flattenedVariants.find(x => x.key === k);
+            if (!v) return;
+
+            const existing = window.blanxerState.selectedProducts.find(sp => sp.key === k);
+            if (existing) {
+                existing.quantity += 1;
+            } else {
+                window.blanxerState.selectedProducts.push({
+                    key: v.key,
+                    productId: v.productId,
+                    name: v.productName,
+                    variant: v.variant,
+                    size: v.size,
+                    sku: v.sku,
+                    stock: v.stock,
+                    price: v.price,
+                    image: v.image,
+                    quantity: 1
+                });
+            }
+        });
+
+        window.blanxerState.selectedVariantKeys.clear();
         window.closeProductPicker();
         renderSelectedProducts();
     };
@@ -691,30 +870,42 @@
             addMore.classList.remove('hidden');
 
             list.innerHTML = items.map((it, idx) => {
-                return '<div class="p-3 rounded-xl border border-gray-200 bg-white flex items-center justify-between gap-3 text-xs">' +
-                    '<div class="flex items-center gap-3">' +
-                        '<img src="' + it.image + '" class="w-11 h-11 object-cover rounded-lg border border-gray-100" onerror="this.src=\'/images/kurtha-charcoal.jpg\'">' +
-                        '<div>' +
-                            '<div class="font-bold text-gray-900">' + it.name + '</div>' +
-                            '<div class="text-[11px] text-gray-500 mt-0.5 flex items-center gap-2">' +
-                                '<span>Variant: ' + it.size + '</span>' +
-                                '<span>•</span>' +
-                                '<span class="font-semibold text-gray-700">Rs. ' + it.price + ' each</span>' +
-                            '</div>' +
-                        '</div>' +
-                    '</div>' +
-                    '<div class="flex items-center gap-4">' +
-                        '<div class="flex items-center border border-gray-200 rounded-lg overflow-hidden bg-gray-50">' +
-                            '<button type="button" onclick="window.stepQty(' + idx + ', -1)" class="w-7 h-7 flex items-center justify-center bg-pink-50 text-pink-600 hover:bg-pink-100 font-bold text-sm">-</button>' +
-                            '<span class="w-8 text-center font-bold text-xs bg-white py-1">' + it.quantity + '</span>' +
-                            '<button type="button" onclick="window.stepQty(' + idx + ', 1)" class="w-7 h-7 flex items-center justify-center bg-purple-50 text-purple-600 hover:bg-purple-100 font-bold text-sm">+</button>' +
-                        '</div>' +
-                        '<span class="font-bold text-gray-900 w-16 text-right">Rs. ' + (it.price * it.quantity) + '</span>' +
-                        '<button type="button" onclick="window.removeProductItem(' + idx + ')" class="text-gray-400 hover:text-red-500 p-1 cursor-pointer">' +
-                            '<svg class="w-4 h-4 blanxer-icon-xs" style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>' +
-                        '</button>' +
-                    '</div>' +
-                '</div>';
+                const stockText = it.stock !== undefined ? `Stock: ${it.stock}` : '';
+                return `
+                    <div class="p-3 rounded-xl border border-gray-200 bg-white flex items-center justify-between gap-3 text-xs">
+                        <div class="flex items-center gap-3">
+                            <img src="${it.image}" class="w-11 h-11 object-cover rounded-lg border border-gray-100" onerror="this.src='/images/kurtha-charcoal.jpg'">
+                            <div>
+                                <div class="font-bold text-gray-900">${it.name}</div>
+                                <div class="text-[11px] text-gray-500 mt-0.5 flex items-center gap-2">
+                                    <span class="font-semibold text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded">Variant: ${it.variant || it.size}</span>
+                                    <span>•</span>
+                                    <span class="text-gray-400 font-mono">${it.sku || ''}</span>
+                                    ${stockText ? `<span>•</span><span class="text-emerald-600 font-semibold">${stockText}</span>` : ''}
+                                    <span>•</span>
+                                    <span class="font-semibold text-gray-700">Rs ${it.price} each</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-4">
+                            <!-- Stepper -->
+                            <div class="flex items-center border border-gray-200 rounded-lg overflow-hidden bg-gray-50">
+                                <button type="button" onclick="window.stepQty(${idx}, -1)" class="w-7 h-7 flex items-center justify-center bg-pink-50 text-pink-600 hover:bg-pink-100 font-bold text-sm">-</button>
+                                <span class="w-8 text-center font-bold text-xs bg-white py-1">${it.quantity}</span>
+                                <button type="button" onclick="window.stepQty(${idx}, 1)" class="w-7 h-7 flex items-center justify-center bg-purple-50 text-purple-600 hover:bg-purple-100 font-bold text-sm">+</button>
+                            </div>
+
+                            <!-- Item Total -->
+                            <span class="font-bold text-gray-900 w-16 text-right">Rs ${it.price * it.quantity}</span>
+
+                            <!-- Trash -->
+                            <button type="button" onclick="window.removeProductItem(${idx})" class="text-gray-400 hover:text-red-500 p-1 cursor-pointer">
+                                <svg class="w-4 h-4 blanxer-icon-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                `;
             }).join('');
         }
         recalcTotal();
@@ -739,11 +930,13 @@
         const priceStr = prompt('Enter price in Rs.:', '2500');
         const price = parseInt(priceStr) || 2500;
         window.blanxerState.selectedProducts.push({
-            product_id: 'CUSTOM-' + Date.now().toString().slice(-4),
+            key: 'custom_' + Date.now(),
+            productId: 'CUSTOM-' + Date.now().toString().slice(-4),
             name: title,
+            variant: 'Custom',
+            size: 'Free Size',
             price: price,
             image: '/images/kurtha-charcoal.jpg',
-            size: 'Free Size',
             quantity: 1
         });
         renderSelectedProducts();
@@ -834,9 +1027,9 @@
                 paymentMethod: 'COD'
             },
             items: items.map(it => ({
-                productId: it.product_id,
+                productId: it.productId,
                 name: it.name,
-                size: it.size,
+                size: it.size || it.variant || 'M',
                 quantity: it.quantity,
                 price: it.price,
                 image: it.image

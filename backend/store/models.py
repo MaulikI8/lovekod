@@ -280,6 +280,8 @@ class Product(models.Model):
             'hsCode': self.hs_code,
             'variantSizes': [s.strip() for s in self.sizes.split(',') if s.strip()] if self.sizes else [],
             'showColorPreview': self.show_color_preview,
+            'customSizes': self.custom_sizes,
+            'totalStock': self.total_stock(),
             'seo': {
                 'title': self.get_meta_title(),
                 'description': self.get_meta_description(),

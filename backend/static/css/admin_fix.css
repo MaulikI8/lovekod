@@ -229,3 +229,9 @@ table#result_list td.field-blanxer_name {
     min-width: 220px !important;
     max-width: 420px !important;
 }
+
+/* 8. Completely remove sidebar search bar as requested by client */
+#nav-sidebar-inner .mb-2\.5.mx-3,
+#nav-sidebar [x-on\:click*="opencommand"] {
+    display: none !important;
+}

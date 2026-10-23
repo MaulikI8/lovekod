@@ -238,20 +238,20 @@
                 <div>
                     <label class="block text-xs font-bold text-gray-700 mb-2">Customer</label>
                     
-                    <!-- Search Input Row -->
-                    <div id="customer-search-row" class="flex items-center gap-2">
-                        <div class="relative flex-1">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                                <svg class="w-4 h-4 blanxer-icon-xs" style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                            </div>
-                            <input type="text" id="cust-search-input" placeholder="9841234567 / 9818765432" class="blanxer-input blanxer-input-icon">
+                    <!-- Search Input Row (Pixel-Perfect Alignment) -->
+                    <div id="customer-search-row" style="display: flex; align-items: center; gap: 8px;">
+                        <div style="position: relative; flex: 1; display: flex; align-items: center;">
+                            <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; color: #94a3b8; display: flex; align-items: center;">
+                                <svg style="width: 15px; height: 15px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                            </span>
+                            <input type="text" id="cust-search-input" placeholder="9841234567 / 9818765432" style="width: 100%; height: 38px; border: 1px solid #cbd5e1; border-radius: 8px; padding-left: 38px; padding-right: 12px; font-size: 0.82rem; background: #ffffff; color: #0f172a; outline: none; box-sizing: border-box;">
                         </div>
-                        <button type="button" onclick="window.searchCustomer()" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-purple-600 text-purple-600 hover:bg-purple-50 text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap">
-                            <svg class="w-3.5 h-3.5 blanxer-icon-xs" style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        <button type="button" onclick="window.searchCustomer()" style="height: 38px; padding: 0 16px; border: 1px solid #7c3aed; background: #f5f3ff; color: #7c3aed; border-radius: 8px; font-weight: 700; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap; flex-shrink: 0;">
+                            <svg class="blanxer-icon-xs" style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                             <span>Search Customer</span>
                         </button>
-                        <button type="button" onclick="window.openCustomItemPrompt()" class="px-3 py-2 rounded-lg bg-pink-50 border border-pink-200 text-pink-600 hover:bg-pink-100 text-xs font-semibold transition-colors whitespace-nowrap cursor-pointer">
-                            Add Custom Item
+                        <button type="button" onclick="window.openCustomItemPrompt()" style="height: 38px; padding: 0 14px; border: 1px solid #fbcfe8; background: #fdf2f8; color: #db2777; border-radius: 8px; font-weight: 700; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap; flex-shrink: 0;">
+                            <span>Add Custom Item</span>
                         </button>
                     </div>
 
@@ -391,16 +391,16 @@
                         </div>
                         <div>
                             <label class="block font-semibold text-gray-700 mb-1">Discount</label>
-                            <div class="relative">
-                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 text-xs">Rs.</span>
-                                <input type="number" id="order-discount" value="0" min="0" oninput="window.recalcTotal()" class="blanxer-input blanxer-input-icon">
+                            <div style="display: flex; align-items: center; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; background: #ffffff; height: 38px;">
+                                <span style="padding: 0 10px; background: #f8fafc; border-right: 1px solid #e2e8f0; color: #64748b; font-size: 0.78rem; font-weight: 700; height: 100%; display: flex; align-items: center;">Rs.</span>
+                                <input type="number" id="order-discount" value="0" min="0" oninput="window.recalcTotal()" style="border: none; outline: none; padding: 0 10px; width: 100%; height: 100%; font-size: 0.85rem; color: #0f172a; background: transparent; box-sizing: border-box;">
                             </div>
                         </div>
                         <div>
                             <label class="block font-semibold text-gray-700 mb-1">Delivery Charge</label>
-                            <div class="relative">
-                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 text-xs">Rs.</span>
-                                <input type="text" id="order-delivery-charge" placeholder="Auto" value="0" class="blanxer-input blanxer-input-icon">
+                            <div style="display: flex; align-items: center; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; background: #ffffff; height: 38px;">
+                                <span style="padding: 0 10px; background: #f8fafc; border-right: 1px solid #e2e8f0; color: #64748b; font-size: 0.78rem; font-weight: 700; height: 100%; display: flex; align-items: center;">Rs.</span>
+                                <input type="text" id="order-delivery-charge" placeholder="Auto" value="0" oninput="window.recalcTotal()" style="border: none; outline: none; padding: 0 10px; width: 100%; height: 100%; font-size: 0.85rem; color: #0f172a; background: transparent; box-sizing: border-box;">
                             </div>
                         </div>
                     </div>

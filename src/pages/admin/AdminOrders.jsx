@@ -83,7 +83,7 @@ export default function AdminOrders() {
   };
 
   const handleSearchCustomer = async (phoneVal) => {
-    const raw = phoneVal !== undefined ? phoneVal : customerSearchPhone;
+    const raw = (phoneVal !== undefined && phoneVal !== '') ? phoneVal : (customerSearchPhone || (typeof document !== 'undefined' && document.querySelector('input[placeholder*="phone"]')?.value) || '');
     const clean = (raw || '').replace(/\D/g, '');
     if (!clean || clean.length < 5) {
       alert('Please enter a valid phone number (at least 7-10 digits).');
@@ -152,15 +152,17 @@ export default function AdminOrders() {
 
   const handleSaveNewCustomer = async (e) => {
     e?.preventDefault();
-    if (!newCustForm.name.trim() || !newCustForm.phone.trim()) {
+    const nameToSave = (newCustForm.name || (typeof document !== 'undefined' && document.querySelector('input[placeholder*="Aarav"]')?.value) || '').trim();
+    const phoneToSave = (newCustForm.phone || (typeof document !== 'undefined' && document.querySelector('input[placeholder*="phone"]')?.value) || '').trim();
+    if (!nameToSave || !phoneToSave) {
       alert('Full Name and Phone Number are required.');
       return;
     }
     setIsSubmitting(true);
     try {
       let savedCust = {
-        name: newCustForm.name.trim(),
-        phone: newCustForm.phone.trim(),
+        name: nameToSave,
+        phone: phoneToSave,
         email: newCustForm.email.trim(),
         altPhone: newCustForm.altPhone.trim(),
         district: newCustForm.district || 'Kathmandu Inside Ring Road',
@@ -339,7 +341,10 @@ export default function AdminOrders() {
   // ── Duplicate Order Guard & Submission ──
   const handleInitiateOrder = (e) => {
     e?.preventDefault();
-    if (!formData.fullName?.trim() || !formData.phone?.trim()) {
+    const orderPhone = (formData.phone || selectedCustomer?.phone || (typeof document !== 'undefined' && document.querySelector('input[placeholder*="phone"]')?.value) || '').trim();
+    const orderName = (formData.fullName || selectedCustomer?.name || selectedCustomer?.fullName || (typeof document !== 'undefined' && document.querySelector('input[placeholder*="Aarav"]')?.value) || '').trim();
+    const orderAddr = (formData.address || (typeof document !== 'undefined' && document.querySelector('input[placeholder*="Baluwatar"]')?.value) || '').trim();
+    if (!orderName || !orderPhone) {
       alert('Please provide customer name and phone number.');
       return;
     }
@@ -377,13 +382,13 @@ export default function AdminOrders() {
     try {
       await createManualOrder({
         customer: {
-          fullName: formData.fullName.trim(),
-          phone: formData.phone.trim(),
+          fullName: orderName,
+          phone: orderPhone,
           email: (formData.email || '').trim(),
           whatsapp: (formData.whatsapp || formData.phone || '').trim(),
           district: formData.district,
           city: formData.district,
-          address: (formData.address || '').trim(),
+          address: orderAddr,
           landmark: (formData.landmark || '').trim(),
           altPhone: (formData.altPhone || '').trim(),
           note: (formData.note || '').trim(),

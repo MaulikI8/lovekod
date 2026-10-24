@@ -393,11 +393,21 @@ export function StoreProvider({ children }) {
       });
       if (res.ok) {
         const saved = await res.json();
-        setCategories(prev => [...prev, saved]);
+        setCategories(prev => {
+          const next = [...prev, saved];
+          saveState('lovekod_categories', next);
+          return next;
+        });
+        return saved;
       }
-    } catch {
-      setCategories(prev => [...prev, { ...newCat, id: Date.now() }]);
-    }
+    } catch { /* offline fallback */ }
+    const fallback = { ...newCat, id: Date.now() };
+    setCategories(prev => {
+      const next = [...prev, fallback];
+      saveState('lovekod_categories', next);
+      return next;
+    });
+    return fallback;
   }
 
   async function updateCategory(id, updated) {

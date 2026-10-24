@@ -1,17 +1,25 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useStore } from '../../context/StoreContext';
 
 export default function AdminProducts() {
-  const { products, categories, addProduct, deleteProduct } = useStore();
+  const { products, categories, addProduct, deleteProduct, addCategory } = useStore();
   const [activeTab, setActiveTab] = useState('Active'); // Active, Draft, Archived
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [currentStep, setCurrentStep] = useState(1); // 1: General Info, 2: Variants & Inventory, 3: Custom Fields
 
-  // Form State for Step 1
+  // Multi-Category dropdown state
+  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // Separate "Add New Category" modal inside Add Product
+  const [showAddCatModal, setShowAddCatModal] = useState(false);
+  const [newCatForm, setNewCatForm] = useState({ name: '', slug: '', order: 1 });
+
+  // Form State
   const [form, setForm] = useState({
     name: '',
-    categoryId: categories?.[0]?.id || '',
+    categoryIds: [],
     shortDescription: '',
     longDescription: '',
     image: '',
@@ -35,6 +43,17 @@ export default function AdminProducts() {
   const [errors, setErrors] = useState({});
   const fileInputRef = useRef(null);
 
+  // Close category dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setCategoryDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   // Filter products by tab status and search query
   const filteredProducts = (products || []).filter(p => {
     const status = p.status || 'Active';
@@ -51,14 +70,68 @@ export default function AdminProducts() {
     return true;
   });
 
+  // Toggle Category selection (multi-select)
+  const toggleCategory = (catId) => {
+    setForm(prev => {
+      const exists = prev.categoryIds.includes(catId);
+      const updated = exists
+        ? prev.categoryIds.filter(id => id !== catId)
+        : [...prev.categoryIds, catId];
+      return { ...prev, categoryIds: updated };
+    });
+    if (errors.categoryIds) {
+      setErrors(prev => ({ ...prev, categoryIds: null }));
+    }
+  };
+
+  const removeCategory = (catId) => {
+    setForm(prev => ({
+      ...prev,
+      categoryIds: prev.categoryIds.filter(id => id !== catId),
+    }));
+  };
+
+  const clearAllCategories = (e) => {
+    e.stopPropagation();
+    setForm(prev => ({ ...prev, categoryIds: [] }));
+  };
+
+  // Handle adding new category from modal
+  const handleCreateCategory = async (e) => {
+    e.preventDefault();
+    if (!newCatForm.name.trim()) return;
+
+    const payload = {
+      name: newCatForm.name.trim(),
+      slug: newCatForm.slug.trim() || newCatForm.name.trim().toLowerCase().replace(/\s+/g, '-'),
+      order: parseInt(newCatForm.order, 10) || (categories?.length || 0) + 1,
+      isActive: true,
+    };
+
+    const saved = await addCategory(payload);
+    const newId = saved?.id || payload.name;
+
+    // Automatically select the new category in multi-select
+    setForm(prev => ({
+      ...prev,
+      categoryIds: prev.categoryIds.includes(newId) ? prev.categoryIds : [...prev.categoryIds, newId],
+    }));
+    if (errors.categoryIds) {
+      setErrors(prev => ({ ...prev, categoryIds: null }));
+    }
+
+    setNewCatForm({ name: '', slug: '', order: (categories?.length || 0) + 2 });
+    setShowAddCatModal(false);
+  };
+
   // Validation for Step 1
   const validateStep1 = () => {
     const newErrors = {};
     if (!form.name.trim()) {
       newErrors.name = 'Product name is required';
     }
-    if (!form.categoryId) {
-      newErrors.categoryId = 'Please select a category';
+    if (!form.categoryIds || form.categoryIds.length === 0) {
+      newErrors.categoryIds = 'Please select at least one category';
     }
     if (!form.shortDescription.trim()) {
       newErrors.shortDescription = 'Product description is required';
@@ -114,7 +187,8 @@ export default function AdminProducts() {
 
     addProduct({
       name: form.name,
-      categoryId: form.categoryId,
+      categoryId: form.categoryIds[0] || '',
+      categoryIds: form.categoryIds,
       description: form.shortDescription,
       longDescription: form.longDescription,
       image: form.image || '/images/kurtha-charcoal.jpg',
@@ -131,7 +205,7 @@ export default function AdminProducts() {
     setCurrentStep(1);
     setForm({
       name: '',
-      categoryId: categories?.[0]?.id || '',
+      categoryIds: [],
       shortDescription: '',
       longDescription: '',
       image: '',
@@ -660,61 +734,186 @@ export default function AdminProducts() {
                     )}
                   </div>
 
-                  {/* Field 2: Categories */}
-                  <div style={{ marginBottom: '16px' }}>
+                  {/* Field 2: Categories (CANVA EXACT MULTI-SELECT CHIPS + MODAL POPUP) */}
+                  <div style={{ marginBottom: '16px' }} ref={dropdownRef}>
                     <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
                       Categories <span style={{ color: '#ef4444' }}>*</span>
                     </label>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <select
-                        value={form.categoryId}
-                        onChange={e => {
-                          setForm({ ...form, categoryId: e.target.value });
-                          if (errors.categoryId) setErrors({ ...errors, categoryId: null });
-                        }}
+                    
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+                      
+                      {/* Multi-Select Box */}
+                      <div
+                        onClick={() => setCategoryDropdownOpen(!categoryDropdownOpen)}
                         style={{
                           flex: 1,
-                          padding: '10px 14px',
+                          position: 'relative',
+                          minHeight: '44px',
+                          padding: '6px 12px',
                           borderRadius: '8px',
-                          border: errors.categoryId ? '1.5px solid #ef4444' : '1px solid #e2e8f0',
-                          fontSize: '13.5px',
-                          outline: 'none',
+                          border: errors.categoryIds ? '1.5px solid #ef4444' : '1px solid #e2e8f0',
                           background: '#ffffff',
+                          display: 'flex',
+                          flexWrap: 'wrap',
+                          alignItems: 'center',
+                          gap: '6px',
+                          cursor: 'pointer',
                           boxSizing: 'border-box',
                         }}
                       >
-                        <option value="">Select product categories</option>
-                        {(categories || []).map(cat => (
-                          <option key={cat.id} value={cat.id}>
-                            {cat.name}
-                          </option>
-                        ))}
-                      </select>
+                        {/* Selected Category Chips (Exact Canva design) */}
+                        {form.categoryIds.length > 0 ? (
+                          form.categoryIds.map(catId => {
+                            const cat = (categories || []).find(c => String(c.id) === String(catId) || c.name === catId);
+                            const displayName = cat ? cat.name : catId;
+                            return (
+                              <span
+                                key={catId}
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '6px',
+                                  padding: '4px 8px',
+                                  background: '#f1f5f9',
+                                  borderRadius: '6px',
+                                  fontSize: '12.5px',
+                                  color: '#1e293b',
+                                  fontWeight: 500,
+                                }}
+                              >
+                                <span>{displayName}</span>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    removeCategory(catId);
+                                  }}
+                                  style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    padding: '0 2px',
+                                    color: '#64748b',
+                                    cursor: 'pointer',
+                                    fontSize: '12px',
+                                    lineHeight: 1,
+                                    fontWeight: 700,
+                                  }}
+                                >
+                                  ✕
+                                </button>
+                              </span>
+                            );
+                          })
+                        ) : (
+                          <span style={{ color: '#94a3b8', fontSize: '13px' }}>
+                            Select product categories
+                          </span>
+                        )}
+
+                        {/* Right side icons: Clear All + Chevron Up/Down */}
+                        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px', color: '#94a3b8' }}>
+                          {form.categoryIds.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={clearAllCategories}
+                              title="Clear all"
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                color: '#94a3b8',
+                                cursor: 'pointer',
+                                padding: '2px',
+                                fontSize: '12px',
+                                lineHeight: 1,
+                              }}
+                            >
+                              ✕
+                            </button>
+                          )}
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="7 15 12 20 17 15" />
+                            <polyline points="7 9 12 4 17 9" />
+                          </svg>
+                        </div>
+
+                        {/* Dropdown Menu */}
+                        {categoryDropdownOpen && (
+                          <div style={{
+                            position: 'absolute',
+                            top: '100%',
+                            left: 0,
+                            right: 0,
+                            marginTop: '4px',
+                            background: '#ffffff',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '8px',
+                            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                            zIndex: 50,
+                            maxHeight: '220px',
+                            overflowY: 'auto',
+                            padding: '4px 0',
+                          }}>
+                            {(categories || []).map(cat => {
+                              const isSelected = form.categoryIds.some(id => String(id) === String(cat.id) || id === cat.name);
+                              return (
+                                <div
+                                  key={cat.id}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleCategory(cat.id);
+                                  }}
+                                  style={{
+                                    padding: '8px 14px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    cursor: 'pointer',
+                                    background: isSelected ? '#f8fafc' : 'transparent',
+                                    fontSize: '13px',
+                                    color: isSelected ? '#7952eb' : '#0f172a',
+                                    fontWeight: isSelected ? 600 : 500,
+                                    transition: 'background 0.12s ease',
+                                  }}
+                                  onMouseEnter={e => { e.currentTarget.style.background = '#f8fafc'; }}
+                                  onMouseLeave={e => { e.currentTarget.style.background = isSelected ? '#f8fafc' : 'transparent'; }}
+                                >
+                                  <span>{cat.name}</span>
+                                  {isSelected && (
+                                    <span style={{ color: '#7952eb', fontWeight: 700, fontSize: '13px' }}>✓</span>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* + Add Button (Opens Real Add Category Modal) */}
                       <button
                         type="button"
-                        onClick={() => {
-                          const newCatName = prompt('Enter new category name:');
-                          if (newCatName && newCatName.trim()) {
-                            alert(`Category "${newCatName}" can be selected!`);
-                          }
-                        }}
+                        onClick={() => setShowAddCatModal(true)}
                         style={{
                           background: '#f3effe',
                           color: '#7952eb',
                           border: 'none',
                           borderRadius: '8px',
-                          padding: '0 16px',
+                          padding: '11px 18px',
                           fontSize: '13px',
                           fontWeight: 600,
                           cursor: 'pointer',
+                          whiteSpace: 'nowrap',
+                          transition: 'opacity 0.15s ease',
                         }}
+                        onMouseEnter={e => { e.currentTarget.style.opacity = '0.85'; }}
+                        onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
                       >
                         + Add
                       </button>
                     </div>
-                    {errors.categoryId && (
+
+                    {errors.categoryIds && (
                       <span style={{ fontSize: '11px', color: '#ef4444', display: 'block', marginTop: '4px' }}>
-                        {errors.categoryId}
+                        {errors.categoryIds}
                       </span>
                     )}
                   </div>
@@ -856,7 +1055,6 @@ export default function AdminProducts() {
                         onMouseEnter={e => { e.currentTarget.style.borderColor = '#7952eb'; e.currentTarget.style.background = '#faf8ff'; }}
                         onMouseLeave={e => { if (!errors.image) { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.background = '#fbfbfd'; } }}
                       >
-                        {/* Image Plus Icon from Canva */}
                         <div style={{ color: '#94a3b8', marginBottom: '8px' }}>
                           <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
                             <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
@@ -1063,6 +1261,13 @@ export default function AdminProducts() {
                     </h4>
                     <div style={{ fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                       <div><strong>Name:</strong> {form.name}</div>
+                      <div>
+                        <strong>Categories:</strong>{' '}
+                        {form.categoryIds.map(id => {
+                          const cat = (categories || []).find(c => String(c.id) === String(id) || c.name === id);
+                          return cat ? cat.name : id;
+                        }).join(', ') || 'None'}
+                      </div>
                       <div><strong>Price:</strong> NPR {form.price.toLocaleString()}</div>
                       <div><strong>Status:</strong> {form.status}</div>
                       <div><strong>Total Stock:</strong> {form.variants.reduce((a, b) => a + (parseInt(b.stock, 10) || 0), 0)} units</div>
@@ -1109,6 +1314,102 @@ export default function AdminProducts() {
               )}
 
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══ 6. NESTED "ADD CATEGORY" MODAL (PIXEL PERFECT REPLACEMENT FOR PROMPT) ══ */}
+      {showAddCatModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(15, 23, 42, 0.6)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1200, // Above Add Product modal
+          padding: '20px',
+        }}>
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '16px',
+            maxWidth: '460px',
+            width: '100%',
+            padding: '24px',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
+              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: '#0f172a' }}>
+                Add New Category
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowAddCatModal(false)}
+                style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '18px', cursor: 'pointer', padding: 0 }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateCategory}>
+              <div style={{ marginBottom: '14px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
+                  Category Name <span style={{ color: '#ef4444' }}>*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  autoFocus
+                  placeholder="e.g. Silk Blend Kurthas"
+                  value={newCatForm.name}
+                  onChange={e => setNewCatForm({ ...newCatForm, name: e.target.value })}
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '13.5px', color: '#0f172a', outline: 'none', boxSizing: 'border-box' }}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
+                    Slug
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="silk-blend"
+                    value={newCatForm.slug}
+                    onChange={e => setNewCatForm({ ...newCatForm, slug: e.target.value })}
+                    style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '13.5px', color: '#0f172a', outline: 'none', boxSizing: 'border-box' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
+                    Display Order
+                  </label>
+                  <input
+                    type="number"
+                    value={newCatForm.order}
+                    onChange={e => setNewCatForm({ ...newCatForm, order: parseInt(e.target.value, 10) || 1 })}
+                    style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '13.5px', color: '#0f172a', outline: 'none', boxSizing: 'border-box' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowAddCatModal(false)}
+                  style={{ padding: '9px 16px', borderRadius: '8px', border: '1px solid #e5e7eb', background: '#ffffff', color: '#64748b', cursor: 'pointer', fontSize: '13px', fontWeight: 500 }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  style={{ padding: '9px 20px', borderRadius: '8px', border: 'none', background: '#7952eb', color: '#ffffff', fontWeight: 600, cursor: 'pointer', fontSize: '13px' }}
+                >
+                  Create Category
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

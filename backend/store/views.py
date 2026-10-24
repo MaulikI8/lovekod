@@ -794,29 +794,62 @@ def order_detail_update(request, order_id):
     elif request.method in ['PATCH', 'PUT']:
         try:
             data = json.loads(request.body.decode('utf-8'))
-            update_fields = []
+            customer = data.get('customer') or {}
+            
+            if customer or 'customerName' in data or 'phone' in data:
+                c_name = customer.get('fullName') or customer.get('name') or data.get('customerName') or data.get('customer_name')
+                if c_name: order.customer_name = c_name
+                c_phone = customer.get('phone') or data.get('phone')
+                if c_phone: order.phone = c_phone
+                c_email = customer.get('email') or data.get('email')
+                if c_email is not None: order.email = c_email
+                c_wa = customer.get('whatsapp') or data.get('whatsapp')
+                if c_wa is not None: order.whatsapp = c_wa
+                c_dist = customer.get('district') or data.get('district')
+                if c_dist: order.district = c_dist
+                c_city = customer.get('city') or data.get('city')
+                if c_city: order.city = c_city
+                c_addr = customer.get('address') or data.get('address')
+                if c_addr: order.address = c_addr
+                c_note = customer.get('note') or data.get('note')
+                if c_note is not None: order.note = c_note
+
+            if 'paymentMethod' in data or 'payment_method' in data:
+                order.payment_method = data.get('paymentMethod') or data.get('payment_method')
+            if 'channel' in data:
+                order.channel = data['channel']
+            if 'total' in data:
+                order.total = int(data['total'])
+            if 'discountAmount' in data or 'discount_amount' in data:
+                order.discount_amount = int(data.get('discountAmount') or data.get('discount_amount') or 0)
             if 'payment_status' in data or 'paymentStatus' in data:
                 order.payment_status = data.get('payment_status') or data.get('paymentStatus')
-                update_fields.append('payment_status')
             if 'status' in data:
                 old_status = order.status
                 new_status = data['status']
                 order.status = new_status
-                update_fields.append('status')
                 if new_status == 'Cancelled' and old_status != 'Cancelled':
                     for item in order.items.all():
                         item.restore_inventory()
                 elif old_status == 'Cancelled' and new_status != 'Cancelled':
                     for item in order.items.all():
                         item.deduct_inventory()
-            if update_fields:
-                order.save(update_fields=update_fields)
-                if new_status == 'Cancelled' and old_status != 'Cancelled':
-                    for item in order.items.all():
-                        item.restore_inventory()
-                elif old_status == 'Cancelled' and new_status != 'Cancelled':
-                    for item in order.items.all():
-                        item.deduct_inventory()
+
+            # If items are updated
+            if 'items' in data and isinstance(data['items'], list) and len(data['items']) > 0:
+                order.items.all().delete()
+                for item_data in data['items']:
+                    OrderItem.objects.create(
+                        order=order,
+                        title=item_data.get('title') or item_data.get('name') or 'Item',
+                        price=int(item_data.get('price') or item_data.get('sellingPrice') or 0),
+                        quantity=int(item_data.get('quantity') or 1),
+                        size=item_data.get('size') or item_data.get('variant') or 'M',
+                        color=item_data.get('color', ''),
+                        image=item_data.get('image', '/images/kurtha-charcoal.jpg'),
+                    )
+
+            order.save()
             return JsonResponse(order.to_dict())
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)

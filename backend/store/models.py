@@ -836,6 +836,7 @@ class Order(models.Model):
             "channel": self.channel,
             "isDeleted": self.is_deleted,
             "createdAt": self.created_at.isoformat(),
+            "updatedAt": self.created_at.isoformat(),
         }
 
     def __str__(self):

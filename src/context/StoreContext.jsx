@@ -614,6 +614,45 @@ export function StoreProvider({ children }) {
     return updateOrderStatus(orderId, { paymentStatus, payment_status: paymentStatus });
   }
 
+  async function updateOrder(updatedOrder) {
+    const id = updatedOrder.id;
+    setOrders(prev => {
+      const next = prev.map(o => String(o.id) === String(id) ? { ...o, ...updatedOrder } : o);
+      saveState('lovekod_orders', next);
+      return next;
+    });
+    showToast(`Order #${String(id).replace(/^ORD-/, '').replace(/^#/, '')} updated successfully`);
+
+    try {
+      const res = await fetch(`${API_BASE}/orders/${id}/`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedOrder),
+      });
+      if (res.ok) {
+        const saved = await res.json();
+        setOrders(prev => {
+          const next = prev.map(o => String(o.id) === String(id) ? { ...o, ...saved } : o);
+          saveState('lovekod_orders', next);
+          return next;
+        });
+      }
+    } catch { /* offline fallback */ }
+  }
+
+  async function deleteOrder(orderId) {
+    setOrders(prev => {
+      const next = prev.filter(o => String(o.id) !== String(orderId));
+      saveState('lovekod_orders', next);
+      return next;
+    });
+    showToast(`Order #${String(orderId).replace(/^ORD-/, '').replace(/^#/, '')} deleted`);
+
+    try {
+      await fetch(`${API_BASE}/orders/${orderId}/`, { method: 'DELETE' });
+    } catch { /* offline fallback */ }
+  }
+
   async function adminLogin(password) {
     if (password === 'lovekod2026') {
       setIsAdmin(true);
@@ -726,7 +765,7 @@ export function StoreProvider({ children }) {
     addCategory, updateCategory, deleteCategory,
     addFestivalMoment, updateFestivalMoment, deleteFestivalMoment,
     addTestimonial, updateTestimonial, deleteTestimonial,
-    updateProduct, addProduct, deleteProduct, createManualOrder, updateOrderStatus, updateOrderPaymentStatus,
+    updateProduct, addProduct, deleteProduct, createManualOrder, updateOrderStatus, updateOrderPaymentStatus, updateOrder, deleteOrder,
     lookupCustomer, addCustomer, updateCustomer, deleteCustomer,
     adminLogin, adminLogout, showToast, resetInventory, refreshFromBackend,
   };

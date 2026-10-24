@@ -1,16 +1,25 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { WhatsAppIcon } from '../../components/Icons';
 import LocationAutocomplete from '../../components/common/LocationAutocomplete';
 
 export default function AdminOrders() {
-  const { orders = [], updateOrderStatus, updateOrderPaymentStatus, products = [], createManualOrder, lookupCustomer, addCustomer, customers = [] } = useStore();
+  const { orders = [], updateOrderStatus, updateOrderPaymentStatus, products = [], createManualOrder, updateOrder, deleteOrder, lookupCustomer, addCustomer, customers = [] } = useStore();
   const [statusFilter, setStatusFilter] = useState('All');
   const [dateFilter, setDateFilter] = useState('Last 7 Days');
   const [search, setSearch] = useState('');
   const [selectedOrderIds, setSelectedOrderIds] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [previewOrder, setPreviewOrder] = useState(null);
+  const [editingOrder, setEditingOrder] = useState(null);
+  const [actionMenuOpenId, setActionMenuOpenId] = useState(null);
+  const [orderToDelete, setOrderToDelete] = useState(null);
+
+  useEffect(() => {
+    const handleCloseMenu = () => setActionMenuOpenId(null);
+    window.addEventListener('click', handleCloseMenu);
+    return () => window.removeEventListener('click', handleCloseMenu);
+  }, []);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showProductPicker, setShowProductPicker] = useState(false);
   const [activePreviewTab, setActivePreviewTab] = useState('Comments');
@@ -374,6 +383,61 @@ export default function AdminOrders() {
   const deliveryChargeVal = Math.max(0, parseFloat(formData.deliveryCharge) || 0);
   const grandTotal = Math.max(0, calculatedItemsTotal - orderDiscountAmount) + deliveryChargeVal;
 
+
+  const openEditOrder = (order) => {
+    const cust = order.customer || {};
+    const name = cust.fullName || cust.name || order.customer_name || order.customerName || '';
+    const phone = cust.phone || order.phone || '';
+    const email = cust.email || order.email || '';
+    const whatsapp = cust.whatsapp || order.whatsapp || phone;
+    const district = cust.district || order.district || 'Kathmandu Inside Ring Road';
+    const address = cust.address || order.address || '';
+    const landmark = cust.landmark || order.landmark || '';
+    const altPhone = cust.altPhone || order.altPhone || '';
+    const note = cust.note || order.note || '';
+
+    setEditingOrder(order);
+    setSelectedCustomer({
+      name,
+      fullName: name,
+      phone,
+      email,
+      district,
+      address,
+      landmark,
+      altPhone,
+    });
+    setFormData({
+      phone,
+      fullName: name,
+      email,
+      whatsapp,
+      district,
+      address,
+      landmark,
+      altPhone,
+      note,
+      discount: order.discountAmount || order.discount_amount || 0,
+      deliveryCharge: order.deliveryCharge !== undefined ? order.deliveryCharge : 150,
+      paymentMethod: order.paymentMethod || order.payment_method || 'COD',
+      paymentStatus: order.paymentStatus || order.payment_status || 'Unpaid',
+      status: order.status || 'Pending',
+      channel: order.channel || 'WhatsApp',
+      items: (order.items || []).map(it => ({
+        id: it.id || it.product_id || it.productId || Date.now(),
+        title: it.title || it.name || '',
+        price: it.price || it.sellingPrice || 0,
+        sellingPrice: it.price || it.sellingPrice || 0,
+        quantity: it.quantity || 1,
+        size: it.size || it.variant || 'M',
+        color: it.color || '',
+        image: it.image || '/images/kurtha-charcoal.jpg',
+        discount: it.discount || 0,
+      })),
+    });
+    setShowCreateModal(true);
+  };
+
   // ── Duplicate Order Guard & Submission ──
   const handleInitiateOrder = (e) => {
     e?.preventDefault();
@@ -386,6 +450,60 @@ export default function AdminOrders() {
     }
     if ((formData.items || []).length === 0) {
       alert('Please add at least one product or custom item to the order.');
+      return;
+    }
+
+    if (editingOrder) {
+      setIsSubmitting(true);
+      (async () => {
+        try {
+          const updated = {
+            id: editingOrder.id,
+            customer: {
+              fullName: orderName,
+              phone: orderPhone,
+              email: (formData.email || '').trim(),
+              whatsapp: (formData.whatsapp || formData.phone || '').trim(),
+              district: formData.district,
+              city: formData.district,
+              address: orderAddr,
+              landmark: (formData.landmark || '').trim(),
+              altPhone: (formData.altPhone || '').trim(),
+              note: (formData.note || '').trim(),
+              paymentMethod: formData.paymentMethod,
+            },
+            customerName: orderName,
+            phone: orderPhone,
+            email: (formData.email || '').trim(),
+            whatsapp: (formData.whatsapp || formData.phone || '').trim(),
+            district: formData.district,
+            city: formData.district,
+            address: orderAddr,
+            landmark: (formData.landmark || '').trim(),
+            altPhone: (formData.altPhone || '').trim(),
+            note: (formData.note || '').trim(),
+            paymentMethod: formData.paymentMethod,
+            paymentStatus: formData.paymentStatus,
+            payment_status: formData.paymentStatus,
+            status: formData.status || 'Pending',
+            channel: formData.channel || 'WhatsApp',
+            items: formData.items,
+            total: grandTotal,
+            discountAmount: orderDiscountAmount,
+            deliveryCharge: deliveryChargeVal,
+            updatedAt: new Date().toISOString(),
+          };
+          await updateOrder(updated);
+          setShowCreateModal(false);
+          setEditingOrder(null);
+          setFormData(initialForm);
+          setSelectedCustomer(null);
+        } catch (err) {
+          alert('Failed to update order: ' + err.message);
+        } finally {
+          setIsSubmitting(false);
+        }
+      })();
       return;
     }
 
@@ -702,8 +820,21 @@ export default function AdminOrders() {
         </div>
       ) : (
         <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.8rem' }}>
+          <div style={{
+            padding: '6px 14px',
+            background: '#f8fafc',
+            borderBottom: '1px solid #e2e8f0',
+            fontSize: '0.74rem',
+            color: '#64748b',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px'
+          }}>
+            <span>↔️</span>
+            <span>Table is scrollable sideways on smaller screens</span>
+          </div>
+          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+            <table style={{ width: '100%', minWidth: '1080px', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.8rem' }}>
               <thead>
                 <tr style={{ background: '#f8fafc', borderBottom: '1.5px solid #e2e8f0', color: '#64748b', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   <th style={{ padding: '10px 12px', width: '32px' }}>
@@ -788,7 +919,7 @@ export default function AdminOrders() {
                   return (
                     <tr
                       key={order.id}
-                      onClick={() => setPreviewOrder(order)}
+                      onClick={() => openEditOrder(order)}
                       style={{
                         borderBottom: '1px solid #f1f5f9',
                         cursor: 'pointer',
@@ -916,25 +1047,110 @@ export default function AdminOrders() {
                       </td>
 
                       {/* 12. Actions */}
-                      <td style={{ padding: '10px 12px', textAlign: 'center' }}>
+                      <td style={{ padding: '10px 12px', textAlign: 'center', position: 'relative' }} onClick={e => e.stopPropagation()}>
                         <button
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setPreviewOrder(order);
+                            setActionMenuOpenId(actionMenuOpenId === order.id ? null : order.id);
                           }}
                           style={{
-                            background: '#f8fafc',
-                            border: '1px solid #e2e8f0',
-                            borderRadius: '4px',
-                            padding: '2px 8px',
-                            color: '#64748b',
+                            background: actionMenuOpenId === order.id ? '#ede9fe' : '#ffffff',
+                            border: '1px solid #cbd5e1',
+                            borderRadius: '6px',
+                            width: '32px',
+                            height: '32px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#475569',
                             cursor: 'pointer',
-                            fontSize: '0.8rem'
+                            fontSize: '1rem',
+                            fontWeight: 700,
+                            boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                            transition: 'all 0.15s ease'
                           }}
+                          title="Actions"
                         >
                           ···
                         </button>
+
+                        {actionMenuOpenId === order.id && (
+                          <div
+                            onClick={e => e.stopPropagation()}
+                            style={{
+                              position: 'absolute',
+                              right: '12px',
+                              top: '42px',
+                              zIndex: 50,
+                              background: '#ffffff',
+                              border: '1px solid #e2e8f0',
+                              borderRadius: '8px',
+                              boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)',
+                              minWidth: '150px',
+                              padding: '4px',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '2px',
+                              textAlign: 'left'
+                            }}
+                          >
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setActionMenuOpenId(null);
+                                openEditOrder(order);
+                              }}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                width: '100%',
+                                padding: '8px 12px',
+                                background: 'none',
+                                border: 'none',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontSize: '0.82rem',
+                                fontWeight: 600,
+                                color: '#1e293b',
+                                textAlign: 'left',
+                                transition: 'background 0.12s ease'
+                              }}
+                              onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'}
+                              onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                            >
+                              <span>✏️</span> Edit Order
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setActionMenuOpenId(null);
+                                setOrderToDelete(order);
+                              }}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                width: '100%',
+                                padding: '8px 12px',
+                                background: 'none',
+                                border: 'none',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontSize: '0.82rem',
+                                fontWeight: 600,
+                                color: '#dc2626',
+                                textAlign: 'left',
+                                transition: 'background 0.12s ease'
+                              }}
+                              onMouseEnter={e => e.currentTarget.style.background = '#fee2e2'}
+                              onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                            >
+                              <span>🗑️</span> Delete Order
+                            </button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   );
@@ -981,10 +1197,10 @@ export default function AdminOrders() {
             }}>
               <div>
                 <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span>+</span> Create Order
+                  <span>{editingOrder ? '✏️' : '+'}</span> {editingOrder ? `Edit Order #${String(editingOrder.id).replace(/^ORD-/, '').replace(/^#/, '')}` : 'Create Order'}
                 </h3>
                 <p style={{ margin: '3px 0 0', fontSize: '0.78rem', color: '#64748b' }}>
-                  Auto-increments sequential ID (#1001, #1002...) • Blanxer Workflow
+                  {editingOrder ? 'Modify customer details, items, pricing, payment, and fulfillment status' : 'Auto-increments sequential ID (#1001, #1002...) • Blanxer Workflow'}
                 </p>
               </div>
               <button
@@ -1637,7 +1853,33 @@ export default function AdminOrders() {
                     Payment & Status
                   </span>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.74rem', fontWeight: 700, color: '#475569', marginBottom: '4px' }}>
+                        Order Status
+                      </label>
+                      <select
+                        value={formData.status || 'Pending'}
+                        onChange={e => setFormData({ ...formData, status: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '8px 10px',
+                          borderRadius: '6px',
+                          border: '1px solid #cbd5e1',
+                          fontSize: '0.84rem',
+                          fontWeight: 700,
+                          background: '#ffffff',
+                          color: formData.status === 'Delivered' ? '#16a34a' : (formData.status === 'Cancelled' ? '#dc2626' : (formData.status === 'Processing' ? '#2563eb' : '#d97706'))
+                        }}
+                      >
+                        <option value="Pending">Pending</option>
+                        <option value="Confirmed">Confirmed</option>
+                        <option value="Processing">Processing</option>
+                        <option value="Delivered">Delivered</option>
+                        <option value="Cancelled">Cancelled</option>
+                      </select>
+                    </div>
+
                     <div>
                       <label style={{ display: 'block', fontSize: '0.74rem', fontWeight: 700, color: '#475569', marginBottom: '4px' }}>
                         Payment Status
@@ -1762,7 +2004,7 @@ export default function AdminOrders() {
                       boxShadow: '0 4px 6px -1px rgba(124, 58, 237, 0.3)'
                     }}
                   >
-                    {isSubmitting ? 'Creating Order...' : 'Create Order'}
+                    {isSubmitting ? (editingOrder ? 'Saving...' : 'Creating Order...') : (editingOrder ? 'Save Changes' : 'Create Order')}
                   </button>
                 </div>
               </div>
@@ -2272,6 +2514,92 @@ export default function AdminOrders() {
           </div>
         </div>
       )}
+
+      {/* ══ DELETE ORDER CONFIRMATION MODAL ══ */}
+      {orderToDelete && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(15, 23, 42, 0.75)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1100,
+          padding: '16px'
+        }}>
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '14px',
+            width: '100%',
+            maxWidth: '420px',
+            padding: '24px',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2)',
+            border: '1px solid #e2e8f0',
+            textAlign: 'center'
+          }}>
+            <div style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '50%',
+              background: '#fee2e2',
+              color: '#dc2626',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '1.5rem',
+              margin: '0 auto 14px'
+            }}>
+              🗑️
+            </div>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', margin: '0 0 8px 0' }}>
+              Delete Order #{String(orderToDelete.id).replace(/^ORD-/, '').replace(/^#/, '')}?
+            </h3>
+            <p style={{ fontSize: '0.86rem', color: '#64748b', margin: '0 0 20px 0', lineHeight: 1.5 }}>
+              Are you sure you want to delete this order? This action will remove the order and restore its items to inventory.
+            </p>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+              <button
+                type="button"
+                onClick={() => setOrderToDelete(null)}
+                style={{
+                  padding: '9px 18px',
+                  borderRadius: '8px',
+                  border: '1px solid #cbd5e1',
+                  background: '#ffffff',
+                  color: '#475569',
+                  fontWeight: 600,
+                  fontSize: '0.85rem',
+                  cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  const id = orderToDelete.id;
+                  setOrderToDelete(null);
+                  await deleteOrder(id);
+                }}
+                style={{
+                  padding: '9px 20px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: '#dc2626',
+                  color: '#ffffff',
+                  fontWeight: 700,
+                  fontSize: '0.85rem',
+                  cursor: 'pointer'
+                }}
+              >
+                Yes, Delete Order
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

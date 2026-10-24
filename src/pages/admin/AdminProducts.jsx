@@ -304,11 +304,8 @@ export default function AdminProducts() {
     if (!form.categoryIds || form.categoryIds.length === 0) {
       newErrors.categoryIds = 'Please select at least one category';
     }
-    if (!form.shortDescription.trim()) {
+    if (!form.shortDescription.trim() && !form.longDescription.trim()) {
       newErrors.shortDescription = 'Product description is required';
-    }
-    if (!form.longDescription.trim()) {
-      newErrors.longDescription = 'Long description is required';
     }
     if (!form.image && !form.imagePreview) {
       newErrors.image = 'Please upload at least one product image';
@@ -416,10 +413,10 @@ export default function AdminProducts() {
     setForm({
       name: prod.name || '',
       categoryIds: prod.categoryIds || (prod.categoryId ? [prod.categoryId] : (categories.length > 0 ? [categories[0].id] : [])),
-      shortDescription: prod.description || prod.shortDescription || '',
-      longDescription: prod.longDescription || '',
-      image: prod.image || '',
-      imagePreview: prod.image || '',
+      shortDescription: prod.description || prod.shortDescription || 'Premium designer garment tailored with luxury fabric and exquisite attention to detail.',
+      longDescription: prod.longDescription || 'Elevate your wardrobe with timeless style, impeccable stitching, and comfortable all-day wear.',
+      image: prod.image || '/images/kurtha-charcoal.jpg',
+      imagePreview: prod.image || '/images/kurtha-charcoal.jpg',
       price: prod.price || prod.regular_price || 2000,
       originalPrice: prod.originalPrice || prod.crossedPrice || 2500,
       sku: prod.sku || '',
@@ -1162,7 +1159,7 @@ export default function AdminProducts() {
               {/* Step 2 Item */}
               <div
                 onClick={() => {
-                  if (validateStep1()) setCurrentStep(2);
+                  if (editingProduct || validateStep1()) setCurrentStep(2);
                 }}
                 style={{
                   display: 'flex',
@@ -1212,7 +1209,7 @@ export default function AdminProducts() {
               {/* Step 3 Item */}
               <div
                 onClick={() => {
-                  if (validateStep1()) setCurrentStep(3);
+                  if (editingProduct || validateStep1()) setCurrentStep(3);
                 }}
                 style={{
                   display: 'flex',

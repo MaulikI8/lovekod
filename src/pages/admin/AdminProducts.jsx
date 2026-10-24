@@ -227,10 +227,11 @@ export default function AdminProducts() {
 
   // Filter products by tab status and search query
   const filteredProducts = (products || []).filter(p => {
-    const status = p.status || 'Active';
-    if (activeTab === 'Active' && status !== 'Active') return false;
-    if (activeTab === 'Draft' && status !== 'Draft') return false;
-    if (activeTab === 'Archived' && status !== 'Archived') return false;
+    const status = (p.status || 'Active').toLowerCase();
+    const tab = activeTab.toLowerCase();
+    if (tab === 'active' && status !== 'active') return false;
+    if (tab === 'draft' && status !== 'draft') return false;
+    if (tab === 'archived' && status !== 'archived') return false;
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();

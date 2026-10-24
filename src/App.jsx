@@ -23,6 +23,7 @@ import AdminOrders from './pages/admin/AdminOrders';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
 import AdminContent from './pages/admin/AdminContent';
 import AdminTestimonials from './pages/admin/AdminTestimonials';
+import AdminCoupons from './pages/admin/AdminCoupons';
 
 import './index.css';
 
@@ -58,6 +59,7 @@ export default function App() {
               <Route path="inventory" element={<AdminInventory />} />
               <Route path="customers" element={<AdminCustomers />} />
               <Route path="orders" element={<AdminOrders />} />
+              <Route path="coupons" element={<AdminCoupons />} />
               <Route path="analytics" element={<AdminAnalytics />} />
               <Route path="content" element={<AdminContent />} />
               <Route path="testimonials" element={<AdminTestimonials />} />

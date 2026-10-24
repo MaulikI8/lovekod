@@ -6,7 +6,7 @@ import LocationAutocomplete from '../components/common/LocationAutocomplete';
 import { DiyaIcon, ShieldCheckIcon, ArrowRightIcon } from '../components/Icons';
 
 export default function Checkout() {
-  const { cart, products, cartTotal, placeOrder, siteSettings, lookupCustomer } = useStore();
+  const { cart, products, cartTotal, placeOrder, siteSettings, lookupCustomer, validateCoupon } = useStore();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -69,6 +69,29 @@ export default function Checkout() {
     setCouponLoading(true);
     setCouponFeedback(null);
     try {
+      // 1. Instant validation against StoreContext (supports all admin-created coupons)
+      if (typeof validateCoupon === 'function') {
+        const localRes = validateCoupon(code, cartTotal);
+        if (localRes.valid) {
+          setAppliedCoupon({
+            code: localRes.code,
+            discountType: localRes.discountType === 'percent' ? 'percentage' : 'fixed',
+            discountValue: localRes.discountValue,
+            discountAmount: localRes.discountAmount,
+            message: localRes.message,
+          });
+          setCouponFeedback({ type: 'success', message: localRes.message });
+          setCouponLoading(false);
+          return;
+        } else {
+          setAppliedCoupon(null);
+          setCouponFeedback({ type: 'error', message: localRes.message });
+          setCouponLoading(false);
+          return;
+        }
+      }
+
+      // 2. Fallback to API endpoint
       const res = await fetch(`/api/coupons/validate/?code=${encodeURIComponent(code)}&subtotal=${cartTotal}`);
       const data = await res.json();
       if (res.ok && data.valid) {

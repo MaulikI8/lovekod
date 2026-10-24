@@ -7,13 +7,53 @@ const STORAGE_KEYS = {
   PRODUCTS: 'lovekod_products',
   CART: 'lovekod_cart',
   ORDERS: 'lovekod_orders',
+  CUSTOMERS: 'lovekod_customers',
   ADMIN_AUTH: 'lovekod_admin',
   LIGHTS: 'lovekod_tihar_lights',
   SITE_SETTINGS: 'lovekod_site_settings',
   CATEGORIES: 'lovekod_categories',
   FESTIVALS: 'lovekod_festivals',
   TESTIMONIALS: 'lovekod_testimonials',
+  COUPONS: 'lovekod_coupons',
 };
+
+const DEFAULT_COUPONS = [
+  {
+    id: 'coup_tihar2083',
+    code: 'TIHAR2083',
+    discountType: 'fixed',
+    discountValue: 200,
+    minOrderAmount: 1500,
+    description: 'Tihar Festive Special - Flat Rs. 200 OFF on orders above Rs. 1,500',
+    active: true,
+    usesCount: 8,
+    createdAt: '2026-10-20T10:00:00Z',
+  },
+  {
+    id: 'coup_welcome10',
+    code: 'WELCOME10',
+    discountType: 'percent',
+    discountValue: 10,
+    minOrderAmount: 1000,
+    maxDiscountAmount: 500,
+    description: '10% Welcome Discount for handcrafted kurthas',
+    active: true,
+    usesCount: 15,
+    createdAt: '2026-10-21T11:00:00Z',
+  },
+  {
+    id: 'coup_festive15',
+    code: 'FESTIVE15',
+    discountType: 'percent',
+    discountValue: 15,
+    minOrderAmount: 3000,
+    maxDiscountAmount: 1000,
+    description: '15% Royal Festive Discount on orders over Rs. 3,000',
+    active: true,
+    usesCount: 3,
+    createdAt: '2026-10-23T14:30:00Z',
+  },
+];
 
 // Auto-purge stale localStorage cache so all visitors and friends immediately get live catalog data
 const LIVE_CACHE_VERSION = 'lovekod_v5_live';
@@ -122,6 +162,14 @@ function loadCustomers() {
   return [];
 }
 
+function loadCoupons() {
+  const cached = loadState('lovekod_coupons', null);
+  if (Array.isArray(cached) && cached.length > 0) {
+    return cached;
+  }
+  return DEFAULT_COUPONS;
+}
+
 function loadState(key, fallback) {
   try {
     const raw = localStorage.getItem(key);
@@ -144,6 +192,7 @@ export function StoreProvider({ children }) {
   const [testimonials, setTestimonials] = useState([]);
   const [orders, setOrders] = useState(loadOrders);
   const [customers, setCustomers] = useState(loadCustomers);
+  const [coupons, setCoupons] = useState(loadCoupons);
 
   // Client session state (persisted)
   const [cart, setCart] = useState(() => loadState(STORAGE_KEYS.CART, []));
@@ -161,6 +210,7 @@ export function StoreProvider({ children }) {
   useEffect(() => saveState(STORAGE_KEYS.LIGHTS, lightsEnabled), [lightsEnabled]);
   useEffect(() => saveState('lovekod_orders', orders), [orders]);
   useEffect(() => saveState('lovekod_customers', customers), [customers]);
+  useEffect(() => saveState('lovekod_coupons', coupons), [coupons]);
 
   // Anti-cache fetch helper: guarantees fresh responses bypassing browser/proxy cache
   const fetchLive = async (path) => {
@@ -774,9 +824,97 @@ export function StoreProvider({ children }) {
       showToast('Error deleting customer', 'error');
     }
   }
+
+  // ── Discount Coupons Management & Validation ──
+  const createCoupon = (data) => {
+    const code = (data.code || '').trim().toUpperCase();
+    if (!code) throw new Error('Coupon code is required.');
+    if (coupons.some(c => c.code.toUpperCase() === code)) {
+      throw new Error(`Coupon with code "${code}" already exists.`);
+    }
+    const newCoupon = {
+      id: 'coup_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6),
+      code,
+      discountType: data.discountType || 'percent',
+      discountValue: Math.max(1, Number(data.discountValue) || 10),
+      minOrderAmount: Math.max(0, Number(data.minOrderAmount) || 0),
+      maxDiscountAmount: data.maxDiscountAmount ? Math.max(0, Number(data.maxDiscountAmount)) : null,
+      description: (data.description || '').trim(),
+      active: data.active !== undefined ? !!data.active : true,
+      usesCount: 0,
+      createdAt: new Date().toISOString(),
+    };
+    setCoupons(prev => [newCoupon, ...prev]);
+    showToast(`Coupon "${code}" created successfully!`);
+    return newCoupon;
+  };
+
+  const updateCoupon = (id, updates) => {
+    setCoupons(prev => prev.map(c => {
+      if (c.id === id) {
+        return {
+          ...c,
+          ...updates,
+          code: updates.code ? updates.code.trim().toUpperCase() : c.code,
+          discountValue: updates.discountValue !== undefined ? Math.max(1, Number(updates.discountValue)) : c.discountValue,
+          minOrderAmount: updates.minOrderAmount !== undefined ? Math.max(0, Number(updates.minOrderAmount)) : c.minOrderAmount,
+        };
+      }
+      return c;
+    }));
+    showToast('Coupon updated successfully!');
+  };
+
+  const deleteCoupon = (id) => {
+    setCoupons(prev => prev.filter(c => c.id !== id));
+    showToast('Coupon deleted');
+  };
+
+  const toggleCouponStatus = (id) => {
+    setCoupons(prev => prev.map(c => c.id === id ? { ...c, active: !c.active } : c));
+  };
+
+  const validateCoupon = (inputCode, subtotal = 0) => {
+    const normCode = (inputCode || '').trim().toUpperCase();
+    if (!normCode) return { valid: false, message: 'Please enter a coupon code.' };
+    const found = coupons.find(c => c.code.toUpperCase() === normCode);
+    if (!found) {
+      return { valid: false, message: `Coupon code "${normCode}" is invalid.` };
+    }
+    if (!found.active) {
+      return { valid: false, message: `Coupon "${found.code}" is currently inactive.` };
+    }
+    const sub = Number(subtotal) || 0;
+    if (found.minOrderAmount && sub < found.minOrderAmount) {
+      return {
+        valid: false,
+        message: `Cart subtotal of at least Rs. ${found.minOrderAmount.toLocaleString()} required for "${found.code}".`
+      };
+    }
+    let disc = 0;
+    if (found.discountType === 'percent') {
+      disc = Math.round(sub * (Number(found.discountValue) / 100));
+      if (found.maxDiscountAmount) {
+        disc = Math.min(disc, Number(found.maxDiscountAmount));
+      }
+    } else {
+      disc = Number(found.discountValue);
+    }
+    disc = Math.min(disc, sub);
+
+    return {
+      valid: true,
+      coupon: found,
+      code: found.code,
+      discountType: found.discountType,
+      discountValue: found.discountValue,
+      discountAmount: disc,
+      message: `Coupon "${found.code}" applied! You saved Rs. ${disc.toLocaleString()}.`
+    };
+  };
   const value = {
     products, categories, siteSettings, festivalMoments, testimonials,
-    cart, orders, customers, cartOpen, toast, isAdmin, cartTotal, cartCount,
+    cart, orders, customers, coupons, cartOpen, toast, isAdmin, cartTotal, cartCount,
     lightsEnabled, toggleLights, celebrateLights,
     setCartOpen, addToCart, updateCartQty, removeFromCart, clearCart, placeOrder,
     updateSiteSettings,
@@ -785,6 +923,7 @@ export function StoreProvider({ children }) {
     addTestimonial, updateTestimonial, deleteTestimonial,
     updateProduct, addProduct, deleteProduct, createManualOrder, updateOrderStatus, updateOrderPaymentStatus, updateOrder, deleteOrder,
     lookupCustomer, addCustomer, updateCustomer, deleteCustomer,
+    createCoupon, updateCoupon, deleteCoupon, toggleCouponStatus, validateCoupon,
     adminLogin, adminLogout, showToast, resetInventory, refreshFromBackend,
   };
 

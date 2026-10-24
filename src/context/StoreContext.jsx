@@ -88,7 +88,7 @@ const DEFAULT_CATEGORIES = [
   { id: 4, name: '3-Piece Sets', slug: '3-piece', nepaliName: '', order: 4, isActive: true },
 ];
 
-const DUMMY_PRODUCT_IDS = new Set(['lk-001', 'lk-002', 'lk-003', 'lk-004', 'lk-005']);
+const isDummyProduct = (p) => String(p?.id) === 'lk-001' && (p?.name || '').trim() === 'Royal Silk';
 
 function loadCategories() {
   const cached = loadState('lovekod_categories', null);
@@ -101,7 +101,7 @@ function loadCategories() {
 function loadProducts() {
   const cached = loadState('lovekod_products', []);
   if (Array.isArray(cached) && cached.length > 0) {
-    return cached.filter(p => !DUMMY_PRODUCT_IDS.has(String(p.id)) && !p.isDeleted && !p.is_deleted);
+    return cached.filter(p => !isDummyProduct(p) && !p.isDeleted && !p.is_deleted);
   }
   return [];
 }
@@ -164,7 +164,7 @@ export function StoreProvider({ children }) {
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0) {
-          const activeOnly = data.filter(p => !p.isDeleted && !p.is_deleted && !DUMMY_PRODUCT_IDS.has(String(p.id)));
+          const activeOnly = data.filter(p => !p.isDeleted && !p.is_deleted && !isDummyProduct(p));
           setProducts(prev => {
             const map = new Map();
             prev.forEach(p => map.set(String(p.id), p));

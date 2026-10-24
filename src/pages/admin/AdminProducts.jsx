@@ -802,7 +802,8 @@ export default function AdminProducts() {
                     <td style={{ padding: '12px 16px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <img
-                          src={p.image || '/images/kurtha-charcoal.jpg'}
+                          src={(p.image ? (p.image.startsWith('/media/images/') ? p.image.replace('/media/images/', '/images/') : p.image) : '/images/kurtha-charcoal.jpg')}
+                          onError={e => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/kurtha-charcoal.jpg'; }}
                           alt={p.name}
                           style={{
                             width: '40px',

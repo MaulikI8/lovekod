@@ -168,14 +168,22 @@ class Product(models.Model):
 
     def get_image_url(self):
         if self.image:
+            name = str(self.image).strip()
+            if name.startswith('http'):
+                return name
+            if name.startswith('/images/') or name.startswith('images/'):
+                return name if name.startswith('/') else f'/{name}'
+            if name.startswith('/media/'):
+                return name
             try:
                 url = self.image.url
                 if url:
+                    if '/media/images/' in url:
+                        return url.replace('/media/images/', '/images/')
                     return url
             except Exception:
                 pass
-            name = str(self.image)
-            if name.startswith('http') or name.startswith('/'):
+            if name.startswith('/'):
                 return name
             return f'/media/{name}'
         return '/images/kurtha-charcoal.jpg'

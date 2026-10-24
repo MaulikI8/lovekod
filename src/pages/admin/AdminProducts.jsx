@@ -42,6 +42,22 @@ export default function AdminProducts() {
 
   const [errors, setErrors] = useState({});
   const fileInputRef = useRef(null);
+  const modalBodyRef = useRef(null);
+
+  // Effortless mousewheel / trackpad scrolling from anywhere in modal (including over textareas)
+  const handleModalWheel = (e) => {
+    if (!modalBodyRef.current) return;
+    const target = e.target;
+    if (target && target.tagName === 'TEXTAREA') {
+      const hasOverflow = target.scrollHeight > target.clientHeight;
+      if (hasOverflow) {
+        const atTop = target.scrollTop <= 0 && e.deltaY < 0;
+        const atBottom = (target.scrollTop + target.clientHeight >= target.scrollHeight - 1) && e.deltaY > 0;
+        if (!atTop && !atBottom) return; // Allow internal textarea scroll
+      }
+    }
+    modalBodyRef.current.scrollTop += e.deltaY;
+  };
 
   // Close category dropdown on outside click
   useEffect(() => {
@@ -519,28 +535,35 @@ export default function AdminProducts() {
 
       {/* ══ 5. CANVA 3-STEP "ADD PRODUCT" MODAL (PIXEL PERFECT) ══ */}
       {showAddModal && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(15, 23, 42, 0.45)',
-          backdropFilter: 'blur(3px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          padding: '20px',
-        }}>
-          <div style={{
-            background: '#ffffff',
-            borderRadius: '16px',
-            maxWidth: '680px',
-            width: '100%',
-            maxHeight: '90vh',
+        <div
+          onWheel={handleModalWheel}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15, 23, 42, 0.45)',
+            backdropFilter: 'blur(3px)',
             display: 'flex',
-            flexDirection: 'column',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)',
-            overflow: 'hidden',
-          }}>
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '20px',
+          }}
+        >
+          <div
+            onWheel={handleModalWheel}
+            style={{
+              background: '#ffffff',
+              borderRadius: '16px',
+              maxWidth: '680px',
+              width: '100%',
+              maxHeight: '90vh',
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)',
+              overflow: 'hidden',
+              position: 'relative',
+            }}
+          >
             
             {/* Modal Header */}
             <div style={{
@@ -695,8 +718,23 @@ export default function AdminProducts() {
               </div>
             </div>
 
-            {/* Modal Body (Scrollable) */}
-            <div style={{ padding: '24px', overflowY: 'auto', flex: 1 }}>
+            {/* Modal Body (Scrollable & Wheel Enabled Anywhere) */}
+            <div
+              ref={modalBodyRef}
+              onWheel={handleModalWheel}
+              style={{
+                padding: '24px',
+                overflowY: 'auto',
+                flex: '1 1 auto',
+                minHeight: 0,
+                maxHeight: 'calc(90vh - 130px)',
+                overscrollBehavior: 'contain',
+                WebkitOverflowScrolling: 'touch',
+                scrollBehavior: 'smooth',
+                scrollbarWidth: 'thin',
+                scrollbarColor: '#cbd5e1 #f8fafc',
+              }}
+            >
               
               {/* ══ STEP 1: GENERAL INFORMATION ══ */}
               {currentStep === 1 && (
@@ -931,6 +969,16 @@ export default function AdminProducts() {
                         setForm({ ...form, shortDescription: e.target.value });
                         if (errors.shortDescription) setErrors({ ...errors, shortDescription: null });
                       }}
+                      onWheel={(e) => {
+                        const target = e.currentTarget;
+                        if (target.scrollHeight <= target.clientHeight) {
+                          if (modalBodyRef.current) modalBodyRef.current.scrollTop += e.deltaY;
+                        } else {
+                          const atTop = target.scrollTop <= 0 && e.deltaY < 0;
+                          const atBottom = (target.scrollTop + target.clientHeight >= target.scrollHeight - 1) && e.deltaY > 0;
+                          if ((atTop || atBottom) && modalBodyRef.current) modalBodyRef.current.scrollTop += e.deltaY;
+                        }
+                      }}
                       style={{
                         width: '100%',
                         padding: '10px 14px',
@@ -964,6 +1012,16 @@ export default function AdminProducts() {
                       onChange={e => {
                         setForm({ ...form, longDescription: e.target.value });
                         if (errors.longDescription) setErrors({ ...errors, longDescription: null });
+                      }}
+                      onWheel={(e) => {
+                        const target = e.currentTarget;
+                        if (target.scrollHeight <= target.clientHeight) {
+                          if (modalBodyRef.current) modalBodyRef.current.scrollTop += e.deltaY;
+                        } else {
+                          const atTop = target.scrollTop <= 0 && e.deltaY < 0;
+                          const atBottom = (target.scrollTop + target.clientHeight >= target.scrollHeight - 1) && e.deltaY > 0;
+                          if ((atTop || atBottom) && modalBodyRef.current) modalBodyRef.current.scrollTop += e.deltaY;
+                        }
                       }}
                       style={{
                         width: '100%',

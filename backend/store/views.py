@@ -26,7 +26,7 @@ def save_base64_image(data_str):
             os.makedirs(d, exist_ok=True)
             with open(os.path.join(d, filename), 'wb') as f:
                 f.write(file_bytes)
-        return f"/media/products/{filename}"
+        return f"products/{filename}"
     except Exception as e:
         print("Base64 save error:", e)
         return '/images/kurtha-charcoal.jpg'

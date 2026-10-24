@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useStore } from '../../context/StoreContext';
 import Toast from '../../components/Toast';
@@ -16,6 +17,12 @@ export default function AdminLayout() {
     adminLogout();
     navigate('/admin/login');
   };
+
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    setMobileSidebarOpen(false);
+  }, [location.pathname]);
 
   const pendingCount = orders.filter(o => o.status === 'Pending').length;
 
@@ -249,11 +256,122 @@ export default function AdminLayout() {
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#fbfbfd', fontFamily: "'Plus Jakarta Sans', Inter, -apple-system, sans-serif" }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#fbfbfd', fontFamily: "'Plus Jakarta Sans', Inter, -apple-system, sans-serif" }}>
       <Toast />
       
-      {/* ══ CANVA RECREATED SIDEBAR ══ */}
-      <aside style={{ width: '235px', background: '#ffffff', borderRight: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+      <style>{`
+        .admin-desktop-sidebar {
+          width: 235px;
+          background: #ffffff;
+          border-right: 1px solid #f1f5f9;
+          display: flex;
+          flex-direction: column;
+          flex-shrink: 0;
+          transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .admin-mobile-topbar {
+          display: none;
+        }
+        .admin-main-content {
+          flex: 1;
+          min-width: 0;
+          padding: 28px 36px;
+          overflow-y: auto;
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+        }
+        @media (max-width: 900px) {
+          .admin-desktop-sidebar {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            bottom: 0 !important;
+            height: 100vh !important;
+            z-index: 1000 !important;
+            transform: translateX(-100%);
+            box-shadow: 4px 0 24px rgba(0,0,0,0.15) !important;
+          }
+          .admin-desktop-sidebar.open {
+            transform: translateX(0) !important;
+          }
+          .admin-mobile-topbar {
+            display: flex !important;
+          }
+          .admin-main-content {
+            padding: 16px 14px !important;
+          }
+        }
+      `}</style>
+
+      {/* ══ MOBILE TOPBAR (Visible on <= 900px) ══ */}
+      <header className="admin-mobile-topbar" style={{
+        height: '56px',
+        background: '#ffffff',
+        borderBottom: '1px solid #f1f5f9',
+        padding: '0 16px',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        position: 'sticky',
+        top: 0,
+        zIndex: 40,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <button
+            type="button"
+            onClick={() => setMobileSidebarOpen(true)}
+            style={{
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              borderRadius: '8px',
+              width: '36px',
+              height: '36px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#0f172a',
+              cursor: 'pointer',
+            }}
+            aria-label="Toggle Menu"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#fbf6f0', border: '1px solid #fed7aa', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+              <img src="/images/logo.jpg" alt="lovekod" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.currentTarget.style.display = 'none'; }} />
+            </div>
+            <span style={{ fontSize: '1rem', fontWeight: 700, color: '#0f172a', textTransform: 'lowercase' }}>lovekod</span>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={handleLogout}
+          style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}
+        >
+          Sign Out
+        </button>
+      </header>
+
+      {/* Backdrop for mobile drawer */}
+      {mobileSidebarOpen && (
+        <div
+          onClick={() => setMobileSidebarOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15, 23, 42, 0.45)',
+            backdropFilter: 'blur(2px)',
+            zIndex: 999,
+          }}
+        />
+      )}
+
+      <div style={{ display: 'flex', flex: 1, minHeight: 'calc(100vh - 56px)' }}>
+        {/* ══ CANVA RECREATED SIDEBAR ══ */}
+        <aside className={`admin-desktop-sidebar ${mobileSidebarOpen ? 'open' : ''}`}>
         
         {/* Brand Logo Header (Matches Canva: Circle Logo + lowercase lovekod) */}
         <div style={{ height: '64px', padding: '0 20px', borderBottom: '1px solid #f8fafc', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -297,9 +415,10 @@ export default function AdminLayout() {
       </aside>
 
       {/* ══ MAIN DASHBOARD CONTENT AREA ══ */}
-      <main style={{ flex: 1, padding: '28px 36px', overflowY: 'auto' }}>
+      <main className="admin-main-content">
         <Outlet />
       </main>
+      </div>
     </div>
   );
 }

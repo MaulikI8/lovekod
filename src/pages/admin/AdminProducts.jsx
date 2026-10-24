@@ -536,7 +536,14 @@ export default function AdminProducts() {
   };
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', color: '#111827' }}>
+    <div style={{ maxWidth: '1200px', margin: '0 auto', color: '#111827', width: '100%' }}>
+      <style>{`
+        @media (max-width: 900px) {
+          .admin-table-mobile-hint {
+            display: flex !important;
+          }
+        }
+      `}</style>
       
       {/* ══ 1. TITLE (CANVA EXACT) ══ */}
       <h1 style={{ fontSize: '22px', fontWeight: 700, margin: '0 0 16px 0', letterSpacing: '-0.01em', color: '#111827' }}>
@@ -626,9 +633,9 @@ export default function AdminProducts() {
       </div>
 
       {/* ══ 3. ACTION BAR (Search Input + Add Product + More Options) ══ */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '14px', marginBottom: '16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '14px', marginBottom: '16px', flexWrap: 'wrap' }}>
         {/* Search Bar with Icon */}
-        <div style={{ position: 'relative', width: '320px' }}>
+        <div style={{ position: 'relative', width: '100%', maxWidth: '340px', minWidth: '220px', flex: '1 1 220px' }}>
           <svg
             width="14"
             height="14"
@@ -716,7 +723,34 @@ export default function AdminProducts() {
 
       {/* ══ 4. PRODUCTS TABLE & EMPTY STATE (CANVA PIXEL-PERFECT) ══ */}
       <div style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
+        
+        {/* Subtle mobile sideways scroll hint */}
+        <div className="admin-table-mobile-hint" style={{
+          display: 'none',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '8px 14px',
+          background: '#f8fafc',
+          borderBottom: '1px solid #f1f5f9',
+          fontSize: '11.5px',
+          color: '#7952eb',
+          fontWeight: 500,
+        }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+            <span>↔</span> Scroll table sideways for full columns
+          </span>
+          <span style={{ fontSize: '11px', color: '#94a3b8' }}>
+            Rating · Price · Inventory · Actions
+          </span>
+        </div>
+
+        {/* Sideways / Horizontal Scroll Container */}
+        <div style={{
+          width: '100%',
+          overflowX: 'auto',
+          WebkitOverflowScrolling: 'touch',
+        }}>
+          <table style={{ width: '100%', minWidth: '940px', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px', whiteSpace: 'nowrap' }}>
           <thead>
             <tr style={{ background: '#ffffff', borderBottom: '1px solid #e5e7eb', color: '#6b7280', fontSize: '11px', fontWeight: 600, letterSpacing: '0.03em' }}>
               <th style={{ padding: '12px 16px', width: '38px' }}>
@@ -964,6 +998,7 @@ export default function AdminProducts() {
             )}
           </tbody>
         </table>
+        </div>
 
         {/* Canva Pagination Footer */}
         <div style={{
@@ -2179,8 +2214,8 @@ export default function AdminProducts() {
                       </div>
 
                       {/* Dynamic Combinations Table */}
-                      <div style={{ border: '1px solid #e2e8f0', borderRadius: '10px', overflowX: 'auto', marginBottom: '16px' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12.5px' }}>
+                      <div style={{ border: '1px solid #e2e8f0', borderRadius: '10px', overflowX: 'auto', WebkitOverflowScrolling: 'touch', marginBottom: '16px', width: '100%' }}>
+                        <table style={{ width: '100%', minWidth: '820px', borderCollapse: 'collapse', fontSize: '12.5px', whiteSpace: 'nowrap' }}>
                           <thead>
                             <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', color: '#64748b', fontSize: '11px', fontWeight: 700 }}>
                               <th style={{ padding: '10px 14px', textAlign: 'left' }}>VARIANT</th>

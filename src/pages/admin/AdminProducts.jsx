@@ -41,6 +41,159 @@ export default function AdminProducts() {
   });
 
   const [errors, setErrors] = useState({});
+
+  // ══ Step 2: Canva Dynamic Variants & Inventory State ══
+  const [enableVariants, setEnableVariants] = useState(false);
+  const [showColorPreview, setShowColorPreview] = useState(true);
+  const [variantColors, setVariantColors] = useState([]);
+  const [colorInput, setColorInput] = useState('');
+  const [colorCodes, setColorCodes] = useState({});
+  const [colorCodesSec, setColorCodesSec] = useState({});
+  const [variantSizes, setVariantSizes] = useState([]);
+  const [sizeInput, setSizeInput] = useState('');
+
+  const [singlePricing, setSinglePricing] = useState({
+    crossedPrice: 0,
+    sellingPrice: 0,
+    costPrice: 0,
+    quantity: 0,
+    weight: 0,
+    sku: 'LK-PROD-' + Math.floor(100 + Math.random() * 900),
+    barcode: '',
+    hsCode: '',
+    continueSellingOutOfStock: true,
+  });
+
+  const [combinationRows, setCombinationRows] = useState([]);
+  const [barcodeAccordionOpen, setBarcodeAccordionOpen] = useState(false);
+  const [continueSellingOutOfStock, setContinueSellingOutOfStock] = useState(false);
+
+  const KNOWN_COLORS = {
+    red: '#ef4444',
+    green: '#10b981',
+    blue: '#3b82f6',
+    yellow: '#eab308',
+    purple: '#8b5cf6',
+    pink: '#ec4899',
+    black: '#0f172a',
+    white: '#ffffff',
+    grey: '#6b7280',
+    gray: '#6b7280',
+    orange: '#f97316',
+    brown: '#78350f',
+    navy: '#1e3a8a',
+    teal: '#14b8a6',
+    maroon: '#831843',
+    olive: '#65a30d',
+    gold: '#f59e0b',
+    silver: '#94a3b8',
+    violet: '#7c3aed',
+    magenta: '#c026d3',
+    cyan: '#06b6d4',
+    beige: '#d4b996',
+    charcoal: '#374151',
+    cream: '#fef3c7',
+    lavender: '#c084fc',
+  };
+
+  const updateCombinations = (colors, sizes) => {
+    let names = [];
+    if (colors.length > 0 && sizes.length > 0) {
+      colors.forEach(c => {
+        sizes.forEach(s => {
+          names.push(`${c}/${s}`);
+        });
+      });
+    } else if (colors.length > 0) {
+      names = [...colors];
+    } else if (sizes.length > 0) {
+      names = [...sizes];
+    } else {
+      names = [];
+    }
+
+    setCombinationRows(prev => {
+      return names.map(name => {
+        const existing = prev.find(p => p.name === name);
+        if (existing) return existing;
+        const randId = Math.random().toString(36).substring(2, 6).toUpperCase();
+        return {
+          id: Date.now() + '_' + name,
+          name,
+          crossedPrice: 0,
+          sellingPrice: 0,
+          costPrice: 0,
+          weight: 0,
+          quantity: 0,
+          sku: `LK-${name.replace(/[^a-zA-Z0-9]/g, '-').toUpperCase()}-${randId}`,
+        };
+      });
+    });
+  };
+
+  const addColor = (col) => {
+    const clean = col.trim().replace(/,/g, '');
+    if (!clean) return;
+    if (!variantColors.includes(clean)) {
+      const nextColors = [...variantColors, clean];
+      setVariantColors(nextColors);
+      const lower = clean.toLowerCase();
+      setColorCodes(prev => ({ ...prev, [lower]: KNOWN_COLORS[lower] || '#6366f1' }));
+      updateCombinations(nextColors, variantSizes);
+    }
+    setColorInput('');
+  };
+
+  const removeColor = (color) => {
+    const nextColors = variantColors.filter(c => c !== color);
+    setVariantColors(nextColors);
+    updateCombinations(nextColors, variantSizes);
+  };
+
+  const addSize = (sz) => {
+    const clean = sz.trim().replace(/,/g, '');
+    if (!clean) return;
+    if (!variantSizes.includes(clean)) {
+      const nextSizes = [...variantSizes, clean];
+      setVariantSizes(nextSizes);
+      updateCombinations(variantColors, nextSizes);
+    }
+    setSizeInput('');
+  };
+
+  const removeSize = (size) => {
+    const nextSizes = variantSizes.filter(s => s !== size);
+    setVariantSizes(nextSizes);
+    updateCombinations(variantColors, nextSizes);
+  };
+
+  const updateRowField = (idx, field, val) => {
+    setCombinationRows(prev => {
+      const next = [...prev];
+      next[idx] = { ...next[idx], [field]: val };
+      return next;
+    });
+  };
+
+  const deleteVariantRow = (idx) => {
+    setCombinationRows(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const regenerateAllSkus = () => {
+    setCombinationRows(prev => {
+      return prev.map(r => ({
+        ...r,
+        sku: `LK-${r.name.replace(/[^a-zA-Z0-9]/g, '-').toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`,
+      }));
+    });
+  };
+
+  const generateSingleSku = () => {
+    setSinglePricing(prev => ({
+      ...prev,
+      sku: 'LK-PROD-' + Math.floor(100 + Math.random() * 900),
+    }));
+  };
   const fileInputRef = useRef(null);
   const modalBodyRef = useRef(null);
 
@@ -618,28 +771,37 @@ export default function AdminProducts() {
                   width: '26px',
                   height: '26px',
                   borderRadius: '50%',
-                  background: currentStep >= 1 ? '#7952eb' : '#e2e8f0',
-                  color: currentStep >= 1 ? '#ffffff' : '#64748b',
+                  background: '#7952eb',
+                  color: '#ffffff',
                   fontSize: '12px',
                   fontWeight: 700,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}>
-                  1
+                  {currentStep > 1 ? (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  ) : '1'}
                 </div>
                 <div>
-                  <div style={{ fontSize: '10px', fontWeight: 700, color: currentStep === 1 ? '#7952eb' : '#64748b', letterSpacing: '0.04em' }}>
+                  <div style={{ fontSize: '10px', fontWeight: 700, color: currentStep >= 1 ? '#7952eb' : '#64748b', letterSpacing: '0.04em' }}>
                     STEP 1
                   </div>
-                  <div style={{ fontSize: '12px', fontWeight: 600, color: currentStep === 1 ? '#0f172a' : '#64748b' }}>
+                  <div style={{ fontSize: '12px', fontWeight: 600, color: currentStep >= 1 ? '#0f172a' : '#64748b' }}>
                     General Information
                   </div>
                 </div>
               </div>
 
-              {/* Separator Line */}
-              <div style={{ height: '1px', flex: '0 0 30px', background: '#e2e8f0' }} />
+              {/* Separator Line 1 -> 2 */}
+              <div style={{
+                height: '2px',
+                flex: '0 0 40px',
+                background: currentStep >= 2 ? '#7952eb' : '#e2e8f0',
+                transition: 'background 0.2s ease',
+              }} />
 
               {/* Step 2 Item */}
               <div
@@ -650,7 +812,7 @@ export default function AdminProducts() {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
-                  cursor: currentStep > 1 ? 'pointer' : 'default',
+                  cursor: 'pointer',
                   flex: 1,
                 }}
               >
@@ -658,36 +820,49 @@ export default function AdminProducts() {
                   width: '26px',
                   height: '26px',
                   borderRadius: '50%',
-                  background: currentStep >= 2 ? '#7952eb' : '#f1f5f9',
-                  border: currentStep >= 2 ? 'none' : '1px solid #cbd5e1',
-                  color: currentStep >= 2 ? '#ffffff' : '#94a3b8',
+                  background: currentStep === 2 ? '#ffffff' : (currentStep > 2 ? '#7952eb' : '#f1f5f9'),
+                  border: currentStep === 2 ? '2px solid #7952eb' : (currentStep > 2 ? 'none' : '1px solid #cbd5e1'),
+                  color: currentStep === 2 ? '#7952eb' : (currentStep > 2 ? '#ffffff' : '#94a3b8'),
                   fontSize: '12px',
                   fontWeight: 700,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}>
-                  2
+                  {currentStep > 2 ? (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  ) : '2'}
                 </div>
                 <div>
-                  <div style={{ fontSize: '10px', fontWeight: 700, color: currentStep === 2 ? '#7952eb' : '#94a3b8', letterSpacing: '0.04em' }}>
+                  <div style={{ fontSize: '10px', fontWeight: 700, color: currentStep >= 2 ? '#7952eb' : '#94a3b8', letterSpacing: '0.04em' }}>
                     STEP 2
                   </div>
-                  <div style={{ fontSize: '12px', fontWeight: 600, color: currentStep === 2 ? '#0f172a' : '#94a3b8' }}>
+                  <div style={{ fontSize: '12px', fontWeight: 600, color: currentStep >= 2 ? '#0f172a' : '#94a3b8' }}>
                     Variants & Inventory
                   </div>
                 </div>
               </div>
 
-              {/* Separator Line */}
-              <div style={{ height: '1px', flex: '0 0 30px', background: '#e2e8f0' }} />
+              {/* Separator Line 2 -> 3 */}
+              <div style={{
+                height: '2px',
+                flex: '0 0 40px',
+                background: currentStep >= 3 ? '#7952eb' : '#e2e8f0',
+                transition: 'background 0.2s ease',
+              }} />
 
               {/* Step 3 Item */}
               <div
+                onClick={() => {
+                  if (validateStep1()) setCurrentStep(3);
+                }}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
+                  cursor: currentStep > 2 ? 'pointer' : 'default',
                   flex: 1,
                   opacity: currentStep === 3 ? 1 : 0.6,
                 }}
@@ -696,9 +871,9 @@ export default function AdminProducts() {
                   width: '26px',
                   height: '26px',
                   borderRadius: '50%',
-                  background: currentStep >= 3 ? '#7952eb' : '#f1f5f9',
-                  border: currentStep >= 3 ? 'none' : '1px solid #cbd5e1',
-                  color: currentStep >= 3 ? '#ffffff' : '#94a3b8',
+                  background: currentStep === 3 ? '#7952eb' : '#f1f5f9',
+                  border: currentStep === 3 ? 'none' : '1px solid #cbd5e1',
+                  color: currentStep === 3 ? '#ffffff' : '#94a3b8',
                   fontSize: '12px',
                   fontWeight: 700,
                   display: 'flex',
@@ -1167,99 +1342,688 @@ export default function AdminProducts() {
               {/* ══ STEP 2: VARIANTS & INVENTORY ══ */}
               {currentStep === 2 && (
                 <div>
-                  <div style={{ marginBottom: '16px' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '16px' }}>
+                  {/* Card Container for Enable Product Variants */}
+                  <div style={{
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '12px',
+                    background: '#ffffff',
+                    padding: '18px 20px',
+                    marginBottom: '20px',
+                  }}>
+                    {/* Top Row: Title + Toggle Switch */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: enableVariants ? '18px' : '0' }}>
                       <div>
-                        <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
-                          Base Price (NPR) <span style={{ color: '#ef4444' }}>*</span>
-                        </label>
-                        <input
-                          type="number"
-                          value={form.price}
-                          onChange={e => setForm({ ...form, price: parseInt(e.target.value, 10) || 0 })}
-                          style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '13.5px', boxSizing: 'border-box' }}
-                        />
+                        <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#0f172a', marginBottom: '3px' }}>
+                          Enable Product Variants
+                        </div>
+                        <div style={{ fontSize: '11.5px', color: '#94a3b8' }}>
+                          Whenever you have multiple color/sizes/specs for any product
+                        </div>
                       </div>
-                      <div>
-                        <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
-                          Original / MRP Price (NPR)
-                        </label>
-                        <input
-                          type="number"
-                          value={form.originalPrice}
-                          onChange={e => setForm({ ...form, originalPrice: parseInt(e.target.value, 10) || 0 })}
-                          style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '13.5px', boxSizing: 'border-box' }}
-                        />
+
+                      {/* Toggle Switch Pill */}
+                      <div
+                        onClick={() => setEnableVariants(!enableVariants)}
+                        style={{
+                          width: '64px',
+                          height: '30px',
+                          borderRadius: '15px',
+                          background: enableVariants ? '#10b981' : '#e2e8f0',
+                          position: 'relative',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          padding: '2px',
+                          boxSizing: 'border-box',
+                          transition: 'background 0.2s ease',
+                          userSelect: 'none',
+                        }}
+                      >
+                        {enableVariants ? (
+                          <>
+                            <span style={{ fontSize: '10px', fontWeight: 800, color: '#ffffff', marginLeft: '9px' }}>
+                              ON
+                            </span>
+                            <div style={{
+                              position: 'absolute',
+                              right: '3px',
+                              width: '24px',
+                              height: '24px',
+                              borderRadius: '50%',
+                              background: '#ffffff',
+                              boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                              transition: 'all 0.2s ease',
+                            }} />
+                          </>
+                        ) : (
+                          <>
+                            <div style={{
+                              position: 'absolute',
+                              left: '3px',
+                              width: '24px',
+                              height: '24px',
+                              borderRadius: '50%',
+                              background: '#ffffff',
+                              boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
+                              transition: 'all 0.2s ease',
+                            }} />
+                            <span style={{ fontSize: '10px', fontWeight: 800, color: '#64748b', marginLeft: 'auto', marginRight: '8px' }}>
+                              OFF
+                            </span>
+                          </>
+                        )}
                       </div>
                     </div>
 
-                    <h4 style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a', margin: '20px 0 10px 0' }}>
-                      Size Variants & Stock
-                    </h4>
+                    {/* ─── WHEN ENABLE VARIANTS IS ON: Variant Selectors inside Card ─── */}
+                    {enableVariants && (
+                      <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        
+                        {/* Choose Variant (Color Tags) */}
+                        <div>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#1e293b', marginBottom: '6px' }}>
+                            Choose Variant
+                          </label>
+                          <div style={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            alignItems: 'center',
+                            gap: '6px',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '8px',
+                            padding: '6px 10px',
+                            background: '#ffffff',
+                            minHeight: '42px',
+                            boxSizing: 'border-box',
+                          }}>
+                            {variantColors.map(color => (
+                              <span
+                                key={color}
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '6px',
+                                  padding: '4px 8px',
+                                  background: '#f1f5f9',
+                                  borderRadius: '6px',
+                                  fontSize: '12px',
+                                  fontWeight: 500,
+                                  color: '#0f172a',
+                                }}
+                              >
+                                <span>{color}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => removeColor(color)}
+                                  style={{ background: 'none', border: 'none', padding: 0, color: '#64748b', cursor: 'pointer', fontSize: '12px', lineHeight: 1 }}
+                                >
+                                  ✕
+                                </button>
+                              </span>
+                            ))}
+                            <input
+                              type="text"
+                              placeholder={variantColors.length === 0 ? "eg. Red, Green" : "Add color..."}
+                              value={colorInput}
+                              onChange={e => setColorInput(e.target.value)}
+                              onKeyDown={e => {
+                                if (e.key === 'Enter' || e.key === ',') {
+                                  e.preventDefault();
+                                  addColor(colorInput);
+                                }
+                              }}
+                              onBlur={() => { if (colorInput.trim()) addColor(colorInput); }}
+                              style={{
+                                border: 'none',
+                                outline: 'none',
+                                fontSize: '13px',
+                                flex: 1,
+                                minWidth: '120px',
+                                padding: '4px',
+                                background: 'transparent',
+                              }}
+                            />
+                          </div>
+                        </div>
 
-                    <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden' }}>
-                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-                        <thead>
-                          <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', color: '#64748b', fontSize: '11px', fontWeight: 600 }}>
-                            <th style={{ padding: '10px 14px', textAlign: 'left' }}>SIZE</th>
-                            <th style={{ padding: '10px 14px', textAlign: 'left' }}>STOCK QUANTITY</th>
-                            <th style={{ padding: '10px 14px', textAlign: 'left' }}>PRICE (NPR)</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {form.variants.map((v, i) => (
-                            <tr key={v.size} style={{ borderBottom: i < form.variants.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
-                              <td style={{ padding: '10px 14px', fontWeight: 700, color: '#0f172a' }}>
-                                {v.size}
-                              </td>
-                              <td style={{ padding: '10px 14px' }}>
-                                <input
-                                  type="number"
-                                  value={v.stock}
-                                  onChange={e => {
-                                    const next = [...form.variants];
-                                    next[i].stock = parseInt(e.target.value, 10) || 0;
-                                    setForm({ ...form, variants: next });
-                                  }}
-                                  style={{ width: '90px', padding: '6px 10px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '13px' }}
-                                />
-                              </td>
-                              <td style={{ padding: '10px 14px' }}>
-                                <input
-                                  type="number"
-                                  value={v.price}
-                                  onChange={e => {
-                                    const next = [...form.variants];
-                                    next[i].price = parseInt(e.target.value, 10) || 0;
-                                    setForm({ ...form, variants: next });
-                                  }}
-                                  style={{ width: '110px', padding: '6px 10px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '13px' }}
-                                />
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                        {/* Show Color Preview Toggle */}
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '3px' }}>
+                            <span style={{ fontSize: '12px', fontWeight: 600, color: '#1e293b' }}>
+                              Show color preview
+                            </span>
+                            <div
+                              onClick={() => setShowColorPreview(!showColorPreview)}
+                              style={{
+                                width: '38px',
+                                height: '20px',
+                                borderRadius: '10px',
+                                background: showColorPreview ? '#10b981' : '#e2e8f0',
+                                position: 'relative',
+                                cursor: 'pointer',
+                                padding: '1px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                transition: 'background 0.2s ease',
+                              }}
+                            >
+                              {showColorPreview ? (
+                                <>
+                                  <span style={{ fontSize: '8px', fontWeight: 800, color: '#ffffff', marginLeft: '5px' }}>ON</span>
+                                  <div style={{ position: 'absolute', right: '2px', width: '16px', height: '16px', borderRadius: '50%', background: '#fff' }} />
+                                </>
+                              ) : (
+                                <>
+                                  <div style={{ position: 'absolute', left: '2px', width: '16px', height: '16px', borderRadius: '50%', background: '#fff' }} />
+                                  <span style={{ fontSize: '8px', fontWeight: 800, color: '#64748b', marginLeft: 'auto', marginRight: '5px' }}>OFF</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                          <div style={{ fontSize: '11px', color: '#94a3b8' }}>
+                            Enable this to display the color as a visual preview instead of text (e.g. Black, Pink).
+                          </div>
+                        </div>
+
+                        {/* Color Pickers for Each Selected Variant Color */}
+                        {showColorPreview && variantColors.length > 0 && (
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
+                            {variantColors.map(color => {
+                              const hex = colorCodes[color.toLowerCase()] || '#6366f1';
+                              const secHex = colorCodesSec[color.toLowerCase()] || '';
+                              return (
+                                <div key={color} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                  <div style={{ fontSize: '11px', fontWeight: 600, color: '#64748b' }}>
+                                    Color code for {color}
+                                  </div>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    {/* Primary Color Box */}
+                                    <div style={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '6px',
+                                      border: '1px solid #e2e8f0',
+                                      borderRadius: '6px',
+                                      padding: '4px 8px',
+                                      background: '#ffffff',
+                                    }}>
+                                      <input
+                                        type="color"
+                                        value={hex}
+                                        onChange={e => setColorCodes(prev => ({ ...prev, [color.toLowerCase()]: e.target.value }))}
+                                        style={{
+                                          width: '20px',
+                                          height: '20px',
+                                          border: 'none',
+                                          borderRadius: '50%',
+                                          cursor: 'pointer',
+                                          padding: 0,
+                                          background: 'none',
+                                        }}
+                                      />
+                                      <span style={{ fontSize: '11px', color: '#64748b', fontFamily: 'monospace' }}>
+                                        {hex}
+                                      </span>
+                                      <button
+                                        type="button"
+                                        onClick={() => setColorCodes(prev => ({ ...prev, [color.toLowerCase()]: '#6366f1' }))}
+                                        style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 0, fontSize: '11px' }}
+                                      >
+                                        ✕
+                                      </button>
+                                    </div>
+
+                                    {/* Secondary Color Box (optional) */}
+                                    <div style={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '6px',
+                                      border: '1px solid #e2e8f0',
+                                      borderRadius: '6px',
+                                      padding: '4px 8px',
+                                      background: '#f8fafc',
+                                    }}>
+                                      <input
+                                        type="color"
+                                        value={secHex || '#ffffff'}
+                                        onChange={e => setColorCodesSec(prev => ({ ...prev, [color.toLowerCase()]: e.target.value }))}
+                                        style={{
+                                          width: '20px',
+                                          height: '20px',
+                                          border: 'none',
+                                          borderRadius: '50%',
+                                          cursor: 'pointer',
+                                          padding: 0,
+                                          background: 'none',
+                                        }}
+                                      />
+                                      <span style={{ fontSize: '11px', color: '#94a3b8' }}>
+                                        {secHex ? secHex : '2nd (optional)'}
+                                      </span>
+                                      {secHex && (
+                                        <button
+                                          type="button"
+                                          onClick={() => setColorCodesSec(prev => ({ ...prev, [color.toLowerCase()]: '' }))}
+                                          style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 0, fontSize: '11px' }}
+                                        >
+                                          ✕
+                                        </button>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        {/* Choose Size */}
+                        <div>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#1e293b', marginBottom: '6px' }}>
+                            Choose Size
+                          </label>
+                          <div style={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            alignItems: 'center',
+                            gap: '6px',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '8px',
+                            padding: '6px 10px',
+                            background: '#ffffff',
+                            minHeight: '42px',
+                            boxSizing: 'border-box',
+                          }}>
+                            {variantSizes.map(size => (
+                              <span
+                                key={size}
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '6px',
+                                  padding: '4px 8px',
+                                  background: '#f1f5f9',
+                                  borderRadius: '6px',
+                                  fontSize: '12px',
+                                  fontWeight: 500,
+                                  color: '#0f172a',
+                                }}
+                              >
+                                <span>{size}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => removeSize(size)}
+                                  style={{ background: 'none', border: 'none', padding: 0, color: '#64748b', cursor: 'pointer', fontSize: '12px', lineHeight: 1 }}
+                                >
+                                  ✕
+                                </button>
+                              </span>
+                            ))}
+                            <input
+                              type="text"
+                              placeholder={variantSizes.length === 0 ? "eg. M, X, XL" : "Add size..."}
+                              value={sizeInput}
+                              onChange={e => setSizeInput(e.target.value)}
+                              onKeyDown={e => {
+                                if (e.key === 'Enter' || e.key === ',') {
+                                  e.preventDefault();
+                                  addSize(sizeInput);
+                                }
+                              }}
+                              onBlur={() => { if (sizeInput.trim()) addSize(sizeInput); }}
+                              style={{
+                                border: 'none',
+                                outline: 'none',
+                                fontSize: '13px',
+                                flex: 1,
+                                minWidth: '100px',
+                                padding: '4px',
+                                background: 'transparent',
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Step 2 Footer Actions */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px', paddingTop: '16px', borderTop: '1px solid #f1f5f9' }}>
+                  {/* ─── WHEN ENABLE VARIANTS IS OFF: Single Product Grid ─── */}
+                  {!enableVariants && (
+                    <div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px', marginBottom: '16px' }}>
+                        {/* Crossed Price */}
+                        <div>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
+                            Crossed Price
+                          </label>
+                          <input
+                            type="number"
+                            value={singlePricing.crossedPrice}
+                            onChange={e => setSinglePricing({ ...singlePricing, crossedPrice: parseInt(e.target.value, 10) || 0 })}
+                            style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '13.5px', boxSizing: 'border-box' }}
+                          />
+                        </div>
+
+                        {/* Selling Price * */}
+                        <div>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
+                            Selling Price <span style={{ color: '#ef4444' }}>*</span>
+                          </label>
+                          <input
+                            type="number"
+                            value={singlePricing.sellingPrice}
+                            onChange={e => setSinglePricing({ ...singlePricing, sellingPrice: parseInt(e.target.value, 10) || 0 })}
+                            style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '13.5px', boxSizing: 'border-box' }}
+                          />
+                        </div>
+
+                        {/* Cost Price */}
+                        <div>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
+                            Cost Price
+                          </label>
+                          <input
+                            type="number"
+                            value={singlePricing.costPrice}
+                            onChange={e => setSinglePricing({ ...singlePricing, costPrice: parseInt(e.target.value, 10) || 0 })}
+                            style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '13.5px', boxSizing: 'border-box' }}
+                          />
+                        </div>
+
+                        {/* Quantity */}
+                        <div>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
+                            Quantity
+                          </label>
+                          <input
+                            type="number"
+                            value={singlePricing.quantity}
+                            onChange={e => setSinglePricing({ ...singlePricing, quantity: parseInt(e.target.value, 10) || 0 })}
+                            style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '13.5px', boxSizing: 'border-box' }}
+                          />
+                        </div>
+
+                        {/* Weight (per unit, in KG) * */}
+                        <div>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
+                            Weight (per unit, in KG) <span style={{ color: '#ef4444' }}>*</span>
+                          </label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={singlePricing.weight}
+                            onChange={e => setSinglePricing({ ...singlePricing, weight: parseFloat(e.target.value) || 0 })}
+                            style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '13.5px', boxSizing: 'border-box' }}
+                          />
+                        </div>
+
+                        {/* SKU with refresh icon */}
+                        <div>
+                          <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
+                            SKU
+                          </label>
+                          <div style={{ position: 'relative' }}>
+                            <input
+                              type="text"
+                              placeholder="eg: PROD-NP-101"
+                              value={singlePricing.sku}
+                              onChange={e => setSinglePricing({ ...singlePricing, sku: e.target.value })}
+                              style={{ width: '100%', padding: '9px 36px 9px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '13.5px', boxSizing: 'border-box' }}
+                            />
+                            <button
+                              type="button"
+                              onClick={generateSingleSku}
+                              title="Generate new unique SKU"
+                              style={{
+                                position: 'absolute',
+                                right: '8px',
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                background: 'none',
+                                border: 'none',
+                                color: '#7952eb',
+                                cursor: 'pointer',
+                                padding: '4px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }}
+                            >
+                              ⟳
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ─── WHEN ENABLE VARIANTS IS ON: Action Buttons & Dynamic Table ─── */}
+                  {enableVariants && (
+                    <div>
+                      {/* Generate SKUs Button */}
+                      <div style={{ marginBottom: '14px' }}>
+                        <button
+                          type="button"
+                          onClick={regenerateAllSkus}
+                          style={{
+                            background: '#f5f3ff',
+                            border: '1px solid #ddd6fe',
+                            color: '#7952eb',
+                            borderRadius: '8px',
+                            padding: '7px 14px',
+                            fontSize: '12.5px',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                          }}
+                        >
+                          <span>⟳</span> Generate SKUs
+                        </button>
+                      </div>
+
+                      {/* Dynamic Combinations Table */}
+                      <div style={{ border: '1px solid #e2e8f0', borderRadius: '10px', overflowX: 'auto', marginBottom: '16px' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12.5px' }}>
+                          <thead>
+                            <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', color: '#64748b', fontSize: '11px', fontWeight: 700 }}>
+                              <th style={{ padding: '10px 14px', textAlign: 'left' }}>VARIANT</th>
+                              <th style={{ padding: '10px 10px', textAlign: 'left' }}>CROSSED PRICE</th>
+                              <th style={{ padding: '10px 10px', textAlign: 'left' }}>SELLING PRICE</th>
+                              <th style={{ padding: '10px 10px', textAlign: 'left' }}>COST PRICE</th>
+                              <th style={{ padding: '10px 10px', textAlign: 'left' }}>WEIGHT</th>
+                              <th style={{ padding: '10px 10px', textAlign: 'left' }}>QUANTITY</th>
+                              <th style={{ padding: '10px 10px', textAlign: 'left' }}>SKU</th>
+                              <th style={{ padding: '10px 10px', textAlign: 'center', width: '36px' }}></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {combinationRows.length === 0 ? (
+                              <tr>
+                                <td colSpan={8} style={{ padding: '36px 14px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>
+                                  No variants created yet. Enter variant colors or sizes above to dynamically generate combinations.
+                                </td>
+                              </tr>
+                            ) : (
+                              combinationRows.map((row, idx) => (
+                                <tr key={row.id || row.name} style={{ borderBottom: idx < combinationRows.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
+                                  {/* Variant Name & Image Icon */}
+                                  <td style={{ padding: '8px 12px', fontWeight: 600, color: '#0f172a' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                      <span style={{ color: '#94a3b8' }}>🖼️</span>
+                                      <span>{row.name}</span>
+                                    </div>
+                                  </td>
+
+                                  {/* Crossed Price */}
+                                  <td style={{ padding: '6px 8px' }}>
+                                    <input
+                                      type="number"
+                                      value={row.crossedPrice}
+                                      onChange={e => updateRowField(idx, 'crossedPrice', parseInt(e.target.value, 10) || 0)}
+                                      style={{ width: '75px', padding: '6px 8px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '12.5px' }}
+                                    />
+                                  </td>
+
+                                  {/* Selling Price */}
+                                  <td style={{ padding: '6px 8px' }}>
+                                    <input
+                                      type="number"
+                                      value={row.sellingPrice}
+                                      onChange={e => updateRowField(idx, 'sellingPrice', parseInt(e.target.value, 10) || 0)}
+                                      style={{ width: '75px', padding: '6px 8px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '12.5px' }}
+                                    />
+                                  </td>
+
+                                  {/* Cost Price */}
+                                  <td style={{ padding: '6px 8px' }}>
+                                    <input
+                                      type="number"
+                                      value={row.costPrice}
+                                      onChange={e => updateRowField(idx, 'costPrice', parseInt(e.target.value, 10) || 0)}
+                                      style={{ width: '75px', padding: '6px 8px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '12.5px' }}
+                                    />
+                                  </td>
+
+                                  {/* Weight */}
+                                  <td style={{ padding: '6px 8px' }}>
+                                    <input
+                                      type="number"
+                                      step="0.01"
+                                      value={row.weight}
+                                      onChange={e => updateRowField(idx, 'weight', parseFloat(e.target.value) || 0)}
+                                      style={{ width: '65px', padding: '6px 8px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '12.5px' }}
+                                    />
+                                  </td>
+
+                                  {/* Quantity */}
+                                  <td style={{ padding: '6px 8px' }}>
+                                    <input
+                                      type="number"
+                                      value={row.quantity}
+                                      onChange={e => updateRowField(idx, 'quantity', parseInt(e.target.value, 10) || 0)}
+                                      style={{ width: '65px', padding: '6px 8px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '12.5px' }}
+                                    />
+                                  </td>
+
+                                  {/* SKU */}
+                                  <td style={{ padding: '6px 8px' }}>
+                                    <input
+                                      type="text"
+                                      value={row.sku}
+                                      onChange={e => updateRowField(idx, 'sku', e.target.value)}
+                                      placeholder="SKU"
+                                      style={{ width: '110px', padding: '6px 8px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '12px' }}
+                                    />
+                                  </td>
+
+                                  {/* Delete Icon */}
+                                  <td style={{ padding: '6px 8px', textAlign: 'center' }}>
+                                    <button
+                                      type="button"
+                                      onClick={() => deleteVariantRow(idx)}
+                                      title="Delete variant row"
+                                      style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px', fontSize: '14px' }}
+                                    >
+                                      🗑️
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Accordion: Barcode & HS Code */}
+                  <div style={{ marginBottom: '16px' }}>
+                    <button
+                      type="button"
+                      onClick={() => setBarcodeAccordionOpen(!barcodeAccordionOpen)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#7952eb',
+                        fontSize: '12.5px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        padding: '4px 0',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                      }}
+                    >
+                      <span>Barcode & HS code (optional)</span>
+                      <span>{barcodeAccordionOpen ? '▴' : '▾'}</span>
+                    </button>
+
+                    {barcodeAccordionOpen && (
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '10px' }}>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: '#64748b', marginBottom: '4px' }}>Barcode</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. 123456789012"
+                            value={singlePricing.barcode}
+                            onChange={e => setSinglePricing({ ...singlePricing, barcode: e.target.value })}
+                            style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '13px', boxSizing: 'border-box' }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: '#64748b', marginBottom: '4px' }}>HS Code</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. 6204.42"
+                            value={singlePricing.hsCode}
+                            onChange={e => setSinglePricing({ ...singlePricing, hsCode: e.target.value })}
+                            style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '13px', boxSizing: 'border-box' }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Continue selling even after product is out of stock Checkbox */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px' }}>
+                    <input
+                      type="checkbox"
+                      id="continueSelling"
+                      checked={enableVariants ? continueSellingOutOfStock : singlePricing.continueSellingOutOfStock}
+                      onChange={e => {
+                        if (enableVariants) {
+                          setContinueSellingOutOfStock(e.target.checked);
+                        } else {
+                          setSinglePricing({ ...singlePricing, continueSellingOutOfStock: e.target.checked });
+                        }
+                      }}
+                      style={{ accentColor: '#7952eb', width: '16px', height: '16px', cursor: 'pointer' }}
+                    />
+                    <label htmlFor="continueSelling" style={{ fontSize: '13px', color: '#374151', cursor: 'pointer' }}>
+                      Continue selling even after product is out of stock
+                    </label>
+                  </div>
+
+                  {/* Step 2 Footer Navigation (EXACT MATCH) */}
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '20px', paddingTop: '16px', borderTop: '1px solid #f1f5f9' }}>
                     <button
                       type="button"
                       onClick={() => setCurrentStep(1)}
                       style={{
                         background: '#ffffff',
-                        border: '1px solid #e2e8f0',
-                        color: '#64748b',
+                        border: '1px solid #7952eb',
+                        color: '#7952eb',
                         borderRadius: '8px',
-                        padding: '10px 18px',
+                        padding: '9px 18px',
                         fontSize: '13px',
                         fontWeight: 600,
                         cursor: 'pointer',
+                        transition: 'all 0.15s ease',
                       }}
                     >
-                      ← Back
+                      Previous: General Information
                     </button>
                     <button
                       type="button"
@@ -1269,11 +2033,15 @@ export default function AdminProducts() {
                         color: '#ffffff',
                         border: 'none',
                         borderRadius: '8px',
-                        padding: '10px 22px',
+                        padding: '9px 22px',
                         fontSize: '13.5px',
                         fontWeight: 600,
                         cursor: 'pointer',
+                        boxShadow: '0 1px 3px rgba(121, 82, 235, 0.3)',
+                        transition: 'opacity 0.15s ease',
                       }}
+                      onMouseEnter={e => { e.currentTarget.style.opacity = '0.9'; }}
+                      onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
                     >
                       Next: Custom Fields
                     </button>
@@ -1326,9 +2094,9 @@ export default function AdminProducts() {
                           return cat ? cat.name : id;
                         }).join(', ') || 'None'}
                       </div>
-                      <div><strong>Price:</strong> NPR {form.price.toLocaleString()}</div>
-                      <div><strong>Status:</strong> {form.status}</div>
-                      <div><strong>Total Stock:</strong> {form.variants.reduce((a, b) => a + (parseInt(b.stock, 10) || 0), 0)} units</div>
+                      <div><strong>Pricing Mode:</strong> {enableVariants ? 'Multiple Variants' : 'Single Product'}</div>
+                      <div><strong>Price:</strong> NPR {(enableVariants ? (combinationRows[0]?.sellingPrice || 0) : singlePricing.sellingPrice).toLocaleString()}</div>
+                      <div><strong>Total Stock:</strong> {enableVariants ? combinationRows.reduce((a, b) => a + (parseInt(b.quantity, 10) || 0), 0) : singlePricing.quantity} units</div>
                     </div>
                   </div>
 

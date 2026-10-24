@@ -1,22 +1,39 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useStore } from '../../context/StoreContext';
 
 export default function AdminProducts() {
-  const { products, addProduct, deleteProduct } = useStore();
+  const { products, categories, addProduct, deleteProduct } = useStore();
   const [activeTab, setActiveTab] = useState('Active'); // Active, Draft, Archived
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1); // 1: General Info, 2: Variants & Inventory, 3: Custom Fields
 
-  const [newProduct, setNewProduct] = useState({
+  // Form State for Step 1
+  const [form, setForm] = useState({
     name: '',
+    categoryId: categories?.[0]?.id || '',
+    shortDescription: '',
+    longDescription: '',
+    image: '',
+    imagePreview: '',
+    // Step 2 fields
     price: 2999,
     originalPrice: 4499,
+    sku: '',
+    variants: [
+      { size: 'M', stock: 5, price: 2999 },
+      { size: 'L', stock: 5, price: 2999 },
+      { size: 'XL', stock: 5, price: 2999 },
+      { size: 'XXL', stock: 5, price: 2999 },
+    ],
+    // Step 3 fields
+    tags: '',
+    badge: 'New Arrival',
     status: 'Active',
-    rating: 5,
-    inventory: 20,
-    image: '/images/kurtha-charcoal.jpg',
-    sizes: { M: 5, L: 5, XL: 5, XXL: 5 },
   });
+
+  const [errors, setErrors] = useState({});
+  const fileInputRef = useRef(null);
 
   // Filter products by tab status and search query
   const filteredProducts = (products || []).filter(p => {
@@ -34,28 +51,105 @@ export default function AdminProducts() {
     return true;
   });
 
-  const handleCreate = (e) => {
+  // Validation for Step 1
+  const validateStep1 = () => {
+    const newErrors = {};
+    if (!form.name.trim()) {
+      newErrors.name = 'Product name is required';
+    }
+    if (!form.categoryId) {
+      newErrors.categoryId = 'Please select a category';
+    }
+    if (!form.shortDescription.trim()) {
+      newErrors.shortDescription = 'Product description is required';
+    }
+    if (!form.longDescription.trim()) {
+      newErrors.longDescription = 'Long description is required';
+    }
+    if (!form.image && !form.imagePreview) {
+      newErrors.image = 'Please upload at least one product image';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleNextStep1 = () => {
+    if (validateStep1()) {
+      setErrors({});
+      setCurrentStep(2);
+    }
+  };
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setForm(prev => ({
+          ...prev,
+          image: reader.result,
+          imagePreview: reader.result,
+        }));
+        if (errors.image) {
+          setErrors(prev => ({ ...prev, image: null }));
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleFinalSubmit = (e) => {
     e.preventDefault();
-    if (!newProduct.name || !newProduct.price) {
-      alert('Please fill in product name and price');
+    if (!validateStep1()) {
+      setCurrentStep(1);
       return;
     }
+
+    const totalStock = form.variants.reduce((acc, v) => acc + (parseInt(v.stock, 10) || 0), 0);
+    const sizesObj = form.variants.reduce((acc, v) => {
+      acc[v.size] = parseInt(v.stock, 10) || 0;
+      return acc;
+    }, {});
+
     addProduct({
-      ...newProduct,
-      status: activeTab,
+      name: form.name,
+      categoryId: form.categoryId,
+      description: form.shortDescription,
+      longDescription: form.longDescription,
+      image: form.image || '/images/kurtha-charcoal.jpg',
+      price: form.price,
+      originalPrice: form.originalPrice,
+      status: form.status,
+      inventory: totalStock,
+      sizes: sizesObj,
       createdAt: new Date().toISOString(),
     });
+
+    // Reset and close
     setShowAddModal(false);
-    setNewProduct({
+    setCurrentStep(1);
+    setForm({
       name: '',
+      categoryId: categories?.[0]?.id || '',
+      shortDescription: '',
+      longDescription: '',
+      image: '',
+      imagePreview: '',
       price: 2999,
       originalPrice: 4499,
+      sku: '',
+      variants: [
+        { size: 'M', stock: 5, price: 2999 },
+        { size: 'L', stock: 5, price: 2999 },
+        { size: 'XL', stock: 5, price: 2999 },
+        { size: 'XXL', stock: 5, price: 2999 },
+      ],
+      tags: '',
+      badge: 'New Arrival',
       status: 'Active',
-      rating: 5,
-      inventory: 20,
-      image: '/images/kurtha-charcoal.jpg',
-      sizes: { M: 5, L: 5, XL: 5, XXL: 5 },
     });
+    setErrors({});
   };
 
   return (
@@ -192,7 +286,10 @@ export default function AdminProducts() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <button
             type="button"
-            onClick={() => setShowAddModal(true)}
+            onClick={() => {
+              setCurrentStep(1);
+              setShowAddModal(true);
+            }}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -274,7 +371,6 @@ export default function AdminProducts() {
               <tr>
                 <td colSpan="9" style={{ padding: '72px 20px', textAlign: 'center' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                    {/* Circle icon with disabled file/image SVG */}
                     <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#f3f4f6', border: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', marginBottom: '10px' }}>
                       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                         <line x1="2" y1="2" x2="22" y2="22" />
@@ -292,7 +388,6 @@ export default function AdminProducts() {
                 </td>
               </tr>
             ) : (
-              /* Product Rows */
               filteredProducts.map((p, idx) => {
                 const totalStock = Object.values(p.sizes || {}).reduce((a, b) => a + Number(b || 0), 0);
                 return (
@@ -348,54 +443,676 @@ export default function AdminProducts() {
         </table>
       </div>
 
-      {/* Modal for adding product */}
+      {/* ══ 5. CANVA 3-STEP "ADD PRODUCT" MODAL (PIXEL PERFECT) ══ */}
       {showAddModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
-          <div style={{ background: '#ffffff', borderRadius: '16px', padding: '24px', maxWidth: '480px', width: '100%', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
-            <h3 style={{ margin: '0 0 16px 0', fontSize: '1.2rem', fontWeight: 800, color: '#111827' }}>Add New Product</h3>
-            <form onSubmit={handleCreate}>
-              <div style={{ marginBottom: '14px' }}>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#6b7280', marginBottom: '6px' }}>Product Name</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Royal Silk Kurtha"
-                  value={newProduct.name}
-                  onChange={e => setNewProduct({ ...newProduct, name: e.target.value })}
-                  style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '13.5px', boxSizing: 'border-box' }}
-                />
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(15, 23, 42, 0.45)',
+          backdropFilter: 'blur(3px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '20px',
+        }}>
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '16px',
+            maxWidth: '680px',
+            width: '100%',
+            maxHeight: '90vh',
+            display: 'flex',
+            flexDirection: 'column',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)',
+            overflow: 'hidden',
+          }}>
+            
+            {/* Modal Header */}
+            <div style={{
+              padding: '16px 24px',
+              borderBottom: '1px solid #f1f5f9',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}>
+              <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', margin: 0 }}>
+                Add Product
+              </h2>
+              <button
+                type="button"
+                onClick={() => setShowAddModal(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#94a3b8',
+                  fontSize: '18px',
+                  lineHeight: 1,
+                  cursor: 'pointer',
+                  padding: '4px',
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Stepper Header (CANVA EXACT) */}
+            <div style={{
+              background: '#f8fafc',
+              borderBottom: '1px solid #f1f5f9',
+              padding: '14px 24px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '12px',
+            }}>
+              {/* Step 1 Item */}
+              <div
+                onClick={() => setCurrentStep(1)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  cursor: 'pointer',
+                  flex: 1,
+                }}
+              >
+                <div style={{
+                  width: '26px',
+                  height: '26px',
+                  borderRadius: '50%',
+                  background: currentStep >= 1 ? '#7952eb' : '#e2e8f0',
+                  color: currentStep >= 1 ? '#ffffff' : '#64748b',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                  1
+                </div>
+                <div>
+                  <div style={{ fontSize: '10px', fontWeight: 700, color: currentStep === 1 ? '#7952eb' : '#64748b', letterSpacing: '0.04em' }}>
+                    STEP 1
+                  </div>
+                  <div style={{ fontSize: '12px', fontWeight: 600, color: currentStep === 1 ? '#0f172a' : '#64748b' }}>
+                    General Information
+                  </div>
+                </div>
               </div>
 
-              <div style={{ marginBottom: '14px' }}>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#6b7280', marginBottom: '6px' }}>Price (NPR)</label>
-                <input
-                  type="number"
-                  required
-                  value={newProduct.price}
-                  onChange={e => setNewProduct({ ...newProduct, price: parseInt(e.target.value, 10) || 0 })}
-                  style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '13.5px', boxSizing: 'border-box' }}
-                />
+              {/* Separator Line */}
+              <div style={{ height: '1px', flex: '0 0 30px', background: '#e2e8f0' }} />
+
+              {/* Step 2 Item */}
+              <div
+                onClick={() => {
+                  if (validateStep1()) setCurrentStep(2);
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  cursor: currentStep > 1 ? 'pointer' : 'default',
+                  flex: 1,
+                }}
+              >
+                <div style={{
+                  width: '26px',
+                  height: '26px',
+                  borderRadius: '50%',
+                  background: currentStep >= 2 ? '#7952eb' : '#f1f5f9',
+                  border: currentStep >= 2 ? 'none' : '1px solid #cbd5e1',
+                  color: currentStep >= 2 ? '#ffffff' : '#94a3b8',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                  2
+                </div>
+                <div>
+                  <div style={{ fontSize: '10px', fontWeight: 700, color: currentStep === 2 ? '#7952eb' : '#94a3b8', letterSpacing: '0.04em' }}>
+                    STEP 2
+                  </div>
+                  <div style={{ fontSize: '12px', fontWeight: 600, color: currentStep === 2 ? '#0f172a' : '#94a3b8' }}>
+                    Variants & Inventory
+                  </div>
+                </div>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
-                <button
-                  type="button"
-                  onClick={() => setShowAddModal(false)}
-                  style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #e5e7eb', background: '#ffffff', color: '#6b7280', cursor: 'pointer', fontSize: '13px' }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  style={{ padding: '8px 18px', borderRadius: '8px', border: 'none', background: '#7952eb', color: '#ffffff', fontWeight: 700, cursor: 'pointer', fontSize: '13px' }}
-                >
-                  Save Product
-                </button>
+              {/* Separator Line */}
+              <div style={{ height: '1px', flex: '0 0 30px', background: '#e2e8f0' }} />
+
+              {/* Step 3 Item */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  flex: 1,
+                  opacity: currentStep === 3 ? 1 : 0.6,
+                }}
+              >
+                <div style={{
+                  width: '26px',
+                  height: '26px',
+                  borderRadius: '50%',
+                  background: currentStep >= 3 ? '#7952eb' : '#f1f5f9',
+                  border: currentStep >= 3 ? 'none' : '1px solid #cbd5e1',
+                  color: currentStep >= 3 ? '#ffffff' : '#94a3b8',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                  3
+                </div>
+                <div>
+                  <div style={{ fontSize: '10px', fontWeight: 700, color: currentStep === 3 ? '#7952eb' : '#94a3b8', letterSpacing: '0.04em' }}>
+                    STEP 3
+                  </div>
+                  <div style={{ fontSize: '12px', fontWeight: 600, color: currentStep === 3 ? '#0f172a' : '#94a3b8' }}>
+                    Custom Fields
+                  </div>
+                </div>
               </div>
-            </form>
+            </div>
+
+            {/* Modal Body (Scrollable) */}
+            <div style={{ padding: '24px', overflowY: 'auto', flex: 1 }}>
+              
+              {/* ══ STEP 1: GENERAL INFORMATION ══ */}
+              {currentStep === 1 && (
+                <div>
+                  {/* Field 1: Product Name */}
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
+                      Product Name <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="eg. Red Doko Styled T-shirt"
+                      value={form.name}
+                      onChange={e => {
+                        setForm({ ...form, name: e.target.value });
+                        if (errors.name) setErrors({ ...errors, name: null });
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '10px 14px',
+                        borderRadius: '8px',
+                        border: errors.name ? '1.5px solid #ef4444' : '1px solid #e2e8f0',
+                        fontSize: '13.5px',
+                        outline: 'none',
+                        boxSizing: 'border-box',
+                        transition: 'border-color 0.15s ease',
+                      }}
+                      onFocus={e => { if (!errors.name) e.currentTarget.style.borderColor = '#7952eb'; }}
+                      onBlur={e => { if (!errors.name) e.currentTarget.style.borderColor = '#e2e8f0'; }}
+                    />
+                    {errors.name && (
+                      <span style={{ fontSize: '11px', color: '#ef4444', display: 'block', marginTop: '4px' }}>
+                        {errors.name}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Field 2: Categories */}
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
+                      Categories <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <select
+                        value={form.categoryId}
+                        onChange={e => {
+                          setForm({ ...form, categoryId: e.target.value });
+                          if (errors.categoryId) setErrors({ ...errors, categoryId: null });
+                        }}
+                        style={{
+                          flex: 1,
+                          padding: '10px 14px',
+                          borderRadius: '8px',
+                          border: errors.categoryId ? '1.5px solid #ef4444' : '1px solid #e2e8f0',
+                          fontSize: '13.5px',
+                          outline: 'none',
+                          background: '#ffffff',
+                          boxSizing: 'border-box',
+                        }}
+                      >
+                        <option value="">Select product categories</option>
+                        {(categories || []).map(cat => (
+                          <option key={cat.id} value={cat.id}>
+                            {cat.name}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newCatName = prompt('Enter new category name:');
+                          if (newCatName && newCatName.trim()) {
+                            alert(`Category "${newCatName}" can be selected!`);
+                          }
+                        }}
+                        style={{
+                          background: '#f3effe',
+                          color: '#7952eb',
+                          border: 'none',
+                          borderRadius: '8px',
+                          padding: '0 16px',
+                          fontSize: '13px',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        + Add
+                      </button>
+                    </div>
+                    {errors.categoryId && (
+                      <span style={{ fontSize: '11px', color: '#ef4444', display: 'block', marginTop: '4px' }}>
+                        {errors.categoryId}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Field 3: Product Description */}
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
+                      Product Description <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    <textarea
+                      rows={4}
+                      placeholder={`No description found\nGood & converting description contains:\n• Solutions to customer pain points.\n• Simple language that highlights value.\n• Clear and concise key features and benefits.\n• Context to help customers imagine using the product.`}
+                      value={form.shortDescription}
+                      onChange={e => {
+                        setForm({ ...form, shortDescription: e.target.value });
+                        if (errors.shortDescription) setErrors({ ...errors, shortDescription: null });
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '10px 14px',
+                        borderRadius: '8px',
+                        border: errors.shortDescription ? '1.5px solid #ef4444' : '1px solid #e2e8f0',
+                        fontSize: '13px',
+                        lineHeight: 1.5,
+                        outline: 'none',
+                        boxSizing: 'border-box',
+                        fontFamily: 'inherit',
+                      }}
+                      onFocus={e => { if (!errors.shortDescription) e.currentTarget.style.borderColor = '#7952eb'; }}
+                      onBlur={e => { if (!errors.shortDescription) e.currentTarget.style.borderColor = '#e2e8f0'; }}
+                    />
+                    {errors.shortDescription && (
+                      <span style={{ fontSize: '11px', color: '#ef4444', display: 'block', marginTop: '4px' }}>
+                        {errors.shortDescription}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Field 4: Long Description */}
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
+                      Long Description <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    <textarea
+                      rows={4}
+                      placeholder={`No description found\nGood & converting description contains:\n• Solutions to customer pain points.\n• Simple language that highlights value.\n• Clear and concise key features and benefits.\n• Context to help customers imagine using the product.`}
+                      value={form.longDescription}
+                      onChange={e => {
+                        setForm({ ...form, longDescription: e.target.value });
+                        if (errors.longDescription) setErrors({ ...errors, longDescription: null });
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '10px 14px',
+                        borderRadius: '8px',
+                        border: errors.longDescription ? '1.5px solid #ef4444' : '1px solid #e2e8f0',
+                        fontSize: '13px',
+                        lineHeight: 1.5,
+                        outline: 'none',
+                        boxSizing: 'border-box',
+                        fontFamily: 'inherit',
+                      }}
+                      onFocus={e => { if (!errors.longDescription) e.currentTarget.style.borderColor = '#7952eb'; }}
+                      onBlur={e => { if (!errors.longDescription) e.currentTarget.style.borderColor = '#e2e8f0'; }}
+                    />
+                    {errors.longDescription && (
+                      <span style={{ fontSize: '11px', color: '#ef4444', display: 'block', marginTop: '4px' }}>
+                        {errors.longDescription}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Field 5: Product Images (CANVA EXACT DROPZONE) */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
+                      Product Images <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      style={{ display: 'none' }}
+                    />
+
+                    {form.imagePreview ? (
+                      <div style={{
+                        position: 'relative',
+                        width: '120px',
+                        height: '140px',
+                        borderRadius: '8px',
+                        overflow: 'hidden',
+                        border: '1px solid #e2e8f0',
+                      }}>
+                        <img
+                          src={form.imagePreview}
+                          alt="Preview"
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setForm(prev => ({ ...prev, image: '', imagePreview: '' }))}
+                          style={{
+                            position: 'absolute',
+                            top: '4px',
+                            right: '4px',
+                            background: 'rgba(0,0,0,0.6)',
+                            color: '#ffffff',
+                            border: 'none',
+                            borderRadius: '50%',
+                            width: '22px',
+                            height: '22px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '12px',
+                          }}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ) : (
+                      <div
+                        onClick={() => fileInputRef.current?.click()}
+                        style={{
+                          border: errors.image ? '1.5px dashed #ef4444' : '1.5px dashed #cbd5e1',
+                          borderRadius: '10px',
+                          padding: '36px 20px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          background: '#fbfbfd',
+                          transition: 'all 0.15s ease',
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = '#7952eb'; e.currentTarget.style.background = '#faf8ff'; }}
+                        onMouseLeave={e => { if (!errors.image) { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.background = '#fbfbfd'; } }}
+                      >
+                        {/* Image Plus Icon from Canva */}
+                        <div style={{ color: '#94a3b8', marginBottom: '8px' }}>
+                          <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                            <circle cx="8.5" cy="8.5" r="1.5" />
+                            <polyline points="21 15 16 10 5 21" />
+                            <line x1="18" y1="9" x2="22" y2="9" />
+                            <line x1="20" y1="7" x2="20" y2="11" />
+                          </svg>
+                        </div>
+                        <span style={{ fontSize: '13px', fontWeight: 500, color: '#64748b' }}>
+                          Click to upload product image
+                        </span>
+                        <span style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>
+                          PNG, JPG up to 10MB
+                        </span>
+                      </div>
+                    )}
+
+                    {errors.image && (
+                      <span style={{ fontSize: '11px', color: '#ef4444', display: 'block', marginTop: '4px' }}>
+                        {errors.image}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Step 1 Footer Action */}
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #f1f5f9' }}>
+                    <button
+                      type="button"
+                      onClick={handleNextStep1}
+                      style={{
+                        background: '#7952eb',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: '8px',
+                        padding: '10px 22px',
+                        fontSize: '13.5px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        boxShadow: '0 1px 3px rgba(121, 82, 235, 0.3)',
+                        transition: 'opacity 0.15s ease',
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.opacity = '0.9'; }}
+                      onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
+                    >
+                      Next: Variants & Inventory
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ══ STEP 2: VARIANTS & INVENTORY ══ */}
+              {currentStep === 2 && (
+                <div>
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '16px' }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
+                          Base Price (NPR) <span style={{ color: '#ef4444' }}>*</span>
+                        </label>
+                        <input
+                          type="number"
+                          value={form.price}
+                          onChange={e => setForm({ ...form, price: parseInt(e.target.value, 10) || 0 })}
+                          style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '13.5px', boxSizing: 'border-box' }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
+                          Original / MRP Price (NPR)
+                        </label>
+                        <input
+                          type="number"
+                          value={form.originalPrice}
+                          onChange={e => setForm({ ...form, originalPrice: parseInt(e.target.value, 10) || 0 })}
+                          style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '13.5px', boxSizing: 'border-box' }}
+                        />
+                      </div>
+                    </div>
+
+                    <h4 style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a', margin: '20px 0 10px 0' }}>
+                      Size Variants & Stock
+                    </h4>
+
+                    <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                        <thead>
+                          <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', color: '#64748b', fontSize: '11px', fontWeight: 600 }}>
+                            <th style={{ padding: '10px 14px', textAlign: 'left' }}>SIZE</th>
+                            <th style={{ padding: '10px 14px', textAlign: 'left' }}>STOCK QUANTITY</th>
+                            <th style={{ padding: '10px 14px', textAlign: 'left' }}>PRICE (NPR)</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {form.variants.map((v, i) => (
+                            <tr key={v.size} style={{ borderBottom: i < form.variants.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
+                              <td style={{ padding: '10px 14px', fontWeight: 700, color: '#0f172a' }}>
+                                {v.size}
+                              </td>
+                              <td style={{ padding: '10px 14px' }}>
+                                <input
+                                  type="number"
+                                  value={v.stock}
+                                  onChange={e => {
+                                    const next = [...form.variants];
+                                    next[i].stock = parseInt(e.target.value, 10) || 0;
+                                    setForm({ ...form, variants: next });
+                                  }}
+                                  style={{ width: '90px', padding: '6px 10px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '13px' }}
+                                />
+                              </td>
+                              <td style={{ padding: '10px 14px' }}>
+                                <input
+                                  type="number"
+                                  value={v.price}
+                                  onChange={e => {
+                                    const next = [...form.variants];
+                                    next[i].price = parseInt(e.target.value, 10) || 0;
+                                    setForm({ ...form, variants: next });
+                                  }}
+                                  style={{ width: '110px', padding: '6px 10px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '13px' }}
+                                />
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Step 2 Footer Actions */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px', paddingTop: '16px', borderTop: '1px solid #f1f5f9' }}>
+                    <button
+                      type="button"
+                      onClick={() => setCurrentStep(1)}
+                      style={{
+                        background: '#ffffff',
+                        border: '1px solid #e2e8f0',
+                        color: '#64748b',
+                        borderRadius: '8px',
+                        padding: '10px 18px',
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      ← Back
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCurrentStep(3)}
+                      style={{
+                        background: '#7952eb',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: '8px',
+                        padding: '10px 22px',
+                        fontSize: '13.5px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Next: Custom Fields
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ══ STEP 3: CUSTOM FIELDS & SAVE ══ */}
+              {currentStep === 3 && (
+                <div>
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
+                      Status
+                    </label>
+                    <select
+                      value={form.status}
+                      onChange={e => setForm({ ...form, status: e.target.value })}
+                      style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '13.5px', background: '#fff', boxSizing: 'border-box' }}
+                    >
+                      <option value="Active">Active</option>
+                      <option value="Draft">Draft</option>
+                      <option value="Archived">Archived</option>
+                    </select>
+                  </div>
+
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
+                      Badge / Tag
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Tihar Special, Bestseller"
+                      value={form.badge}
+                      onChange={e => setForm({ ...form, badge: e.target.value })}
+                      style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '13.5px', boxSizing: 'border-box' }}
+                    />
+                  </div>
+
+                  {/* Summary Review Card */}
+                  <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '16px', marginTop: '16px' }}>
+                    <h4 style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', margin: '0 0 10px 0' }}>
+                      Product Summary
+                    </h4>
+                    <div style={{ fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <div><strong>Name:</strong> {form.name}</div>
+                      <div><strong>Price:</strong> NPR {form.price.toLocaleString()}</div>
+                      <div><strong>Status:</strong> {form.status}</div>
+                      <div><strong>Total Stock:</strong> {form.variants.reduce((a, b) => a + (parseInt(b.stock, 10) || 0), 0)} units</div>
+                    </div>
+                  </div>
+
+                  {/* Step 3 Footer Actions */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px', paddingTop: '16px', borderTop: '1px solid #f1f5f9' }}>
+                    <button
+                      type="button"
+                      onClick={() => setCurrentStep(2)}
+                      style={{
+                        background: '#ffffff',
+                        border: '1px solid #e2e8f0',
+                        color: '#64748b',
+                        borderRadius: '8px',
+                        padding: '10px 18px',
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      ← Back
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleFinalSubmit}
+                      style={{
+                        background: '#7952eb',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: '8px',
+                        padding: '10px 24px',
+                        fontSize: '13.5px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        boxShadow: '0 2px 4px rgba(121, 82, 235, 0.3)',
+                      }}
+                    >
+                      Publish Product
+                    </button>
+                  </div>
+                </div>
+              )}
+
+            </div>
           </div>
         </div>
       )}
+
     </div>
   );
 }

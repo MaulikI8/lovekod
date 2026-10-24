@@ -69,7 +69,9 @@ export default function AdminOrders() {
   // Product Picker state
   const [productPickerOpen, setProductPickerOpen] = useState(false);
   const [productSearch, setProductSearch] = useState('');
-  const [pickerSelected, setPickerSelected] = useState({}); // { [productId]: { product, size, quantity } }
+  const [pickerSelected, setPickerSelected] = useState({});
+  const [stockWarning, setStockWarning] = useState('');
+  const [pickerWarning, setPickerWarning] = useState(''); // { [productId]: { product, size, quantity } }
 
   // Discount & Offers
   const [discountType, setDiscountType] = useState('fixed'); // 'fixed' | 'percent'
@@ -167,6 +169,19 @@ export default function AdminOrders() {
       alert('Full Name and Phone Number are required.');
       return;
     }
+    // Validate inventory stock for all items
+    for (const it of (formData.items || [])) {
+      const max = getItemMaxStock(it);
+      if (max !== 9999 && max <= 0) {
+        setStockWarning(`No more products: "${it.name || it.title}" is out of stock (0 items available). Please remove it to proceed.`);
+        return;
+      }
+      if (max !== 9999 && (it.quantity || 1) > max) {
+        setStockWarning(`No more products: Quantity for "${it.name || it.title}" (${it.quantity}) exceeds available stock (${max}).`);
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     try {
       let savedCust = {
@@ -252,7 +267,42 @@ export default function AdminOrders() {
     return rows;
   }, [products]);
 
+  const getItemMaxStock = (item) => {
+    if (!item) return 9999;
+    if (typeof item.stock === 'number' && !isNaN(item.stock)) {
+      return item.stock;
+    }
+    const match = allVariantRows.find(r => 
+      (item.sku && r.sku === item.sku) ||
+      (r.productId === item.productId && (r.variant === item.size || r.variant === item.variant))
+    );
+    if (match) return match.stock;
+    const prodMatch = (products || []).find(p => p.id === item.productId);
+    if (prodMatch) {
+      return Number(prodMatch.stock || prodMatch.totalStock || 0);
+    }
+    if (!item.productId || item.size === 'Custom') {
+      return 9999;
+    }
+    return 0;
+  };
+
   const togglePickerVariantRow = (row) => {
+    if (row.stock <= 0) {
+      setPickerWarning(`No more products: "${row.productName} (${row.variant})" is out of stock (0 items available).`);
+      return;
+    }
+    const inOrderCount = (formData.items || []).filter(it => 
+      (it.sku && it.sku === row.sku) ||
+      (it.productId === row.productId && (it.size === row.variant || it.variant === row.variant))
+    ).reduce((sum, it) => sum + (Number(it.quantity) || 1), 0);
+
+    if (inOrderCount >= row.stock) {
+      setPickerWarning(`No more products: All ${row.stock} items of "${row.productName} (${row.variant})" are already in this order.`);
+      return;
+    }
+
+    setPickerWarning('');
     setPickerSelected(prev => {
       const copy = { ...prev };
       if (copy[row.key]) {
@@ -270,24 +320,67 @@ export default function AdminOrders() {
       setProductPickerOpen(false);
       return;
     }
-    const newItems = selectedList.map(item => {
+
+    let warningMsg = '';
+    const itemsToAdd = [];
+    const updatedExisting = [...formData.items];
+
+    selectedList.forEach(item => {
       const p = item.product || {};
-      return {
-        productId: item.productId || p.id,
-        name: item.productName || p.name,
-        size: item.variant || "Standard",
-        sku: item.sku || "",
-        quantity: 1,
-        price: item.price ?? p.price ?? 0,
-        image: item.image || p.image || "/images/kurtha-charcoal.jpg",
-        discount: 0,
-        discountType: "fixed",
-      };
+      const maxStock = item.stock !== undefined ? Number(item.stock) : 0;
+      if (maxStock <= 0) {
+        warningMsg = `No more products: "${item.productName} (${item.variant})" is out of stock.`;
+        return;
+      }
+
+      const existingIdx = updatedExisting.findIndex(it =>
+        (it.sku && item.sku && it.sku === item.sku) ||
+        (it.productId === (item.productId || p.id) && (it.size === item.variant || it.variant === item.variant))
+      );
+
+      if (existingIdx >= 0) {
+        const cur = updatedExisting[existingIdx];
+        const curQty = Number(cur.quantity) || 1;
+        if (curQty >= maxStock) {
+          warningMsg = `No more products: Only ${maxStock} in stock for "${cur.name || item.productName}". Maximum already in order.`;
+        } else {
+          updatedExisting[existingIdx] = {
+            ...cur,
+            quantity: Math.min(maxStock, curQty + 1),
+            stock: maxStock,
+            maxStock: maxStock,
+          };
+        }
+      } else {
+        itemsToAdd.push({
+          productId: item.productId || p.id,
+          name: item.productName || p.name,
+          title: item.productName || p.name,
+          size: item.variant || "Standard",
+          sku: item.sku || "",
+          quantity: 1,
+          stock: maxStock,
+          maxStock: maxStock,
+          price: item.price ?? p.price ?? 0,
+          sellingPrice: item.price ?? p.price ?? 0,
+          image: item.image || p.image || "/images/kurtha-charcoal.jpg",
+          discount: 0,
+          discountType: "fixed",
+        });
+      }
     });
+
     setFormData(prev => ({
       ...prev,
-      items: [...prev.items, ...newItems]
+      items: [...updatedExisting, ...itemsToAdd]
     }));
+
+    if (warningMsg) {
+      setStockWarning(warningMsg);
+    } else {
+      setStockWarning('');
+    }
+
     setPickerSelected({});
     setProductPickerOpen(false);
   };
@@ -297,9 +390,46 @@ export default function AdminOrders() {
       const updated = [...prev.items];
       const cur = updated[index];
       if (cur) {
-        const newQty = Math.max(1, (cur.quantity || 1) + delta);
-        updated[index] = { ...cur, quantity: newQty };
+        const maxStock = getItemMaxStock(cur);
+        const currentQty = Number(cur.quantity) || 1;
+        const newQty = currentQty + delta;
+
+        if (delta > 0 && maxStock !== 9999 && newQty > maxStock) {
+          setStockWarning(`No more products: Only ${maxStock} item${maxStock === 1 ? '' : 's'} available in stock for "${cur.name || cur.title}". Cannot add more.`);
+          return prev;
+        }
+
+        if (newQty < 1) return prev;
+
+        setStockWarning('');
+        updated[index] = { ...cur, quantity: newQty, stock: maxStock, maxStock: maxStock };
       }
+      return { ...prev, items: updated };
+    });
+  };
+
+  const handleItemDirectQtyChange = (index, val) => {
+    const num = parseInt(val, 10);
+    setFormData(prev => {
+      const updated = [...prev.items];
+      const cur = updated[index];
+      if (!cur) return prev;
+      const maxStock = getItemMaxStock(cur);
+
+      if (isNaN(num) || num < 1) {
+        updated[index] = { ...cur, quantity: 1, stock: maxStock, maxStock: maxStock };
+        setStockWarning('');
+        return { ...prev, items: updated };
+      }
+
+      if (maxStock !== 9999 && num > maxStock) {
+        updated[index] = { ...cur, quantity: maxStock, stock: maxStock, maxStock: maxStock };
+        setStockWarning(`No more products: Only ${maxStock} item${maxStock === 1 ? '' : 's'} available in stock for "${cur.name || cur.title}". Quantity set to available stock (${maxStock}).`);
+        return { ...prev, items: updated };
+      }
+
+      setStockWarning('');
+      updated[index] = { ...cur, quantity: num, stock: maxStock, maxStock: maxStock };
       return { ...prev, items: updated };
     });
   };
@@ -423,17 +553,33 @@ export default function AdminOrders() {
       paymentStatus: order.paymentStatus || order.payment_status || 'Unpaid',
       status: order.status || 'Pending',
       channel: order.channel || 'WhatsApp',
-      items: (order.items || []).map(it => ({
-        id: it.id || it.product_id || it.productId || Date.now(),
-        title: it.title || it.name || '',
-        price: it.price || it.sellingPrice || 0,
-        sellingPrice: it.price || it.sellingPrice || 0,
-        quantity: it.quantity || 1,
-        size: it.size || it.variant || 'M',
-        color: it.color || '',
-        image: it.image || '/images/kurtha-charcoal.jpg',
-        discount: it.discount || 0,
-      })),
+      items: (order.items || []).map(it => {
+        const pId = it.id || it.product_id || it.productId || '';
+        const name = it.title || it.name || '';
+        const size = it.size || it.variant || 'Standard';
+        const match = allVariantRows.find(r => 
+          (it.sku && r.sku === it.sku) ||
+          (r.productId === pId && r.variant === size)
+        );
+        const stock = match ? match.stock : (typeof it.stock === 'number' ? it.stock : 9999);
+        return {
+          id: pId || Date.now(),
+          productId: pId,
+          name: name,
+          title: name,
+          price: it.price || it.sellingPrice || 0,
+          sellingPrice: it.price || it.sellingPrice || 0,
+          quantity: it.quantity || 1,
+          size: size,
+          color: it.color || '',
+          image: it.image || '/images/kurtha-charcoal.jpg',
+          discount: it.discount || 0,
+          discountType: it.discountType || 'fixed',
+          stock: stock,
+          maxStock: stock,
+          sku: it.sku || (match ? match.sku : ''),
+        };
+      }),
     });
     setShowCreateModal(true);
   };
@@ -1398,7 +1544,7 @@ export default function AdminOrders() {
                   borderRadius: '12px',
                   padding: '16px'
                 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#1e293b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                         Products ({formData.items.length})
@@ -1407,7 +1553,7 @@ export default function AdminOrders() {
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <button
                         type="button"
-                        onClick={() => setProductPickerOpen(true)}
+                        onClick={() => { setStockWarning(''); setProductPickerOpen(true); }}
                         style={{
                           background: '#7c3aed',
                           color: '#ffffff',
@@ -1442,6 +1588,45 @@ export default function AdminOrders() {
                       </button>
                     </div>
                   </div>
+
+                  {/* Clean inline warning near adding section (No alert popups) */}
+                  {stockWarning && (
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '8px 12px',
+                      background: '#fff1f2',
+                      border: '1px solid #fecdd3',
+                      borderRadius: '8px',
+                      color: '#e11d48',
+                      fontSize: '0.82rem',
+                      fontWeight: 600,
+                      marginBottom: '12px'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '1rem' }}>⚠️</span>
+                        <span>{stockWarning}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setStockWarning('')}
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          color: '#e11d48',
+                          cursor: 'pointer',
+                          fontSize: '1rem',
+                          fontWeight: 700,
+                          padding: '0 4px',
+                          lineHeight: 1
+                        }}
+                        title="Dismiss"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
 
                   {/* Empty state or Product List */}
                   {formData.items.length === 0 ? (
@@ -1491,73 +1676,115 @@ export default function AdminOrders() {
                             }}
                           >
                             {/* Product Info */}
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
-                              <img
-                                src={item.image || '/images/kurtha-charcoal.jpg'}
-                                alt=""
-                                style={{ width: '40px', height: '40px', borderRadius: '6px', objectFit: 'cover', flexShrink: 0 }}
-                              />
-                              <div>
-                                <div style={{ fontSize: '0.86rem', fontWeight: 700, color: '#0f172a' }}>
-                                  {item.name}
-                                </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
-                                  <span style={{ fontSize: '0.72rem', background: '#f1f5f9', color: '#475569', padding: '1px 6px', borderRadius: '4px', fontWeight: 600 }}>
-                                    Size: {item.size || 'M'}
-                                  </span>
-                                  <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                                    Rs {Number(item.price).toLocaleString()}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
+                            {(() => {
+                              const maxStock = getItemMaxStock(item);
+                              const isAtMax = maxStock !== 9999 && (item.quantity || 1) >= maxStock;
+                              const isZero = maxStock !== 9999 && maxStock <= 0;
 
-                            {/* Quantity Stepper (+ purple, - pink) */}
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              <button
-                                type="button"
-                                onClick={() => handleItemQtyChange(idx, -1)}
-                                style={{
-                                  width: '26px',
-                                  height: '26px',
-                                  borderRadius: '4px',
-                                  border: 'none',
-                                  background: '#ffe4e6',
-                                  color: '#e11d48',
-                                  fontWeight: 800,
-                                  cursor: 'pointer',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  fontSize: '0.9rem'
-                                }}
-                              >
-                                -
-                              </button>
-                              <span style={{ minWidth: '24px', textAlign: 'center', fontWeight: 700, fontSize: '0.85rem' }}>
-                                {item.quantity}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => handleItemQtyChange(idx, 1)}
-                                style={{
-                                  width: '26px',
-                                  height: '26px',
-                                  borderRadius: '4px',
-                                  border: 'none',
-                                  background: '#ede9fe',
-                                  color: '#7c3aed',
-                                  fontWeight: 800,
-                                  cursor: 'pointer',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  fontSize: '0.9rem'
-                                }}
-                              >
-                                +
-                              </button>
-                            </div>
+                              return (
+                                <>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
+                                    <img
+                                      src={item.image || '/images/kurtha-charcoal.jpg'}
+                                      alt=""
+                                      style={{ width: '40px', height: '40px', borderRadius: '6px', objectFit: 'cover', flexShrink: 0 }}
+                                    />
+                                    <div>
+                                      <div style={{ fontSize: '0.86rem', fontWeight: 700, color: '#0f172a' }}>
+                                        {item.name || item.title}
+                                      </div>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px', flexWrap: 'wrap' }}>
+                                        <span style={{ fontSize: '0.72rem', background: '#f1f5f9', color: '#475569', padding: '1px 6px', borderRadius: '4px', fontWeight: 600 }}>
+                                          Size: {item.size || 'M'}
+                                        </span>
+                                        {maxStock !== 9999 && (
+                                          <span style={{
+                                            fontSize: '0.7rem',
+                                            padding: '1px 6px',
+                                            borderRadius: '4px',
+                                            fontWeight: 700,
+                                            background: isZero ? '#fee2e2' : (isAtMax ? '#ffedd5' : '#f0fdf4'),
+                                            color: isZero ? '#dc2626' : (isAtMax ? '#c2410c' : '#15803d')
+                                          }}>
+                                            {isZero ? 'Out of stock' : (isAtMax ? `Max reached (${maxStock} in stock)` : `${maxStock} in stock`)}
+                                          </span>
+                                        )}
+                                        <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                                          Rs {Number(item.price || item.sellingPrice || 0).toLocaleString()}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Quantity Stepper (+ purple, - pink) + Direct input */}
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleItemQtyChange(idx, -1)}
+                                      style={{
+                                        width: '26px',
+                                        height: '26px',
+                                        borderRadius: '4px',
+                                        border: 'none',
+                                        background: '#ffe4e6',
+                                        color: '#e11d48',
+                                        fontWeight: 800,
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: '0.9rem'
+                                      }}
+                                    >
+                                      -
+                                    </button>
+                                    <input
+                                      type="number"
+                                      min="1"
+                                      max={maxStock !== 9999 ? maxStock : undefined}
+                                      value={item.quantity || 1}
+                                      onChange={e => handleItemDirectQtyChange(idx, e.target.value)}
+                                      style={{
+                                        width: '38px',
+                                        textAlign: 'center',
+                                        fontWeight: 700,
+                                        fontSize: '0.85rem',
+                                        border: '1px solid #cbd5e1',
+                                        borderRadius: '4px',
+                                        padding: '2px 0'
+                                      }}
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        if (isAtMax) {
+                                          setStockWarning(`No more products: Only ${maxStock} in stock for "${item.name || item.title}".`);
+                                        } else {
+                                          handleItemQtyChange(idx, 1);
+                                        }
+                                      }}
+                                      style={{
+                                        width: '26px',
+                                        height: '26px',
+                                        borderRadius: '4px',
+                                        border: 'none',
+                                        background: isAtMax ? '#f1f5f9' : '#ede9fe',
+                                        color: isAtMax ? '#94a3b8' : '#7c3aed',
+                                        fontWeight: 800,
+                                        cursor: isAtMax ? 'not-allowed' : 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: '0.9rem'
+                                      }}
+                                      title={isAtMax ? `Only ${maxStock} in stock` : 'Add 1 more'}
+                                    >
+                                      +
+                                    </button>
+                                  </div>
+                                </>
+                              );
+                            })()}
 
                             {/* Item Discount (Toggle Rs / %) */}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -2343,6 +2570,42 @@ export default function AdminOrders() {
               </div>
             </div>
 
+            {/* Inline warning inside picker modal */}
+            {pickerWarning && (
+              <div style={{
+                margin: '10px 22px 0 22px',
+                padding: '8px 12px',
+                background: '#fff1f2',
+                border: '1px solid #fecdd3',
+                borderRadius: '8px',
+                color: '#e11d48',
+                fontSize: '0.82rem',
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span>⚠️</span>
+                  <span>{pickerWarning}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPickerWarning('')}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#e11d48',
+                    cursor: 'pointer',
+                    fontSize: '0.9rem',
+                    fontWeight: 700
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+
             {/* Blanxer Table: Checkbox | Im... | Product | Variant | SKU | Quantity | Unit Price */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '14px 22px' }}>
               {(() => {
@@ -2353,12 +2616,20 @@ export default function AdminOrders() {
                   r.sku.toLowerCase().includes(searchQ)
                 );
 
-                const allChecked = filteredRows.length > 0 && filteredRows.every(r => !!pickerSelected[r.key]);
+                const eligibleRows = filteredRows.filter(r => {
+                  const inOrder = (formData.items || []).filter(it => 
+                    (it.sku && it.sku === r.sku) ||
+                    (it.productId === r.productId && (it.size === r.variant || it.variant === r.variant))
+                  ).reduce((sum, it) => sum + (Number(it.quantity) || 1), 0);
+                  return r.stock > 0 && r.stock > inOrder;
+                });
+
+                const allChecked = eligibleRows.length > 0 && eligibleRows.every(r => !!pickerSelected[r.key]);
 
                 const handleToggleAll = (checked) => {
                   setPickerSelected(prev => {
                     const copy = { ...prev };
-                    filteredRows.forEach(r => {
+                    eligibleRows.forEach(r => {
                       if (checked) copy[r.key] = r;
                       else delete copy[r.key];
                     });
@@ -2382,7 +2653,7 @@ export default function AdminOrders() {
                         <th style={{ padding: '10px 8px' }}>Product</th>
                         <th style={{ padding: '10px 8px' }}>Variant</th>
                         <th style={{ padding: '10px 8px' }}>SKU</th>
-                        <th style={{ padding: '10px 8px', textAlign: 'center' }}>Quantity</th>
+                        <th style={{ padding: '10px 8px', textAlign: 'center' }}>Quantity / Stock</th>
                         <th style={{ padding: '10px 8px', textAlign: 'right' }}>Unit Price</th>
                       </tr>
                     </thead>
@@ -2396,21 +2667,42 @@ export default function AdminOrders() {
                       ) : (
                         filteredRows.map(row => {
                           const isChecked = !!pickerSelected[row.key];
+                          const inOrderCount = (formData.items || []).filter(it => 
+                            (it.sku && it.sku === row.sku) ||
+                            (it.productId === row.productId && (it.size === row.variant || it.variant === row.variant))
+                          ).reduce((sum, it) => sum + (Number(it.quantity) || 1), 0);
+                          const remainingStock = Math.max(0, row.stock - inOrderCount);
+                          const isZeroStock = row.stock <= 0;
+                          const isMaxAllocated = !isZeroStock && remainingStock <= 0;
+                          const isDisabled = isZeroStock || isMaxAllocated;
+
                           return (
                             <tr
                               key={row.key}
+                              onClick={() => {
+                                if (isZeroStock) {
+                                  setPickerWarning(`No more products: "${row.productName} (${row.variant})" is out of stock (0 items available).`);
+                                } else if (isMaxAllocated) {
+                                  setPickerWarning(`No more products: All ${row.stock} items of "${row.productName} (${row.variant})" are already in this order.`);
+                                } else {
+                                  togglePickerVariantRow(row);
+                                }
+                              }}
                               style={{
                                 borderBottom: '1px solid #f1f5f9',
-                                background: isChecked ? '#f5f3ff' : 'transparent',
+                                background: isChecked ? '#f5f3ff' : (isDisabled ? '#f8fafc' : 'transparent'),
+                                opacity: isDisabled ? 0.65 : 1,
+                                cursor: isDisabled ? 'not-allowed' : 'pointer',
                                 transition: 'background 0.15s'
                               }}
                             >
-                              <td style={{ padding: '10px 8px' }}>
+                              <td style={{ padding: '10px 8px' }} onClick={e => e.stopPropagation()}>
                                 <input
                                   type="checkbox"
                                   checked={isChecked}
+                                  disabled={isDisabled}
                                   onChange={() => togglePickerVariantRow(row)}
-                                  style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#7c3aed' }}
+                                  style={{ width: '16px', height: '16px', cursor: isDisabled ? 'not-allowed' : 'pointer', accentColor: '#7c3aed' }}
                                 />
                               </td>
                               <td style={{ padding: '10px 8px' }}>
@@ -2435,12 +2727,40 @@ export default function AdminOrders() {
                                 {row.sku}
                               </td>
                               <td style={{ padding: '10px 8px', textAlign: 'center' }}>
-                                <span style={{
-                                  fontWeight: 700,
-                                  color: row.stock > 0 ? '#0f172a' : '#ef4444'
-                                }}>
-                                  {row.stock}
-                                </span>
+                                {isZeroStock ? (
+                                  <span style={{
+                                    fontSize: '0.72rem',
+                                    fontWeight: 800,
+                                    background: '#fee2e2',
+                                    color: '#dc2626',
+                                    padding: '2px 8px',
+                                    borderRadius: '12px',
+                                    whiteSpace: 'nowrap'
+                                  }}>
+                                    0 • Out of stock
+                                  </span>
+                                ) : isMaxAllocated ? (
+                                  <span style={{
+                                    fontSize: '0.72rem',
+                                    fontWeight: 800,
+                                    background: '#fef3c7',
+                                    color: '#b45309',
+                                    padding: '2px 8px',
+                                    borderRadius: '12px',
+                                    whiteSpace: 'nowrap'
+                                  }}>
+                                    {row.stock} in stock (All in order)
+                                  </span>
+                                ) : (
+                                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                    <span style={{ fontWeight: 700, color: '#0f172a' }}>{row.stock}</span>
+                                    {inOrderCount > 0 && (
+                                      <span style={{ fontSize: '0.68rem', color: '#64748b' }}>
+                                        ({remainingStock} left to add)
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
                               </td>
                               <td style={{ padding: '10px 8px', textAlign: 'right', fontWeight: 700, color: '#0f172a' }}>
                                 Rs {Number(row.price).toLocaleString()}

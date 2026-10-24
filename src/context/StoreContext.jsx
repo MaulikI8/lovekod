@@ -106,6 +106,22 @@ function loadProducts() {
   return [];
 }
 
+function loadOrders() {
+  const cached = loadState('lovekod_orders', []);
+  if (Array.isArray(cached) && cached.length > 0) {
+    return cached.filter(o => !o.isDeleted && !o.is_deleted);
+  }
+  return [];
+}
+
+function loadCustomers() {
+  const cached = loadState('lovekod_customers', []);
+  if (Array.isArray(cached) && cached.length > 0) {
+    return cached.filter(c => !c.isDeleted && !c.is_deleted);
+  }
+  return [];
+}
+
 function loadState(key, fallback) {
   try {
     const raw = localStorage.getItem(key);
@@ -126,8 +142,8 @@ export function StoreProvider({ children }) {
   const [siteSettings, setSiteSettings] = useState(DEFAULT_SETTINGS);
   const [festivalMoments, setFestivalMoments] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
-  const [orders, setOrders] = useState([]);
-  const [customers, setCustomers] = useState([]);
+  const [orders, setOrders] = useState(loadOrders);
+  const [customers, setCustomers] = useState(loadCustomers);
 
   // Client session state (persisted)
   const [cart, setCart] = useState(() => loadState(STORAGE_KEYS.CART, []));
@@ -143,6 +159,8 @@ export function StoreProvider({ children }) {
   useEffect(() => saveState(STORAGE_KEYS.CART, cart), [cart]);
   useEffect(() => saveState(STORAGE_KEYS.ADMIN_AUTH, isAdmin), [isAdmin]);
   useEffect(() => saveState(STORAGE_KEYS.LIGHTS, lightsEnabled), [lightsEnabled]);
+  useEffect(() => saveState('lovekod_orders', orders), [orders]);
+  useEffect(() => saveState('lovekod_customers', customers), [customers]);
 
   // Anti-cache fetch helper: guarantees fresh responses bypassing browser/proxy cache
   const fetchLive = async (path) => {

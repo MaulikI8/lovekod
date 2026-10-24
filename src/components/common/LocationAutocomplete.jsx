@@ -4,10 +4,11 @@ import { nepalLocations } from '../../data/districts';
 export default function LocationAutocomplete({
   value = '',
   onChange,
-  placeholder = 'Type to search city / district (e.g. Sunsari, Pokhara)...',
+  placeholder = 'Type or search city / district (e.g. Sunsari, Pokhara)...',
   required = false,
   style = {},
   inputStyle = {},
+  theme = 'light',
 }) {
   const [query, setQuery] = useState(value);
   const [isOpen, setIsOpen] = useState(false);
@@ -26,8 +27,8 @@ export default function LocationAutocomplete({
         if (aStarts && !bStarts) return -1;
         if (!aStarts && bStarts) return 1;
         return a.localeCompare(b);
-      }).slice(0, 10)
-    : nepalLocations.slice(0, 8);
+      }).slice(0, 15)
+    : nepalLocations.slice(0, 12);
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -69,6 +70,8 @@ export default function LocationAutocomplete({
     }
   };
 
+  const isLight = theme === 'light';
+
   return (
     <div ref={containerRef} style={{ position: 'relative', width: '100%', ...style }}>
       <input
@@ -87,6 +90,13 @@ export default function LocationAutocomplete({
         style={{
           width: '100%',
           boxSizing: 'border-box',
+          padding: '8px 10px',
+          borderRadius: '6px',
+          border: isLight ? '1px solid #cbd5e1' : '1px solid var(--marigold, #7c3aed)',
+          background: isLight ? '#ffffff' : '#140c08',
+          color: isLight ? '#0f172a' : '#ffffff',
+          fontSize: '0.84rem',
+          outline: 'none',
           ...inputStyle,
         }}
         autoComplete="off"
@@ -100,10 +110,10 @@ export default function LocationAutocomplete({
             left: 0,
             right: 0,
             marginTop: '4px',
-            background: '#20150e',
-            border: '1px solid var(--marigold, #7c3aed)',
-            borderRadius: '6px',
-            boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+            background: isLight ? '#ffffff' : '#20150e',
+            border: isLight ? '1px solid #e2e8f0' : '1px solid var(--marigold, #7c3aed)',
+            borderRadius: '8px',
+            boxShadow: isLight ? '0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)' : '0 10px 25px rgba(0,0,0,0.5)',
             maxHeight: '220px',
             overflowY: 'auto',
             zIndex: 9999,
@@ -118,19 +128,24 @@ export default function LocationAutocomplete({
                 onMouseEnter={() => setHighlightIndex(idx)}
                 style={{
                   padding: '8px 12px',
-                  fontSize: '0.86rem',
-                  color: isHighlighted ? '#fff' : 'rgba(255,255,255,0.85)',
-                  background: isHighlighted ? 'rgba(124, 58, 237, 0.4)' : 'transparent',
+                  fontSize: '0.84rem',
+                  color: isLight
+                    ? (isHighlighted ? '#7c3aed' : '#1e293b')
+                    : (isHighlighted ? '#fff' : 'rgba(255,255,255,0.85)'),
+                  background: isLight
+                    ? (isHighlighted ? '#f5f3ff' : 'transparent')
+                    : (isHighlighted ? 'rgba(124, 58, 237, 0.4)' : 'transparent'),
                   cursor: 'pointer',
-                  borderBottom: '1px solid rgba(255,255,255,0.05)',
+                  borderBottom: isLight ? '1px solid #f1f5f9' : '1px solid rgba(255,255,255,0.05)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
+                  fontWeight: isHighlighted ? 600 : 400,
                 }}
               >
                 <span>{item}</span>
                 {item.toLowerCase().startsWith(cleanQ) && cleanQ && (
-                  <span style={{ fontSize: '0.72rem', color: 'var(--marigold, #c084fc)', opacity: 0.8 }}>
+                  <span style={{ fontSize: '0.72rem', color: isLight ? '#7c3aed' : 'var(--marigold, #c084fc)', fontWeight: 700 }}>
                     match
                   </span>
                 )}

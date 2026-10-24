@@ -18,7 +18,7 @@ export default function AdminLogin() {
     if (adminLogin(password)) {
       navigate('/admin');
     } else {
-      setError('Incorrect admin password. Default is "lovekod2026"');
+      setError('Incorrect admin passcode. Please try again.');
     }
   };
 
@@ -53,7 +53,7 @@ export default function AdminLogin() {
             <label>Admin Passcode</label>
             <input
               type="password"
-              placeholder="Enter passcode (default: lovekod2026)"
+              placeholder=""
               value={password}
               onChange={e => setPassword(e.target.value)}
               autoFocus

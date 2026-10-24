@@ -878,10 +878,12 @@ export default function AdminOrders() {
                   let channelStyle = { bg: '#dcfce7', text: '#15803d', border: '#bbf7d0', label: 'WHATSAPP' };
                   if (ch.includes('insta')) {
                     channelStyle = { bg: '#fae8ff', text: '#a21caf', border: '#f0abfc', label: 'INSTAGRAM' };
-                  } else if (ch.includes('web')) {
-                    channelStyle = { bg: '#dbeafe', text: '#1d4ed8', border: '#bfdbfe', label: 'WEBSITE' };
+                  } else if (ch.includes('face') || ch.includes('fb')) {
+                    channelStyle = { bg: '#dbeafe', text: '#1d4ed8', border: '#93c5fd', label: 'FACEBOOK' };
                   } else if (ch.includes('tik')) {
                     channelStyle = { bg: '#f1f5f9', text: '#0f172a', border: '#cbd5e1', label: 'TIKTOK' };
+                  } else if (ch.includes('web')) {
+                    channelStyle = { bg: '#e0e7ff', text: '#4338ca', border: '#c7d2fe', label: 'WEBSITE' };
                   } else if (ch.includes('phone')) {
                     channelStyle = { bg: '#f8fafc', text: '#475569', border: '#e2e8f0', label: 'PHONE' };
                   }
@@ -1739,31 +1741,14 @@ export default function AdminOrders() {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                     <div>
                       <label style={{ display: 'block', fontSize: '0.74rem', fontWeight: 700, color: '#475569', marginBottom: '4px' }}>
-                        City / District *
+                        City / District * (Search / Auto-suggest)
                       </label>
-                      <select
+                      <LocationAutocomplete
                         value={formData.district}
-                        onChange={e => setFormData({ ...formData, district: e.target.value })}
-                        style={{
-                          width: '100%',
-                          padding: '8px 10px',
-                          borderRadius: '6px',
-                          border: '1px solid #cbd5e1',
-                          fontSize: '0.84rem',
-                          background: '#ffffff'
-                        }}
-                      >
-                        <option value="Kathmandu Inside Ring Road">Kathmandu Inside Ring Road</option>
-                        <option value="Kathmandu Outside Ring Road">Kathmandu Outside Ring Road</option>
-                        <option value="Lalitpur">Lalitpur</option>
-                        <option value="Bhaktapur">Bhaktapur</option>
-                        <option value="Pokhara">Pokhara</option>
-                        <option value="Chitwan">Chitwan</option>
-                        <option value="Butwal / Bhairahawa">Butwal / Bhairahawa</option>
-                        <option value="Biratnagar / Dharan">Biratnagar / Dharan</option>
-                        <option value="Nepalgunj">Nepalgunj</option>
-                        <option value="Outside Valley (Courier)">Outside Valley (Courier)</option>
-                      </select>
+                        onChange={val => setFormData({ ...formData, district: val })}
+                        theme="light"
+                        placeholder="Type or select district / city..."
+                      />
                     </div>
 
                     <div>
@@ -1951,6 +1936,8 @@ export default function AdminOrders() {
                       >
                         <option value="WhatsApp">WhatsApp</option>
                         <option value="Instagram">Instagram DM</option>
+                        <option value="Facebook">Facebook Messenger</option>
+                        <option value="TikTok">TikTok</option>
                         <option value="Web">Website Checkout</option>
                         <option value="Phone Call">Phone Call</option>
                       </select>

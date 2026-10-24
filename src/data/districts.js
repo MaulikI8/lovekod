@@ -1,11 +1,23 @@
 export const nepalLocations = [
   "Kathmandu Inside Ring Road",
   "Kathmandu Outside Ring Road",
+  "Lalitpur",
+  "Bhaktapur",
   "Pokhara",
   "Biratnagar",
+  "Birgunj",
   "Dharan",
   "Itahari",
   "Butwal",
+  "Bhairahawa",
+  "Chitwan (Bharatpur / Narayangarh)",
+  "Nepalgunj",
+  "Dhangadhi",
+  "Hetauda",
+  "Janakpur",
+  "Damak",
+  "Birtamod",
+  "Tulsipur / Ghorahi",
   "Achham",
   "Arghakhanchi",
   "Baglung",
@@ -15,9 +27,7 @@ export const nepalLocations = [
   "Banke",
   "Bara",
   "Bardiya",
-  "Bhaktapur",
   "Bhojpur",
-  "Chitwan",
   "Dadeldhura",
   "Dailekh",
   "Dang",
@@ -42,7 +52,6 @@ export const nepalLocations = [
   "Kaski",
   "Kavrepalanchok",
   "Khotang",
-  "Lalitpur",
   "Lamjung",
   "Mahottari",
   "Makwanpur",
@@ -81,7 +90,8 @@ export const nepalLocations = [
   "Tanahun",
   "Taplejung",
   "Terhathum",
-  "Udayapur"
+  "Udayapur",
+  "Outside Valley (Courier)"
 ];
 
 // Compatibility export

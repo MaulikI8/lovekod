@@ -88,6 +88,8 @@ const DEFAULT_CATEGORIES = [
   { id: 4, name: '3-Piece Sets', slug: '3-piece', nepaliName: '', order: 4, isActive: true },
 ];
 
+const DUMMY_PRODUCT_IDS = new Set(['lk-001', 'lk-002', 'lk-003', 'lk-004', 'lk-005']);
+
 function loadCategories() {
   const cached = loadState('lovekod_categories', null);
   if (Array.isArray(cached) && cached.length > 0) {
@@ -98,8 +100,8 @@ function loadCategories() {
 
 function loadProducts() {
   const cached = loadState('lovekod_products', []);
-  if (Array.isArray(cached)) {
-    return cached.filter(p => !String(p.id).startsWith('lk-'));
+  if (Array.isArray(cached) && cached.length > 0) {
+    return cached.filter(p => !DUMMY_PRODUCT_IDS.has(String(p.id)) && !p.isDeleted && !p.is_deleted);
   }
   return [];
 }
@@ -156,15 +158,21 @@ export function StoreProvider({ children }) {
 
   // Fetch all dynamic data from Django Backend
   const refreshFromBackend = useCallback(async () => {
-    // 1. Products (Exclude soft deleted)
+    // 1. Products (Merged with local cache so user products are never wiped on refresh)
     try {
       const res = await fetchLive('/products/');
       if (res.ok) {
         const data = await res.json();
-        if (Array.isArray(data)) {
-          const activeOnly = data.filter(p => !p.isDeleted && !p.is_deleted);
-          setProducts(activeOnly);
-          saveState('lovekod_products', activeOnly);
+        if (Array.isArray(data) && data.length > 0) {
+          const activeOnly = data.filter(p => !p.isDeleted && !p.is_deleted && !DUMMY_PRODUCT_IDS.has(String(p.id)));
+          setProducts(prev => {
+            const map = new Map();
+            prev.forEach(p => map.set(String(p.id), p));
+            activeOnly.forEach(p => map.set(String(p.id), { ...(map.get(String(p.id)) || {}), ...p }));
+            const merged = Array.from(map.values());
+            saveState('lovekod_products', merged);
+            return merged;
+          });
         }
       }
     } catch { /* offline fallback */ }
@@ -506,10 +514,14 @@ export function StoreProvider({ children }) {
     } catch { /* offline fallback */ }
   }
 
-  // ── Product Management ──
+  // ── Product Management (Fully Persisted in LocalStorage & Synced) ──
   async function updateProduct(updatedProduct) {
-    setProducts(prev => prev.map(p => p.id === updatedProduct.id ? updatedProduct : p));
-    showToast('Product updated');
+    setProducts(prev => {
+      const next = prev.map(p => String(p.id) === String(updatedProduct.id) ? { ...p, ...updatedProduct } : p);
+      saveState('lovekod_products', next);
+      return next;
+    });
+    showToast('Product updated successfully');
 
     try {
       await fetch(`${API_BASE}/products/${updatedProduct.id}/`, {
@@ -517,33 +529,47 @@ export function StoreProvider({ children }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedProduct),
       });
-      refreshFromBackend();
     } catch { /* offline fallback */ }
   }
 
   async function addProduct(newProduct) {
-    const tempId = 'lk-' + Date.now().toString(36);
-    const productWithId = { ...newProduct, id: tempId };
-    setProducts(prev => [...prev, productWithId]);
-    showToast('Product added');
+    const id = newProduct.id || ('prod_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 6));
+    const productWithId = { ...newProduct, id };
+    setProducts(prev => {
+      const next = [productWithId, ...prev.filter(p => p.id !== id)];
+      saveState('lovekod_products', next);
+      return next;
+    });
+    showToast('Product added successfully');
 
     try {
       const res = await fetch(`${API_BASE}/products/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newProduct),
+        body: JSON.stringify(productWithId),
       });
-      if (res.ok) refreshFromBackend();
+      if (res.ok) {
+        const saved = await res.json();
+        setProducts(prev => {
+          const next = prev.map(p => p.id === id ? { ...p, ...saved } : p);
+          saveState('lovekod_products', next);
+          return next;
+        });
+      }
     } catch { /* offline fallback */ }
+    return productWithId;
   }
 
   async function deleteProduct(id) {
-    setProducts(prev => prev.filter(p => p.id !== id));
+    setProducts(prev => {
+      const next = prev.filter(p => String(p.id) !== String(id));
+      saveState('lovekod_products', next);
+      return next;
+    });
     showToast('Product deleted');
 
     try {
       await fetch(`${API_BASE}/products/${id}/`, { method: 'DELETE' });
-      refreshFromBackend();
     } catch { /* offline fallback */ }
   }
 

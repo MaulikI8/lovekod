@@ -2,7 +2,9 @@ import { useState, useRef, useEffect } from 'react';
 import { useStore } from '../../context/StoreContext';
 
 export default function AdminProducts() {
-  const { products, categories, addProduct, deleteProduct, addCategory } = useStore();
+  const { products, categories, addProduct, updateProduct, deleteProduct, addCategory } = useStore();
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [actionMenuOpenId, setActionMenuOpenId] = useState(null);
   const [activeTab, setActiveTab] = useState('Active'); // Active, Draft, Archived
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -341,57 +343,197 @@ export default function AdminProducts() {
     }
   };
 
-  const handleFinalSubmit = (e) => {
-    e.preventDefault();
-    if (!validateStep1()) {
-      setCurrentStep(1);
-      return;
+    const formatCanvaDate = (dateString) => {
+    if (!dateString) return 'Oct 24, 2026 3:34 PM';
+    try {
+      const d = new Date(dateString);
+      if (isNaN(d.getTime())) return 'Oct 24, 2026 3:34 PM';
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const month = months[d.getMonth()];
+      const day = d.getDate();
+      const year = d.getFullYear();
+      let hours = d.getHours();
+      const minutes = String(d.getMinutes()).padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+      return `${month} ${day}, ${year} ${hours}:${minutes} ${ampm}`;
+    } catch {
+      return 'Oct 24, 2026 3:34 PM';
     }
+  };
 
-    const totalStock = form.variants.reduce((acc, v) => acc + (parseInt(v.stock, 10) || 0), 0);
-    const sizesObj = form.variants.reduce((acc, v) => {
-      acc[v.size] = parseInt(v.stock, 10) || 0;
-      return acc;
-    }, {});
-
-    addProduct({
-      name: form.name,
-      categoryId: form.categoryIds[0] || '',
-      categoryIds: form.categoryIds,
-      description: form.shortDescription,
-      longDescription: form.longDescription,
-      image: form.image || '/images/kurtha-charcoal.jpg',
-      price: form.price,
-      originalPrice: form.originalPrice,
-      status: form.status,
-      inventory: totalStock,
-      sizes: sizesObj,
-      createdAt: new Date().toISOString(),
-    });
-
-    // Reset and close
-    setShowAddModal(false);
+  const openAddProduct = () => {
+    setEditingProduct(null);
+    setActionMenuOpenId(null);
     setCurrentStep(1);
     setForm({
       name: '',
-      categoryIds: [],
+      categoryIds: categories.length > 0 ? [categories[0].id] : [],
       shortDescription: '',
       longDescription: '',
       image: '',
       imagePreview: '',
-      price: 2999,
-      originalPrice: 4499,
+      price: 2000,
+      originalPrice: 2500,
       sku: '',
       variants: [
-        { size: 'M', stock: 5, price: 2999 },
-        { size: 'L', stock: 5, price: 2999 },
-        { size: 'XL', stock: 5, price: 2999 },
-        { size: 'XXL', stock: 5, price: 2999 },
+        { size: 'M', stock: 5, price: 2000 },
+        { size: 'L', stock: 5, price: 2000 },
+        { size: 'XL', stock: 5, price: 2000 },
+        { size: 'XXL', stock: 5, price: 2000 },
       ],
       tags: '',
       badge: 'New Arrival',
       status: 'Active',
     });
+    setEnableVariants(false);
+    setVariantColors([]);
+    setVariantSizes([]);
+    setColorCodes({});
+    setColorCodesSec({});
+    setCombinationRows([]);
+    setSinglePricing({
+      crossedPrice: 2500,
+      sellingPrice: 2000,
+      costPrice: 1500,
+      quantity: 20,
+      weight: 0.5,
+      sku: 'LK-PROD-' + Math.floor(100 + Math.random() * 900),
+      barcode: '',
+      hsCode: '',
+      continueSellingOutOfStock: true,
+    });
+    setErrors({});
+    setShowAddModal(true);
+  };
+
+  const openEditProduct = (prod) => {
+    setEditingProduct(prod);
+    setActionMenuOpenId(null);
+    setCurrentStep(1);
+
+    setForm({
+      name: prod.name || '',
+      categoryIds: prod.categoryIds || (prod.categoryId ? [prod.categoryId] : (categories.length > 0 ? [categories[0].id] : [])),
+      shortDescription: prod.description || prod.shortDescription || '',
+      longDescription: prod.longDescription || '',
+      image: prod.image || '',
+      imagePreview: prod.image || '',
+      price: prod.price || prod.regular_price || 2000,
+      originalPrice: prod.originalPrice || prod.crossedPrice || 2500,
+      sku: prod.sku || '',
+      variants: prod.variants || [
+        { size: 'M', stock: 5, price: prod.price || 2000 },
+        { size: 'L', stock: 5, price: prod.price || 2000 },
+        { size: 'XL', stock: 5, price: prod.price || 2000 },
+        { size: 'XXL', stock: 5, price: prod.price || 2000 },
+      ],
+      tags: prod.tags || '',
+      badge: prod.badge || 'New Arrival',
+      status: prod.status || 'Active',
+    });
+
+    if (prod.enableVariants || (prod.combinationRows && prod.combinationRows.length > 0) || (prod.variantColors && prod.variantColors.length > 0)) {
+      setEnableVariants(true);
+      setVariantColors(prod.variantColors || []);
+      setColorCodes(prod.colorCodes || {});
+      setColorCodesSec(prod.colorCodesSec || {});
+      setVariantSizes(prod.variantSizes || []);
+      setCombinationRows(prod.combinationRows || []);
+    } else {
+      setEnableVariants(false);
+      setVariantColors([]);
+      setVariantSizes([]);
+      setColorCodes({});
+      setColorCodesSec({});
+      setCombinationRows([]);
+    }
+
+    setSinglePricing(prod.singlePricing || {
+      crossedPrice: prod.originalPrice || 2500,
+      sellingPrice: prod.price || 2000,
+      costPrice: prod.costPrice || 1500,
+      quantity: prod.inventory || 20,
+      weight: prod.weight || 0.5,
+      sku: prod.sku || ('LK-PROD-' + Math.floor(100 + Math.random() * 900)),
+      barcode: prod.barcode || '',
+      hsCode: prod.hsCode || '',
+      continueSellingOutOfStock: prod.continueSellingOutOfStock ?? true,
+    });
+
+    setErrors({});
+    setShowAddModal(true);
+  };
+  const handleFinalSubmit = (e) => {
+    if (e) e.preventDefault();
+    if (!validateStep1()) {
+      setCurrentStep(1);
+      return;
+    }
+
+    let totalStock = 0;
+    let finalPrice = 0;
+    let finalOriginalPrice = 0;
+
+    if (enableVariants && combinationRows.length > 0) {
+      totalStock = combinationRows.reduce((acc, r) => acc + (parseInt(r.quantity, 10) || 0), 0);
+      finalPrice = combinationRows[0]?.sellingPrice || form.price || 0;
+      finalOriginalPrice = combinationRows[0]?.crossedPrice || form.originalPrice || 0;
+    } else {
+      totalStock = parseInt(singlePricing.quantity, 10) || 0;
+      finalPrice = singlePricing.sellingPrice || form.price || 0;
+      finalOriginalPrice = singlePricing.crossedPrice || form.originalPrice || 0;
+    }
+
+    const sizesObj = enableVariants
+      ? combinationRows.reduce((acc, r) => {
+          acc[r.name] = parseInt(r.quantity, 10) || 0;
+          return acc;
+        }, {})
+      : { All: totalStock };
+
+    const productPayload = {
+      name: form.name,
+      categoryId: form.categoryIds[0] || '',
+      categoryIds: form.categoryIds,
+      description: form.shortDescription,
+      longDescription: form.longDescription,
+      image: form.image || form.imagePreview || '/images/kurtha-charcoal.jpg',
+      price: Number(finalPrice) || 0,
+      originalPrice: Number(finalOriginalPrice) || 0,
+      status: form.status || 'Active',
+      inventory: totalStock,
+      sizes: sizesObj,
+      // Full Step 2 variant & pricing configuration
+      enableVariants,
+      variantColors,
+      colorCodes,
+      colorCodesSec,
+      variantSizes,
+      combinationRows,
+      singlePricing,
+      // Step 3 details
+      tags: form.tags,
+      badge: form.badge,
+    };
+
+    if (editingProduct && editingProduct.id) {
+      updateProduct({
+        ...editingProduct,
+        ...productPayload,
+        id: editingProduct.id,
+      });
+    } else {
+      addProduct({
+        ...productPayload,
+        createdAt: new Date().toISOString(),
+      });
+    }
+
+    setShowAddModal(false);
+    setEditingProduct(null);
+    setCurrentStep(1);
     setErrors({});
   };
 
@@ -529,10 +671,7 @@ export default function AdminProducts() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <button
             type="button"
-            onClick={() => {
-              setCurrentStep(1);
-              setShowAddModal(true);
-            }}
+            onClick={openAddProduct}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -577,7 +716,7 @@ export default function AdminProducts() {
         </div>
       </div>
 
-      {/* ══ 4. PRODUCTS TABLE & EMPTY STATE (CANVA EXACT) ══ */}
+      {/* ══ 4. PRODUCTS TABLE & EMPTY STATE (CANVA PIXEL-PERFECT) ══ */}
       <div style={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
           <thead>
@@ -632,51 +771,193 @@ export default function AdminProducts() {
               </tr>
             ) : (
               filteredProducts.map((p, idx) => {
-                const totalStock = Object.values(p.sizes || {}).reduce((a, b) => a + Number(b || 0), 0);
+                // Calculate variant count and stock
+                const isVariants = p.enableVariants && Array.isArray(p.combinationRows) && p.combinationRows.length > 0;
+                const variantCount = isVariants ? p.combinationRows.length : (Array.isArray(p.variants) && p.variants.length > 0 ? p.variants.length : 0);
+                const totalStock = isVariants
+                  ? p.combinationRows.reduce((a, b) => a + Number(b.quantity || 0), 0)
+                  : (p.inventory !== undefined ? Number(p.inventory) : Object.values(p.sizes || {}).reduce((a, b) => a + Number(b || 0), 0));
+
+                // Canva Badge format: "13 FOR 4 VARIANTS" or "20 FOR 2 VARIANTS" or "20 IN STOCK"
+                const inventoryBadge = (isVariants || variantCount > 1)
+                  ? `${totalStock} FOR ${variantCount} VARIANTS`
+                  : `${totalStock} IN STOCK`;
+
                 return (
-                  <tr key={p.id} style={{ borderBottom: '1px solid #f9fafb', transition: 'background 0.15s ease' }}>
-                    <td style={{ padding: '12px 16px' }}>
-                      <input type="checkbox" style={{ accentColor: '#7952eb', borderRadius: '4px' }} />
+                  <tr
+                    key={p.id}
+                    onClick={() => openEditProduct(p)}
+                    style={{
+                      borderBottom: '1px solid #f3f4f6',
+                      transition: 'background 0.15s ease',
+                      cursor: 'pointer',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = '#f9fafb'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = '#ffffff'; }}
+                  >
+                    <td style={{ padding: '12px 16px' }} onClick={e => e.stopPropagation()}>
+                      <input type="checkbox" style={{ accentColor: '#7952eb', borderRadius: '4px', cursor: 'pointer' }} />
                     </td>
-                    <td style={{ padding: '12px 8px', color: '#9ca3af', fontFamily: 'monospace' }}>
+                    <td style={{ padding: '12px 8px', color: '#6b7280', fontSize: '13px', fontWeight: 500 }}>
                       {idx + 1}
                     </td>
                     <td style={{ padding: '12px 16px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <img src={p.image || '/images/kurtha-charcoal.jpg'} alt={p.name} style={{ width: '38px', height: '46px', objectFit: 'cover', borderRadius: '6px', background: '#f3f4f6' }} />
-                        <div>
-                          <div style={{ fontWeight: 600, color: '#111827' }}>{p.name}</div>
-                          <div style={{ fontSize: '11px', color: '#9ca3af', fontFamily: 'monospace' }}>Code: {p.id}</div>
+                        <img
+                          src={p.image || '/images/kurtha-charcoal.jpg'}
+                          alt={p.name}
+                          style={{
+                            width: '40px',
+                            height: '48px',
+                            objectFit: 'cover',
+                            borderRadius: '6px',
+                            border: '1px solid #e2e8f0',
+                            background: '#f8fafc',
+                            flexShrink: 0,
+                          }}
+                        />
+                        <div style={{ fontWeight: 600, color: '#0f172a', fontSize: '13px', letterSpacing: '-0.01em' }}>
+                          {p.name}
                         </div>
                       </div>
                     </td>
                     <td style={{ padding: '12px 16px' }}>
-                      <span style={{ color: '#f59e0b', fontSize: '13px' }}>★ ★ ★ ★ ★</span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '13px', color: '#64748b' }}>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="#94a3b8" stroke="#94a3b8" strokeWidth="1">
+                          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                        </svg>
+                        <span>0 (0)</span>
+                      </span>
                     </td>
-                    <td style={{ padding: '12px 16px', fontWeight: 700, color: '#111827' }}>
-                      Rs. {Number(p.price || 0).toLocaleString()}
+                    <td style={{ padding: '12px 16px', fontWeight: 700, color: '#0f172a', fontSize: '13px' }}>
+                      Rs {Number(p.price || 0).toLocaleString()}
                     </td>
                     <td style={{ padding: '12px 16px' }}>
-                      <span style={{ fontSize: '12px', fontWeight: 600, color: totalStock > 0 ? '#10b981' : '#ef4444' }}>
-                        {totalStock} in stock
+                      <span style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        padding: '3px 10px',
+                        borderRadius: '9999px',
+                        background: '#e6f9ed',
+                        border: '1px solid #bbf7d0',
+                        color: '#10b981',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        letterSpacing: '0.02em',
+                        textTransform: 'uppercase',
+                        whiteSpace: 'nowrap',
+                      }}>
+                        {inventoryBadge}
                       </span>
                     </td>
                     <td style={{ padding: '12px 16px' }}>
-                      <span style={{ fontSize: '11px', fontWeight: 700, padding: '3px 8px', borderRadius: '12px', background: '#ecfdf5', color: '#059669' }}>
-                        {p.status || 'Active'}
+                      <span style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        padding: '3px 10px',
+                        borderRadius: '9999px',
+                        background: '#e6f9ed',
+                        border: '1px solid #bbf7d0',
+                        color: '#10b981',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        letterSpacing: '0.02em',
+                        textTransform: 'uppercase',
+                      }}>
+                        {p.status ? p.status.toUpperCase() : 'ACTIVE'}
                       </span>
                     </td>
-                    <td style={{ padding: '12px 16px', color: '#6b7280', fontSize: '12px' }}>
-                      {p.createdAt ? new Date(p.createdAt).toLocaleDateString() : 'Oct 24, 2026'}
+                    <td style={{ padding: '12px 16px', color: '#64748b', fontSize: '12px' }}>
+                      {formatCanvaDate(p.createdAt)}
                     </td>
-                    <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                      <button
-                        type="button"
-                        onClick={() => deleteProduct(p.id)}
-                        style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '12px', cursor: 'pointer', fontWeight: 600 }}
-                      >
-                        Delete
-                      </button>
+                    <td style={{ padding: '12px 16px', textAlign: 'right' }} onClick={e => e.stopPropagation()}>
+                      <div style={{ position: 'relative', display: 'inline-block' }}>
+                        <button
+                          type="button"
+                          onClick={() => setActionMenuOpenId(actionMenuOpenId === p.id ? null : p.id)}
+                          style={{
+                            width: '30px',
+                            height: '30px',
+                            borderRadius: '6px',
+                            border: '1px solid #7c3aed',
+                            background: actionMenuOpenId === p.id ? '#f5f3ff' : '#ffffff',
+                            color: '#7c3aed',
+                            fontWeight: 800,
+                            fontSize: '16px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            lineHeight: 1,
+                            transition: 'all 0.15s ease',
+                          }}
+                        >
+                          ···
+                        </button>
+                        {actionMenuOpenId === p.id && (
+                          <div style={{
+                            position: 'absolute',
+                            right: 0,
+                            top: '34px',
+                            background: '#ffffff',
+                            borderRadius: '8px',
+                            boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)',
+                            border: '1px solid #e2e8f0',
+                            padding: '4px',
+                            zIndex: 50,
+                            minWidth: '130px',
+                          }}>
+                            <button
+                              type="button"
+                              onClick={() => { setActionMenuOpenId(null); openEditProduct(p); }}
+                              style={{
+                                width: '100%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                padding: '8px 12px',
+                                background: 'transparent',
+                                border: 'none',
+                                borderRadius: '6px',
+                                color: '#0f172a',
+                                fontSize: '12.5px',
+                                fontWeight: 500,
+                                cursor: 'pointer',
+                                textAlign: 'left',
+                              }}
+                              onMouseEnter={e => { e.currentTarget.style.background = '#f8fafc'; }}
+                              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+                            >
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => { setActionMenuOpenId(null); deleteProduct(p.id); }}
+                              style={{
+                                width: '100%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                padding: '8px 12px',
+                                background: 'transparent',
+                                border: 'none',
+                                borderRadius: '6px',
+                                color: '#ef4444',
+                                fontSize: '12.5px',
+                                fontWeight: 500,
+                                cursor: 'pointer',
+                                textAlign: 'left',
+                              }}
+                              onMouseEnter={e => { e.currentTarget.style.background = '#fef2f2'; }}
+                              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+                            >
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );
@@ -684,6 +965,81 @@ export default function AdminProducts() {
             )}
           </tbody>
         </table>
+
+        {/* Canva Pagination Footer */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '12px 16px',
+          borderTop: '1px solid #e5e7eb',
+          background: '#ffffff',
+          fontSize: '12px',
+          color: '#6b7280',
+        }}>
+          <div>
+            1 - {filteredProducts.length} / {filteredProducts.length}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <button
+              type="button"
+              disabled
+              style={{
+                width: '28px',
+                height: '28px',
+                borderRadius: '6px',
+                border: '1px solid #e5e7eb',
+                background: '#ffffff',
+                color: '#9ca3af',
+                cursor: 'not-allowed',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '14px',
+              }}
+            >
+              ‹
+            </button>
+            <button
+              type="button"
+              style={{
+                width: '28px',
+                height: '28px',
+                borderRadius: '6px',
+                border: 'none',
+                background: '#7952eb',
+                color: '#ffffff',
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                fontSize: '12px',
+              }}
+            >
+              1
+            </button>
+            <button
+              type="button"
+              disabled
+              style={{
+                width: '28px',
+                height: '28px',
+                borderRadius: '6px',
+                border: '1px solid #e5e7eb',
+                background: '#ffffff',
+                color: '#9ca3af',
+                cursor: 'not-allowed',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '14px',
+              }}
+            >
+              ›
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* ══ 5. CANVA 3-STEP "ADD PRODUCT" MODAL (PIXEL PERFECT) ══ */}
@@ -727,7 +1083,7 @@ export default function AdminProducts() {
               justifyContent: 'space-between',
             }}>
               <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', margin: 0 }}>
-                Add Product
+                {editingProduct ? 'Edit Product' : 'Add Product'}
               </h2>
               <button
                 type="button"
@@ -2133,7 +2489,7 @@ export default function AdminProducts() {
                         boxShadow: '0 2px 4px rgba(121, 82, 235, 0.3)',
                       }}
                     >
-                      Publish Product
+                      {editingProduct ? 'Save Changes' : 'Publish Product'}
                     </button>
                   </div>
                 </div>

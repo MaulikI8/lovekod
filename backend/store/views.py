@@ -1,3 +1,36 @@
+import base64
+import uuid
+import os
+import time
+
+def save_base64_image(data_str):
+    if not data_str or not isinstance(data_str, str):
+        return '/images/kurtha-charcoal.jpg'
+    if not data_str.startswith('data:image/'):
+        return data_str
+    try:
+        header, encoded = data_str.split(';base64,', 1)
+        ext = 'jpg'
+        if 'png' in header: ext = 'png'
+        elif 'webp' in header: ext = 'webp'
+        elif 'jpeg' in header: ext = 'jpg'
+        
+        filename = f"prod_{uuid.uuid4().hex[:12]}.{ext}"
+        dirs = [
+            '/home8/aashutos/lovekod.com/media/products',
+            '/home8/aashutos/public_html/media/products',
+            '/home8/aashutos/backend/media/products'
+        ]
+        file_bytes = base64.b64decode(encoded)
+        for d in dirs:
+            os.makedirs(d, exist_ok=True)
+            with open(os.path.join(d, filename), 'wb') as f:
+                f.write(file_bytes)
+        return f"/media/products/{filename}"
+    except Exception as e:
+        print("Base64 save error:", e)
+        return '/images/kurtha-charcoal.jpg'
+
 import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -491,12 +524,36 @@ def product_list_create(request):
     elif request.method == 'POST':
         try:
             data = json.loads(request.body.decode('utf-8'))
-            pid = data.get('id') or f"lk-{Product.objects.count() + 1:03d}"
+            pid = data.get('id')
+            if not pid or pid.startswith('lk-'):
+                pid = f"prod_{int(time.time())}_{uuid.uuid4().hex[:6]}"
+
+            raw_image = data.get('image') or data.get('imagePreview') or '/images/kurtha-charcoal.jpg'
+            image_path = save_base64_image(raw_image)
+
             sizes = data.get('sizes', {})
+            combination_rows = data.get('combinationRows', [])
+            single_pricing = data.get('singlePricing', {})
+            custom_sizes = {
+                'combinationRows': combination_rows,
+                'singlePricing': single_pricing,
+                'sizes': sizes if isinstance(sizes, dict) else {}
+            }
 
             category = None
             if 'categoryId' in data and data['categoryId']:
                 category = Category.objects.filter(id=data['categoryId']).first()
+
+            var_colors = data.get('variantColors', [])
+            colors_str = ','.join(var_colors) if isinstance(var_colors, list) else str(data.get('colors', ''))
+            var_sizes = data.get('variantSizes', [])
+            sizes_str = ','.join(var_sizes) if isinstance(var_sizes, list) else str(data.get('sizes', ''))
+
+            inv = 0
+            if combination_rows:
+                inv = sum(int(r.get('quantity', 0) or 0) for r in combination_rows)
+            else:
+                inv = int(data.get('inventory', 0) or single_pricing.get('quantity', 0) or 0)
 
             product = Product.objects.create(
                 product_id=pid,
@@ -508,14 +565,19 @@ def product_list_create(request):
                 price=int(data.get('price', 2999)),
                 original_price=int(data.get('originalPrice', 4499)),
                 description=data.get('description', ''),
-                image=data.get('image', '/images/kurtha-charcoal.jpg'),
+                image=image_path,
                 badge=data.get('badge', ''),
                 is_featured=bool(data.get('isFeatured', False)),
-                colors=data.get('colors', ''),
-                stock_m=int(sizes.get('M', 5)),
-                stock_l=int(sizes.get('L', 5)),
-                stock_xl=int(sizes.get('XL', 5)),
-                stock_xxl=int(sizes.get('XXL', 5)),
+                enable_variants=bool(data.get('enableVariants', False)),
+                custom_sizes=custom_sizes,
+                colors=colors_str,
+                sizes=sizes_str,
+                quantity=inv,
+                status=data.get('status', 'active').lower(),
+                stock_m=int(sizes.get('M', 5)) if isinstance(sizes, dict) else 5,
+                stock_l=int(sizes.get('L', 5)) if isinstance(sizes, dict) else 5,
+                stock_xl=int(sizes.get('XL', 5)) if isinstance(sizes, dict) else 5,
+                stock_xxl=int(sizes.get('XXL', 5)) if isinstance(sizes, dict) else 5,
             )
             return JsonResponse(product.to_dict(), status=201)
         except Exception as e:
@@ -542,13 +604,28 @@ def product_detail_update_delete(request, product_id):
             if 'originalPrice' in data: product.original_price = int(data['originalPrice'])
             if 'description' in data: product.description = data['description']
             if 'badge' in data: product.badge = data['badge']
-            if 'image' in data: product.image = data['image']
+            if 'image' in data and data['image']:
+                product.image = save_base64_image(data['image'])
             if 'isFeatured' in data: product.is_featured = bool(data['isFeatured'])
+            if 'enableVariants' in data: product.enable_variants = bool(data['enableVariants'])
+            if 'combinationRows' in data or 'singlePricing' in data:
+                cs = product.custom_sizes if isinstance(product.custom_sizes, dict) else {}
+                if 'combinationRows' in data: cs['combinationRows'] = data['combinationRows']
+                if 'singlePricing' in data: cs['singlePricing'] = data['singlePricing']
+                product.custom_sizes = cs
+            if 'variantColors' in data and isinstance(data['variantColors'], list):
+                product.colors = ','.join(data['variantColors'])
+            if 'variantSizes' in data and isinstance(data['variantSizes'], list):
+                product.sizes = ','.join(data['variantSizes'])
+            if 'inventory' in data:
+                product.quantity = int(data['inventory'])
+            if 'status' in data:
+                product.status = str(data['status']).lower()
             if 'categoryId' in data:
                 product.category = Category.objects.filter(id=data['categoryId']).first()
 
             # Sizes
-            if 'sizes' in data:
+            if 'sizes' in data and isinstance(data['sizes'], dict):
                 sizes = data['sizes']
                 if 'M' in sizes: product.stock_m = max(0, int(sizes['M']))
                 if 'L' in sizes: product.stock_l = max(0, int(sizes['L']))

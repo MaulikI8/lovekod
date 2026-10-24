@@ -252,8 +252,16 @@ class Product(models.Model):
         return tot
 
     def to_dict(self):
+        cs = self.custom_sizes if isinstance(self.custom_sizes, dict) else {}
+        comb_rows = cs.get('combinationRows', []) if isinstance(cs, dict) else (self.custom_sizes if isinstance(self.custom_sizes, list) else [])
+        single_p = cs.get('singlePricing', {}) if isinstance(cs, dict) else {}
         return {
             'id': self.product_id,
+            'combinationRows': comb_rows,
+            'singlePricing': single_p,
+            'variantColors': [c.strip() for c in self.colors.split(',') if c.strip()] if self.colors else [],
+            'variantSizes': [s.strip() for s in self.sizes.split(',') if s.strip()] if self.sizes else [],
+            'inventory': self.quantity if (self.quantity and self.quantity > 0) else self.total_stock(),
             'categoryId': self.category_id,
             'categoryName': self.category.name if self.category else '',
             'categorySlug': self.category.slug if self.category else '',

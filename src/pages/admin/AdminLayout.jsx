@@ -156,14 +156,17 @@ export default function AdminLayout() {
     },
   ];
 
+  const currentCleanPath = location.pathname.replace(/\/$/, '') || '/admin';
+
   const renderLink = (item) => {
+    const itemCleanPath = item.path.replace(/\/$/, '') || '/admin';
     const isActive = item.exact
-      ? location.pathname === item.path
-      : location.pathname.startsWith(item.path);
+      ? (currentCleanPath === itemCleanPath || (itemCleanPath === '/admin' && (currentCleanPath === '/admin' || currentCleanPath === '')))
+      : currentCleanPath.startsWith(itemCleanPath);
 
     if (item.external) {
       return (
-        <li key={item.path} style={{ marginBottom: '4px' }}>
+        <li key={item.path} style={{ marginBottom: '3px' }}>
           <a
             href={item.path}
             target="_blank"
@@ -199,7 +202,7 @@ export default function AdminLayout() {
     }
 
     return (
-      <li key={item.path} style={{ marginBottom: '4px' }}>
+      <li key={item.path} style={{ marginBottom: '3px' }}>
         <Link
           to={item.path}
           style={{

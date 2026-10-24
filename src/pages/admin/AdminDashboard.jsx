@@ -30,7 +30,7 @@ export default function AdminDashboard() {
 
   const maxHourly = Math.max(4, ...hourlyCounts);
   const hourlyPoints = hourlyCounts.map((count, h) => {
-    const cx = 30 + h * 24.5;
+    const cx = 30 + h * 23.5;
     const cy = 110 - (count / maxHourly) * 90;
     return `${cx},${cy}`;
   }).join(' ');
@@ -198,7 +198,7 @@ export default function AdminDashboard() {
               <polyline fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" points={hourlyPoints} />
 
               {hourlyHours.map(h => {
-                const cx = 30 + h * 24.5;
+                const cx = 30 + h * 23.5;
                 const cy = 110 - (hourlyCounts[h] / maxHourly) * 90;
                 return (
                   <circle
@@ -214,8 +214,8 @@ export default function AdminDashboard() {
               })}
             </svg>
 
-            {/* X-Axis Hours Labels (00:00 to 22:00) */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '8px', color: '#94a3b8', fontFamily: 'monospace', marginTop: '6px', paddingLeft: '8px', paddingRight: '4px' }}>
+            {/* X-Axis Hours Labels (00:00 through 22:00) */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '7.5px', color: '#94a3b8', fontFamily: 'monospace', letterSpacing: '-0.02em', marginTop: '8px', paddingLeft: '22px', paddingRight: '6px' }}>
               {hourlyHours.map(h => (
                 <span key={h}>{String(h).padStart(2, '0')}:00</span>
               ))}

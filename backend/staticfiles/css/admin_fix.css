@@ -229,3 +229,81 @@ table#result_list td.field-blanxer_name {
     min-width: 220px !important;
     max-width: 420px !important;
 }
+
+/* 8. Completely remove sidebar search bar as requested by client */
+#nav-sidebar-inner .mb-2\.5.mx-3,
+#nav-sidebar [x-on\:click*="opencommand"] {
+    display: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   9. CANVA-MATCHED ADAPTIVE SIDEBAR STYLING
+   ═══════════════════════════════════════════════════════════════════════════ */
+#nav-sidebar,
+#nav-sidebar-inner {
+    background-color: #ffffff !important;
+}
+
+#nav-sidebar ol {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+    gap: 4px !important;
+}
+
+#nav-sidebar ol li a {
+    border-radius: 12px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding: 9px 14px !important;
+    height: 42px !important;
+    color: #64748b !important;
+    font-size: 13.5px !important;
+    font-weight: 500 !important;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+#nav-sidebar ol li a .material-symbols-outlined {
+    color: #94a3b8 !important;
+    font-size: 20px !important;
+    margin-right: 12px !important;
+    transition: color 0.15s ease !important;
+}
+
+#nav-sidebar ol li a:hover {
+    background-color: #f8fafc !important;
+    color: #7952eb !important;
+}
+
+#nav-sidebar ol li a:hover .material-symbols-outlined {
+    color: #7952eb !important;
+}
+
+/* Adaptive Active State (Matches Canva Soft Lavender Pill #f3effe) */
+#nav-sidebar ol li a.active,
+#nav-sidebar ol li a[class*="active"],
+#nav-sidebar ol li a.bg-base-100,
+#nav-sidebar ol li a.text-primary-600 {
+    background-color: #f3effe !important;
+    color: #7952eb !important;
+    font-weight: 600 !important;
+    border-radius: 12px !important;
+}
+
+#nav-sidebar ol li a.active .material-symbols-outlined,
+#nav-sidebar ol li a[class*="active"] .material-symbols-outlined,
+#nav-sidebar ol li a.bg-base-100 .material-symbols-outlined,
+#nav-sidebar ol li a.text-primary-600 .material-symbols-outlined {
+    color: #7952eb !important;
+}
+
+/* Customizations Group Header */
+#nav-sidebar h2 {
+    font-size: 12px !important;
+    color: #94a3b8 !important;
+    font-weight: 600 !important;
+    text-transform: capitalize !important;
+    margin-top: 14px !important;
+    margin-bottom: 6px !important;
+    padding-left: 14px !important;
+    letter-spacing: 0.02em !important;
+}

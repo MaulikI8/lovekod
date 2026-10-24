@@ -1194,7 +1194,7 @@ def blanxer_dashboard_callback(request, context):
         greeting = "Good Evening"
 
     today_str = now.strftime("%b %d, %Y")
-    admin_name = "LoveKod" if not request.user.first_name else request.user.first_name
+    admin_name = request.user.get_full_name() if request.user.get_full_name() else "Ashutosh Basnet"
 
     # 1. Real active orders and products
     active_orders = Order.objects.filter(is_deleted=False)

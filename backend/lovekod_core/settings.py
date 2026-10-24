@@ -213,8 +213,8 @@ UNFOLD = {
         "show_all_applications": False,
         "navigation": [
             {
-                "title": "Main Links",
-                "separator": True,
+                "title": "",
+                "separator": False,
                 "items": [
                     {
                         "title": "Home",
@@ -232,19 +232,14 @@ UNFOLD = {
                         "link": reverse_lazy("admin:store_product_changelist"),
                     },
                     {
-                        "title": "Orders",
-                        "icon": "shopping_bag",
-                        "link": reverse_lazy("admin:store_order_changelist"),
-                    },
-                    {
                         "title": "Customers",
                         "icon": "group",
                         "link": reverse_lazy("admin:store_customer_changelist"),
                     },
                     {
-                        "title": "Reviews",
-                        "icon": "rate_review",
-                        "link": reverse_lazy("admin:store_testimonial_changelist"),
+                        "title": "Orders",
+                        "icon": "shopping_bag",
+                        "link": reverse_lazy("admin:store_order_changelist"),
                     },
                     {
                         "title": "Discount Coupons",
@@ -252,19 +247,29 @@ UNFOLD = {
                         "link": reverse_lazy("admin:store_coupon_changelist"),
                     },
                     {
-                        "title": "Festival Moments",
-                        "icon": "celebration",
-                        "link": reverse_lazy("admin:store_festivalmoment_changelist"),
+                        "title": "Analytics",
+                        "icon": "trending_up",
+                        "link": reverse_lazy("admin:store_order_changelist"),
+                    },
+                    {
+                        "title": "Media",
+                        "icon": "perm_media",
+                        "link": reverse_lazy("admin:store_product_changelist"),
+                    },
+                    {
+                        "title": "Finance",
+                        "icon": "account_balance_wallet",
+                        "link": reverse_lazy("admin:store_order_changelist"),
                     },
                 ],
             },
             {
                 "title": "Customizations",
-                "separator": True,
+                "separator": False,
                 "items": [
                     {
-                        "title": "Content & Banners",
-                        "icon": "palette",
+                        "title": "Content",
+                        "icon": "layers",
                         "link": reverse_lazy("admin:store_sitesettings_changelist"),
                     },
                     {
@@ -273,7 +278,7 @@ UNFOLD = {
                         "link": reverse_lazy("admin:auth_user_changelist"),
                     },
                     {
-                        "title": "Live Storefront",
+                        "title": "Store Front",
                         "icon": "storefront",
                         "link": "https://lovekod.com",
                     },

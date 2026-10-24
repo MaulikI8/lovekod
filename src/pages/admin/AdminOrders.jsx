@@ -534,19 +534,24 @@ export default function AdminOrders() {
   const executeCreateOrder = async () => {
     setIsSubmitting(true);
     try {
+      const orderPhone = (formData.phone || selectedCustomer?.phone || '').trim();
+      const orderName = (formData.fullName || selectedCustomer?.name || selectedCustomer?.fullName || '').trim();
+      const orderAddr = (formData.address || selectedCustomer?.address || '').trim();
+
       await createManualOrder({
         customer: {
           fullName: orderName,
+          name: orderName,
           phone: orderPhone,
-          email: (formData.email || '').trim(),
-          whatsapp: (formData.whatsapp || formData.phone || '').trim(),
-          district: formData.district,
-          city: formData.district,
+          email: (formData.email || selectedCustomer?.email || '').trim(),
+          whatsapp: (formData.whatsapp || formData.phone || selectedCustomer?.whatsapp || selectedCustomer?.phone || '').trim(),
+          district: formData.district || 'Kathmandu Inside Ring Road',
+          city: formData.district || 'Kathmandu Inside Ring Road',
           address: orderAddr,
-          landmark: (formData.landmark || '').trim(),
-          altPhone: (formData.altPhone || '').trim(),
+          landmark: (formData.landmark || selectedCustomer?.landmark || '').trim(),
+          altPhone: (formData.altPhone || selectedCustomer?.altPhone || '').trim(),
           note: (formData.note || '').trim(),
-          paymentMethod: formData.paymentMethod,
+          paymentMethod: formData.paymentMethod || 'COD',
         },
         items: formData.items,
         total: grandTotal,
@@ -567,6 +572,7 @@ export default function AdminOrders() {
     } catch (err) {
       setIsSubmitting(false);
       console.error(err);
+      alert('Error creating order: ' + (err.message || 'Unknown error'));
     }
   };
 

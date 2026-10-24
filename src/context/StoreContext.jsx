@@ -86,8 +86,23 @@ const DEFAULT_CATEGORIES = [
   { id: 2, name: 'Georgette Sets', slug: 'georgette', nepaliName: '', order: 2, isActive: true },
   { id: 3, name: 'Silk Blend', slug: 'silk', nepaliName: '', order: 3, isActive: true },
   { id: 4, name: '3-Piece Sets', slug: '3-piece', nepaliName: '', order: 4, isActive: true },
-  { id: 5, name: 'Co-ord Sets', slug: 'co-ord', nepaliName: '', order: 5, isActive: true },
 ];
+
+function loadCategories() {
+  const cached = loadState('lovekod_categories', null);
+  if (Array.isArray(cached) && cached.length > 0) {
+    return cached.filter(c => c.id !== 5 && c.slug !== 'co-ord');
+  }
+  return DEFAULT_CATEGORIES;
+}
+
+function loadProducts() {
+  const cached = loadState('lovekod_products', []);
+  if (Array.isArray(cached)) {
+    return cached.filter(p => !String(p.id).startsWith('lk-'));
+  }
+  return [];
+}
 
 function loadState(key, fallback) {
   try {
@@ -104,8 +119,8 @@ function saveState(key, value) {
 
 export function StoreProvider({ children }) {
   // Dynamic catalog state strictly in-memory (synced live with Django backend)
-  const [products, setProducts] = useState(() => defaultProducts);
-  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
+  const [products, setProducts] = useState(loadProducts);
+  const [categories, setCategories] = useState(loadCategories);
   const [siteSettings, setSiteSettings] = useState(DEFAULT_SETTINGS);
   const [festivalMoments, setFestivalMoments] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
@@ -149,14 +164,10 @@ export function StoreProvider({ children }) {
         if (Array.isArray(data)) {
           const activeOnly = data.filter(p => !p.isDeleted && !p.is_deleted);
           setProducts(activeOnly);
+          saveState('lovekod_products', activeOnly);
         }
-      } else {
-        // Fallback to default products if server returns error or 500
-        setProducts(prev => prev.length ? prev : defaultProducts);
       }
-    } catch {
-      setProducts(prev => prev.length ? prev : defaultProducts);
-    }
+    } catch { /* offline fallback */ }
 
     // 2. Categories (Exclude soft deleted)
     try {
@@ -164,8 +175,9 @@ export function StoreProvider({ children }) {
       if (catRes.ok) {
         const catData = await catRes.json();
         if (Array.isArray(catData)) {
-          const activeOnly = catData.filter(c => !c.isDeleted && !c.is_deleted);
+          const activeOnly = catData.filter(c => !c.isDeleted && !c.is_deleted && c.id !== 5 && c.slug !== 'co-ord');
           setCategories(activeOnly);
+          saveState('lovekod_categories', activeOnly);
         }
       }
     } catch { /* offline fallback */ }
@@ -588,7 +600,8 @@ export function StoreProvider({ children }) {
   function adminLogout() { setIsAdmin(false); }
 
   async function resetInventory() {
-    setProducts(defaultProducts);
+    setProducts([]);
+    saveState('lovekod_products', []);
     showToast('Inventory reset to defaults');
 
     try {

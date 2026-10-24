@@ -1415,8 +1415,16 @@ body, html {
     margin-bottom: 24px !important;
   }
 
-  .btn-add-bag,
-  .btn-buy-now {
+  .btn-add-bag {
+    width: 100% !important;
+    padding: 14px 16px !important;
+    font-size: 0.95rem !important;
+    justify-content: center !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+  }
+
+  .btn-whatsapp-inquiry {
     width: 100% !important;
     padding: 14px 16px !important;
     font-size: 0.95rem !important;

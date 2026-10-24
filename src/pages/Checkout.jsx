@@ -19,7 +19,7 @@ export default function Checkout() {
     city: '',
     address: '',
     note: '',
-    paymentMethod: 'DynamicQR',
+    paymentMethod: 'COD',
   });
   const [customerLookupStatus, setCustomerLookupStatus] = useState(null);
 
@@ -395,40 +395,26 @@ export default function Checkout() {
         {/* Payment Method Selection */}
         <div className="form-group payment-method-group">
           <label className="payment-select-label">Payment Method *</label>
-          <div className="payment-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
-            <label className={`pay-option ${formData.paymentMethod === 'DynamicQR' ? 'selected' : ''}`}>
-              <input
-                type="radio"
-                name="payment"
-                value="DynamicQR"
-                checked={formData.paymentMethod === 'DynamicQR'}
-                onChange={() => setFormData({ ...formData, paymentMethod: 'DynamicQR' })}
-              />
-              <span className="pay-opt-title">Dynamic QR Pay</span>
-              <span className="pay-opt-desc">Instant scan &amp; auto-capture</span>
-            </label>
-
-            <label className={`pay-option ${formData.paymentMethod === 'COD' ? 'selected' : ''}`}>
+          <div className="payment-grid" style={{ gridTemplateColumns: '1fr' }}>
+            <label className="pay-option selected">
               <input
                 type="radio"
                 name="payment"
                 value="COD"
-                checked={formData.paymentMethod === 'COD'}
-                onChange={() => setFormData({ ...formData, paymentMethod: 'COD' })}
+                checked={true}
+                readOnly
               />
-              <span className="pay-opt-title">Cash on Delivery</span>
-              <span className="pay-opt-desc">Pay upon receiving</span>
+              <span className="pay-opt-title">Cash on Delivery (COD)</span>
+              <span className="pay-opt-desc">Pay cash or mobile banking when your parcel arrives</span>
             </label>
           </div>
 
-          {formData.paymentMethod === 'DynamicQR' && (
-            <div className="payment-notice-banner">
-              <ShieldCheckIcon size={16} />
-              <span>
-                Dynamic QR code with instant automated payment acceptance will be presented upon order placement.
-              </span>
-            </div>
-          )}
+          <div className="payment-notice-banner">
+            <ShieldCheckIcon size={16} />
+            <span>
+              Pay conveniently upon delivery across Nepal. No advance payment required.
+            </span>
+          </div>
         </div>
 
         <button

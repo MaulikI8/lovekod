@@ -111,16 +111,6 @@ export default function ProductDetail() {
     addToCart(product.id, selectedSize);
   };
 
-  const handleBuyNow = () => {
-    if (!selectedSize) {
-      setSizeError(true);
-      return;
-    }
-    setSizeError(false);
-    addToCart(product.id, selectedSize);
-    navigate('/checkout');
-  };
-
   const getWaLink = () => {
     const sizeText = selectedSize ? `in size ${selectedSize}` : '';
     const text = encodeURIComponent(
@@ -352,23 +342,16 @@ export default function ProductDetail() {
               <span>Add to Shopping Bag</span>
             </button>
 
-            <button
-              type="button"
-              className="btn-secondary-outline btn-buy-now"
-              onClick={handleBuyNow}
-            >
-              <span>Instant Buy</span>
-            </button>
-
             <a
               href={getWaLink()}
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-whatsapp-square"
+              className="btn-whatsapp-inquiry"
               title="Inquire or Order via WhatsApp"
-              aria-label="Order on WhatsApp"
+              aria-label="WhatsApp Inquiry"
             >
               <WhatsAppIcon size={20} />
+              <span>WhatsApp Inquiry</span>
             </a>
           </div>
 
@@ -389,7 +372,7 @@ export default function ProductDetail() {
             <div className="guarantee-item">
               <ShieldCheckIcon size={18} />
               <div>
-                <strong>Flexible Payment:</strong> Instant Dynamic QR Pay & Cash on Delivery.
+                <strong>Reliable Payment:</strong> Cash on Delivery across all 77 districts in Nepal.
               </div>
             </div>
             <div className="guarantee-item">

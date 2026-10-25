@@ -140,27 +140,10 @@ export default function Header() {
         <div className="main-navbar-bar">
           <div className="main-navbar-inner">
 
-            {/* LEFT GROUP: Collection, Occasions, Lookbook */}
+            {/* LEFT GROUP: Occasions & Lookbook Only */}
             <nav className="nav-left-group" aria-label="Catalog Navigation">
-              {/* Collection with Mega-Menu Trigger */}
-              <div
-                className="mega-trigger-wrap"
-                onMouseEnter={handleMouseEnterCollection}
-                onMouseLeave={handleMouseLeaveCollection}
-              >
-                <button
-                  type="button"
-                  className={`nav-text-link ${megaMenuOpen || activeTab === 'collection' ? 'is-active' : ''}`}
-                  onClick={() => setMegaMenuOpen(!megaMenuOpen)}
-                  aria-expanded={megaMenuOpen}
-                >
-                  <span>Collection</span>
-                  <ChevronDown size={14} className={`nav-chevron ${megaMenuOpen ? 'rotated' : ''}`} />
-                </button>
-              </div>
-
               <a
-                href="/#collection"
+                href="/#occasions"
                 className={`nav-text-link ${activeTab === 'occasions' ? 'is-active' : ''}`}
                 onClick={() => setActiveTab('occasions')}
               >
@@ -168,7 +151,7 @@ export default function Header() {
               </a>
 
               <a
-                href="/#collection"
+                href="/#lookbook"
                 className={`nav-text-link ${activeTab === 'lookbook' ? 'is-active' : ''}`}
                 onClick={() => setActiveTab('lookbook')}
               >
@@ -186,18 +169,8 @@ export default function Header() {
               />
             </Link>
 
-            {/* RIGHT GROUP: Reviews + Icon Buttons */}
+            {/* RIGHT GROUP: Icon Action Buttons */}
             <div className="nav-right-group">
-              <nav className="nav-right-links" aria-label="Store Information">
-
-                <a
-                  href="/#reviews"
-                  className={`nav-text-link ${activeTab === 'reviews' ? 'is-active' : ''}`}
-                  onClick={() => setActiveTab('reviews')}
-                >
-                  <span>Reviews</span>
-                </a>
-              </nav>
 
               {/* Action Icons (44x44 hit areas, unboxed, hover --rose-gold) */}
               <div className="nav-action-icons">
@@ -373,18 +346,11 @@ export default function Header() {
             </div>
 
             <div className="mobile-sheet-links">
-              <a href="/#collection" onClick={() => setMobileDrawerOpen(false)}>
-                Festive Kurtha Collection
+              <a href="/#occasions" onClick={() => setMobileDrawerOpen(false)}>
+                Festive Occasions
               </a>
-              <a href="/#collection" onClick={() => setMobileDrawerOpen(false)}>
-                3-Piece Georgette Sets
-              </a>
-              <a href="/#collection" onClick={() => setMobileDrawerOpen(false)}>
-                Bhai Tika Specials
-              </a>
-
-              <a href="/#reviews" onClick={() => setMobileDrawerOpen(false)}>
-                Customer Reviews
+              <a href="/#lookbook" onClick={() => setMobileDrawerOpen(false)}>
+                Lookbook &amp; Styles
               </a>
             </div>
 

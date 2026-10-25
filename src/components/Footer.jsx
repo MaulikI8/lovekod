@@ -132,10 +132,10 @@ export default function Footer() {
           <div className="footer-nav-col">
             <h4 style={{ color: 'var(--paper)', fontSize: '0.95rem', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '18px' }}>Festive Edit</h4>
             <ul className="footer-links">
-              <li><a href="/#collection">Bhai Tika Collection</a></li>
-              <li><a href="/#collection">3-Piece Georgette Sets</a></li>
-              <li><a href="/#collection">Silk Blend Specials</a></li>
-              <li><a href="/#reviews">Customer Reviews</a></li>
+              <li><a href="/#occasions">Bhai Tika Collection</a></li>
+              <li><a href="/#occasions">3-Piece Georgette Sets</a></li>
+              <li><a href="/#occasions">Silk Blend Specials</a></li>
+              <li><a href="/#lookbook">Festive Lookbook</a></li>
             </ul>
           </div>
 

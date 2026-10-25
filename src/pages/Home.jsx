@@ -6,7 +6,6 @@ import HeroStrip from '../components/home/HeroStrip';
 import FeaturedSpotlight from '../components/home/FeaturedSpotlight';
 import CuratedCollection from '../components/home/CuratedCollection';
 import LookbookCarousel from '../components/home/LookbookCarousel';
-import CustomerReviews from '../components/home/CustomerReviews';
 
 /**
  * Editorial Homepage for LoveKod Atelier.
@@ -101,8 +100,7 @@ export default function Home() {
       {/* ── 7. PERSPECTIVE CAROUSEL / LOOKBOOK ── */}
       <LookbookCarousel products={products} siteSettings={siteSettings} />
 
-      {/* ── 8. TESTIMONIALS / CUSTOMER REVIEWS ── */}
-      <CustomerReviews testimonials={testimonials} />
+
     </div>
   );
 }

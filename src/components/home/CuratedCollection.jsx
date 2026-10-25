@@ -19,7 +19,7 @@ export default function CuratedCollection({
   waPhone,
 }) {
   return (
-    <section className="collection-section" id="collection">
+    <section className="collection-section" id="occasions">
       <div className="section-header-editorial">
         <div className="section-eyebrow">
           <DiyaIcon size={16} active={true} />

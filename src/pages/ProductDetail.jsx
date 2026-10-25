@@ -390,7 +390,7 @@ export default function ProductDetail() {
             <div className="guarantee-item">
               <SparklesIcon size={18} />
               <div>
-                <strong>3-Day Exchange:</strong> Hassle-free size adjustment guarantee.
+                <strong>Authentic Quality:</strong> 100% handcrafted fabrics and fine artisan embroidery.
               </div>
             </div>
           </div>

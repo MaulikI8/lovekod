@@ -226,7 +226,7 @@ async function startBot() {
                             const gitStatus = execSync('git status --porcelain', { cwd: REPO_DIR }).toString().trim();
                             if (gitStatus.length > 0) {
                                 console.log('[DEPLOY HOOK] Code changes detected:\n' + gitStatus);
-                                execSync('npm run build && cp -rf dist/* /home8/aashutos/lovekod.com/ && cp -rf dist/* /home8/aashutos/public_html/ && cp -f dist/.htaccess /home8/aashutos/public_html/.htaccess', { cwd: REPO_DIR, timeout: 120000 });
+                                execSync('export PATH="/opt/alt/alt-nodejs20/root/usr/bin:/home8/aashutos/.local/bin:$PATH" && npm run build && cp -rf dist/* /home8/aashutos/lovekod.com/ && cp -rf dist/* /home8/aashutos/public_html/ && cp -f dist/.htaccess /home8/aashutos/public_html/.htaccess', { cwd: REPO_DIR, timeout: 120000 });
                                 
                                 if (gitStatus.includes('backend/')) {
                                     execSync('cp -rf backend/* /home8/aashutos/backend/ && mkdir -p /home8/aashutos/backend/tmp && touch /home8/aashutos/backend/tmp/restart.txt', { cwd: REPO_DIR });

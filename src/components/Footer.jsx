@@ -143,7 +143,7 @@ export default function Footer() {
             <ul className="footer-links">
               <li><a href="#size-guide">Size &amp; Fit Guide</a></li>
               <li><a href="#shipping">Delivery Across Nepal</a></li>
-              <li><a href="#exchange">3-Day Size Exchange</a></li>
+              <li><a href="#fabric-care">Fabric &amp; Garment Care</a></li>
               <li><a href="#faq">Frequently Asked</a></li>
             </ul>
           </div>

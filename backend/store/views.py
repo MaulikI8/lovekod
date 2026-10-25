@@ -32,7 +32,7 @@ def save_base64_image(data_str):
         return '/images/kurtha-charcoal.jpg'
 
 import json
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404
 from .models import Category, Product, SiteSettings, FestivalMoment, Testimonial, Order, OrderItem, Coupon, Customer
@@ -1090,3 +1090,82 @@ def customer_detail_update_delete(request, phone):
             return JsonResponse({'success': True, 'soft_deleted': clean_phone})
 
     return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+
+def product_preview(request, product_id):
+    """
+    Renders dynamic Open Graph / Twitter Cards HTML for social media crawlers
+    (WhatsApp, Facebook, Telegram, Twitter, etc.) so links unfurl with the exact
+    outfit photo, title, price, and details.
+    Seamlessly redirects human browser visitors to the SPA product page.
+    """
+    clean_id = str(product_id).strip()
+    try:
+        product = Product.objects.get(id=clean_id, is_deleted=False)
+    except Product.DoesNotExist:
+        return HttpResponseRedirect(f"https://lovekod.com/product/{clean_id}")
+
+    raw_img = product.image or '/images/og-share-lovekod.jpg'
+    if raw_img.startswith('http://') or raw_img.startswith('https://'):
+        image_url = raw_img
+    elif raw_img.startswith('/'):
+        image_url = f"https://lovekod.com{raw_img}"
+    else:
+        image_url = f"https://lovekod.com/media/{raw_img}"
+
+    price_formatted = f"Rs. {int(product.price):,}" if product.price else "Festive Exclusive"
+    title = f"{product.name} ({price_formatted}) | LoveKod Festive Boutique"
+    desc = product.description or f"Handcrafted festive kurtha set ({price_formatted}). Exclusive premium collection for Tihar & celebrations across Nepal. Fast delivery in Kathmandu & nationwide."
+    clean_desc = desc.replace('"', '&quot;').replace('\n', ' ')[:250]
+    product_page_url = f"https://lovekod.com/product/{product.id}"
+
+    mime = 'image/jpeg'
+    if image_url.lower().endswith('.png'): mime = 'image/png'
+    elif image_url.lower().endswith('.webp'): mime = 'image/webp'
+
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{title}</title>
+    <meta name="description" content="{clean_desc}">
+
+    <!-- Open Graph Meta Tags for WhatsApp, Facebook, Telegram -->
+    <meta property="og:type" content="product">
+    <meta property="og:site_name" content="LoveKod">
+    <meta property="og:url" content="{product_page_url}">
+    <meta property="og:title" content="{title}">
+    <meta property="og:description" content="{clean_desc}">
+    <meta property="og:image" content="{image_url}">
+    <meta property="og:image:secure_url" content="{image_url}">
+    <meta property="og:image:type" content="{mime}">
+    <meta property="og:image:width" content="1080">
+    <meta property="og:image:height" content="1350">
+    <meta property="og:price:amount" content="{product.price}">
+    <meta property="og:price:currency" content="NPR">
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@lovekod.np">
+    <meta name="twitter:title" content="{title}">
+    <meta name="twitter:description" content="{clean_desc}">
+    <meta name="twitter:image" content="{image_url}">
+
+    <!-- Auto redirect human browser visitors to SPA product detail page -->
+    <meta http-equiv="refresh" content="0;url={product_page_url}">
+    <script>
+        window.location.replace("{product_page_url}");
+    </script>
+</head>
+<body style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #120e0d; color: #f5f0eb; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 16px; box-sizing: border-box; text-align: center;">
+    <div style="max-width: 420px; width: 100%; padding: 28px 20px; background: #1c1615; border: 1px solid rgba(229,169,59,0.25); border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.5);">
+        <img src="{image_url}" alt="{product.name}" style="width: 100%; max-height: 320px; object-fit: cover; border-radius: 12px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.08);">
+        <h1 style="color: #e5a93b; margin: 0 0 10px 0; font-size: 22px; font-weight: 600;">{product.name}</h1>
+        <p style="color: #f5f0eb; font-size: 18px; margin: 0 0 16px 0; font-weight: 700;">{price_formatted}</p>
+        <p style="color: #a89f91; font-size: 14px; margin: 0 0 20px 0;">Opening festive atelier in LoveKod...</p>
+        <a href="{product_page_url}" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #e5a93b, #d48b28); color: #120e0d; font-weight: 700; text-decoration: none; border-radius: 8px; font-size: 15px;">View Full Outfit</a>
+    </div>
+</body>
+</html>"""
+    return HttpResponse(html, content_type="text/html; charset=utf-8")

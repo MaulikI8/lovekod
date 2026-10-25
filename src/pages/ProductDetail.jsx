@@ -112,9 +112,21 @@ export default function ProductDetail() {
   };
 
   const getWaLink = () => {
-    const sizeText = selectedSize ? `in size ${selectedSize}` : '';
+    const sizeLine = selectedSize ? `\n📏 Size: ${selectedSize}` : '';
+    const origin = typeof window !== 'undefined' && window.location.origin ? window.location.origin : 'https://lovekod.com';
+    const productUrl = `${origin}/product/${product.id}`;
+    const rawImg = product.image || '/images/kurtha-charcoal.jpg';
+    const imgUrl = rawImg.startsWith('http') ? rawImg : `${origin}${rawImg.startsWith('/') ? '' : '/'}${rawImg}`;
+    const priceText = product.price ? `Rs. ${Number(product.price).toLocaleString()}` : '';
+
     const text = encodeURIComponent(
-      `Namaste LoveKod! I would like to order "${product.name}" ${sizeText} (Rs. ${product.price.toLocaleString()}) for Tihar. Please share delivery details.`
+      `Namaste LoveKod! 🙏\nI would like to order this outfit:\n\n` +
+      `🛍️ Product: ${product.name}\n` +
+      (priceText ? `💰 Price: ${priceText}` : '') +
+      sizeLine + `\n` +
+      `🔗 Product Link: ${productUrl}\n` +
+      `🖼️ Photo Preview: ${imgUrl}\n\n` +
+      `Please share availability and delivery details for Kathmandu / Nepal.`
     );
     const waPhone = (siteSettings?.contactWhatsapp || '9779717567133').replace(/[^\d]/g, '');
     return `https://wa.me/${waPhone}?text=${text}`;

@@ -12,9 +12,21 @@ export default function OrderSuccess() {
   const getWaConfirmationLink = () => {
     const waPhone = (siteSettings?.contactWhatsapp || '9779717567133').replace(/[^\d]/g, '');
     if (!order) return `https://wa.me/${waPhone}`;
-    const itemsText = order.items.map(i => `${i.name} (Size: ${i.size}, Qty: ${i.quantity})`).join(', ');
+    const origin = typeof window !== 'undefined' && window.location.origin ? window.location.origin : 'https://lovekod.com';
+    const itemsText = (order.items || []).map((i, idx) => {
+      const img = i.image ? (i.image.startsWith('http') ? i.image : `${origin}${i.image.startsWith('/') ? '' : '/'}${i.image}`) : '';
+      return `  ${idx + 1}. ${i.name} (${i.size ? `Size: ${i.size}, ` : ''}Qty: ${i.quantity || 1})${img ? `\n     Photo: ${img}` : ''}`;
+    }).join('\n');
     const text = encodeURIComponent(
-      `Namaste LoveKod!\n\nI just placed an order!\n\nOrder ID: ${order.id}\nCustomer: ${order.customer?.fullName}\nPhone: ${order.customer?.phone}\nAddress: ${order.customer?.address}, ${order.customer?.city}, ${order.customer?.district}\nPayment: ${order.customer?.paymentMethod || 'Cash on Delivery'}\nTotal: ${formatPrice(order.total)}\n\nItems:\n${itemsText}\n\nPlease confirm my delivery!`
+      `Namaste LoveKod! 🙏\n\nI just placed an order on the website!\n\n` +
+      `📦 Order ID: ${order.id}\n` +
+      `👤 Customer: ${order.customer?.fullName}\n` +
+      `📱 Phone: ${order.customer?.phone}\n` +
+      `📍 Address: ${order.customer?.address}, ${order.customer?.city}, ${order.customer?.district}\n` +
+      `💳 Payment: ${order.customer?.paymentMethod || 'Cash on Delivery'}\n` +
+      `💰 Total: ${formatPrice(order.total)}\n\n` +
+      `🛍️ Ordered Outfits:\n${itemsText}\n\n` +
+      `Please confirm my order and share delivery schedule!`
     );
     return `https://wa.me/${waPhone}?text=${text}`;
   };

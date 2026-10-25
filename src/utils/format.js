@@ -44,9 +44,21 @@ export function buildLowStockNote(sizes) {
  * @returns {string} Full wa.me URL
  */
 export function getWhatsAppLink(product, phone = '9779717567133') {
+  if (!product) return `https://wa.me/${phone}`;
   const cleanPhone = String(phone).replace(/[^\d]/g, '');
+  const origin = typeof window !== 'undefined' && window.location.origin ? window.location.origin : 'https://lovekod.com';
+  const productUrl = `${origin}/product/${product.id || ''}`;
+  const rawImg = product.image || '/images/kurtha-charcoal.jpg';
+  const imgUrl = rawImg.startsWith('http') ? rawImg : `${origin}${rawImg.startsWith('/') ? '' : '/'}${rawImg}`;
+  const priceText = product.price ? `Rs. ${Number(product.price).toLocaleString()}` : '';
+
   const text = encodeURIComponent(
-    `Namaste LoveKod! I would like to inquire about "${product.name}" (Rs. ${product.price.toLocaleString()}) for Tihar. Is it available in stock?`
+    `Namaste LoveKod! 🙏\nI would like to inquire about this outfit:\n\n` +
+    `🛍️ Product: ${product.name}\n` +
+    (priceText ? `💰 Price: ${priceText}\n` : '') +
+    `🔗 Product Link: ${productUrl}\n` +
+    `🖼️ Photo Preview: ${imgUrl}\n\n` +
+    `Is this currently available in stock for Tihar?`
   );
   return `https://wa.me/${cleanPhone}?text=${text}`;
 }

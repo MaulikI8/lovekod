@@ -210,11 +210,15 @@ export default function AdminOrders() {
   const allVariantRows = useMemo(() => {
     const rows = [];
     (products || []).forEach(p => {
-      const combos = Array.isArray(p.customSizes) && p.customSizes.length > 0
-        ? p.customSizes
-        : (Array.isArray(p.combinations) && p.combinations.length > 0 ? p.combinations : null);
+      const combos = (Array.isArray(p.combinationRows) && p.combinationRows.length > 0)
+        ? p.combinationRows
+        : (Array.isArray(p.customSizes) && p.customSizes.length > 0
+            ? p.customSizes
+            : (Array.isArray(p.customSizes?.combinationRows) && p.customSizes.combinationRows.length > 0
+                ? p.customSizes.combinationRows
+                : (Array.isArray(p.combinations) && p.combinations.length > 0 ? p.combinations : null)));
 
-      if (combos) {
+      if (combos && combos.length > 0) {
         combos.forEach((c, idx) => {
           const varLabel = c.name || [c.color, c.size].filter(Boolean).join(" / ") || c.size || "Standard";
           rows.push({
@@ -224,8 +228,8 @@ export default function AdminOrders() {
             productName: p.name,
             variant: varLabel,
             sku: c.sku || `${p.id}-${varLabel}`.toLowerCase().replace(/\s+/g, "-"),
-            stock: Number(c.quantity || c.stock || 0),
-            price: Number(c.price || p.price || 0),
+            stock: Number(c.quantity !== undefined ? c.quantity : (c.stock !== undefined ? c.stock : 0)),
+            price: Number(c.sellingPrice || c.price || p.price || 0),
             image: c.image || p.image || "/images/kurtha-charcoal.jpg",
             isFirst: idx === 0,
           });

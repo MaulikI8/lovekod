@@ -203,6 +203,21 @@ class Product(models.Model):
         return self.get_image_url()
 
     def get_sizes_dict(self):
+        cs = self.custom_sizes if isinstance(self.custom_sizes, dict) else {}
+        comb_rows = cs.get('combinationRows', []) if isinstance(cs, dict) else (self.custom_sizes if isinstance(self.custom_sizes, list) else [])
+        if self.enable_variants and comb_rows and len(comb_rows) > 0:
+            result = {}
+            for r in comb_rows:
+                if isinstance(r, dict):
+                    name = str(r.get('name') or r.get('size') or r.get('variant') or 'Standard').strip()
+                    try:
+                        qty = int(r.get('quantity', 0) or r.get('stock', 0) or 0)
+                    except (ValueError, TypeError):
+                        qty = 0
+                    result[name] = qty
+            if result:
+                return result
+
         result = {}
         all_sizes = [
             ('XS', self.stock_xs),
@@ -216,14 +231,15 @@ class Product(models.Model):
         ]
         if isinstance(self.custom_sizes, dict):
             for sz, qty in self.custom_sizes.items():
-                try:
-                    result[str(sz)] = int(qty)
-                except (ValueError, TypeError):
-                    pass
+                if sz not in ['combinationRows', 'singlePricing', 'sizes']:
+                    try:
+                        result[str(sz)] = int(qty)
+                    except (ValueError, TypeError):
+                        pass
         elif isinstance(self.custom_sizes, list):
             for item in self.custom_sizes:
                 if isinstance(item, dict):
-                    sz = item.get('size') or item.get('variant')
+                    sz = item.get('size') or item.get('variant') or item.get('name')
                     qty = item.get('quantity', 0)
                     if sz:
                         try:
@@ -237,8 +253,10 @@ class Product(models.Model):
         return result
 
     def total_stock(self):
-        if self.enable_variants and isinstance(self.custom_sizes, list) and len(self.custom_sizes) > 0:
-            return sum(int(c.get('quantity', 0) or 0) for c in self.custom_sizes if isinstance(c, dict))
+        cs = self.custom_sizes if isinstance(self.custom_sizes, dict) else {}
+        comb_rows = cs.get('combinationRows', []) if isinstance(cs, dict) else (self.custom_sizes if isinstance(self.custom_sizes, list) else [])
+        if comb_rows and len(comb_rows) > 0:
+            return sum(int(c.get('quantity', 0) or c.get('stock', 0) or 0) for c in comb_rows if isinstance(c, dict))
         if self.quantity and self.quantity > 0:
             return self.quantity
         tot = (
@@ -252,24 +270,26 @@ class Product(models.Model):
             (self.stock_free or 0)
         )
         if isinstance(self.custom_sizes, dict):
-            for v in self.custom_sizes.values():
-                try:
-                    tot += int(v)
-                except (ValueError, TypeError):
-                    pass
+            for k, v in self.custom_sizes.items():
+                if k not in ['combinationRows', 'singlePricing', 'sizes']:
+                    try:
+                        tot += int(v)
+                    except (ValueError, TypeError):
+                        pass
         return tot
 
     def to_dict(self):
         cs = self.custom_sizes if isinstance(self.custom_sizes, dict) else {}
         comb_rows = cs.get('combinationRows', []) if isinstance(cs, dict) else (self.custom_sizes if isinstance(self.custom_sizes, list) else [])
         single_p = cs.get('singlePricing', {}) if isinstance(cs, dict) else {}
+        tot_stock = self.total_stock()
         return {
             'id': self.product_id,
             'combinationRows': comb_rows,
             'singlePricing': single_p,
             'variantColors': [c.strip() for c in self.colors.split(',') if c.strip()] if self.colors else [],
             'variantSizes': [s.strip() for s in self.sizes.split(',') if s.strip()] if self.sizes else [],
-            'inventory': self.quantity if (self.quantity and self.quantity > 0) else self.total_stock(),
+            'inventory': tot_stock,
             'categoryId': self.category_id,
             'categoryName': self.category.name if self.category else '',
             'categorySlug': self.category.slug if self.category else '',
@@ -863,6 +883,8 @@ class OrderItem(models.Model):
                 sz = (self.size or 'M').strip()
                 sz_upper = sz.upper()
                 qty = max(1, int(self.quantity or 1))
+
+                # Update standard size stocks
                 if 'XXXL' in sz_upper or '3XL' in sz_upper:
                     p.stock_xxxl = max(0, (p.stock_xxxl or 0) - qty)
                 elif 'XXL' in sz_upper or '2XL' in sz_upper:
@@ -877,26 +899,30 @@ class OrderItem(models.Model):
                     p.stock_s = max(0, (p.stock_s or 0) - qty)
                 elif 'FREE' in sz_upper:
                     p.stock_free = max(0, (p.stock_free or 0) - qty)
-                elif isinstance(p.custom_sizes, dict) and sz in p.custom_sizes:
-                    try:
-                        p.custom_sizes[sz] = max(0, int(p.custom_sizes[sz]) - qty)
-                    except (ValueError, TypeError):
-                        pass
                 else:
                     p.stock_m = max(0, (p.stock_m or 0) - qty)
 
+                # Update combination rows
+                target_rows = []
                 if isinstance(p.custom_sizes, dict) and 'combinationRows' in p.custom_sizes:
-                    for row in p.custom_sizes.get('combinationRows', []):
-                        if isinstance(row, dict) and (str(row.get('size')).upper() == sz_upper or str(row.get('variant')).upper() == sz_upper):
-                            row['quantity'] = max(0, int(row.get('quantity') or 0) - qty)
+                    target_rows = p.custom_sizes.get('combinationRows', [])
                 elif isinstance(p.custom_sizes, list):
-                    for row in p.custom_sizes:
-                        if isinstance(row, dict) and (str(row.get('size')).upper() == sz_upper or str(row.get('variant')).upper() == sz_upper):
-                            row['quantity'] = max(0, int(row.get('quantity') or 0) - qty)
+                    target_rows = p.custom_sizes
 
-                if p.quantity is not None:
-                    p.quantity = max(0, p.quantity - qty)
+                for row in target_rows:
+                    if isinstance(row, dict):
+                        r_name = str(row.get('name', '')).strip().upper()
+                        r_size = str(row.get('size', '')).strip().upper()
+                        r_var = str(row.get('variant', '')).strip().upper()
+                        r_sku = str(row.get('sku', '')).strip().upper()
+                        if (r_name == sz_upper or r_size == sz_upper or r_var == sz_upper or
+                            (r_name and sz_upper and (sz_upper in r_name or r_name in sz_upper)) or
+                            (r_sku and sz_upper and sz_upper in r_sku)):
+                            cur_q = int(row.get('quantity') or row.get('stock') or 0)
+                            row['quantity'] = max(0, cur_q - qty)
+                            row['stock'] = max(0, cur_q - qty)
 
+                p.quantity = p.total_stock()
                 p.save()
                 self.stock_deducted = True
                 self.save(update_fields=['stock_deducted'])
@@ -911,6 +937,8 @@ class OrderItem(models.Model):
                 sz = (self.size or 'M').strip()
                 sz_upper = sz.upper()
                 qty = max(1, int(self.quantity or 1))
+
+                # Update standard size stocks
                 if 'XXXL' in sz_upper or '3XL' in sz_upper:
                     p.stock_xxxl = (p.stock_xxxl or 0) + qty
                 elif 'XXL' in sz_upper or '2XL' in sz_upper:
@@ -925,26 +953,30 @@ class OrderItem(models.Model):
                     p.stock_s = (p.stock_s or 0) + qty
                 elif 'FREE' in sz_upper:
                     p.stock_free = (p.stock_free or 0) + qty
-                elif isinstance(p.custom_sizes, dict) and sz in p.custom_sizes:
-                    try:
-                        p.custom_sizes[sz] = int(p.custom_sizes[sz]) + qty
-                    except (ValueError, TypeError):
-                        pass
                 else:
                     p.stock_m = (p.stock_m or 0) + qty
 
+                # Update combination rows
+                target_rows = []
                 if isinstance(p.custom_sizes, dict) and 'combinationRows' in p.custom_sizes:
-                    for row in p.custom_sizes.get('combinationRows', []):
-                        if isinstance(row, dict) and (str(row.get('size')).upper() == sz_upper or str(row.get('variant')).upper() == sz_upper):
-                            row['quantity'] = int(row.get('quantity') or 0) + qty
+                    target_rows = p.custom_sizes.get('combinationRows', [])
                 elif isinstance(p.custom_sizes, list):
-                    for row in p.custom_sizes:
-                        if isinstance(row, dict) and (str(row.get('size')).upper() == sz_upper or str(row.get('variant')).upper() == sz_upper):
-                            row['quantity'] = int(row.get('quantity') or 0) + qty
+                    target_rows = p.custom_sizes
 
-                if p.quantity is not None:
-                    p.quantity = p.quantity + qty
+                for row in target_rows:
+                    if isinstance(row, dict):
+                        r_name = str(row.get('name', '')).strip().upper()
+                        r_size = str(row.get('size', '')).strip().upper()
+                        r_var = str(row.get('variant', '')).strip().upper()
+                        r_sku = str(row.get('sku', '')).strip().upper()
+                        if (r_name == sz_upper or r_size == sz_upper or r_var == sz_upper or
+                            (r_name and sz_upper and (sz_upper in r_name or r_name in sz_upper)) or
+                            (r_sku and sz_upper and sz_upper in r_sku)):
+                            cur_q = int(row.get('quantity') or row.get('stock') or 0)
+                            row['quantity'] = cur_q + qty
+                            row['stock'] = cur_q + qty
 
+                p.quantity = p.total_stock()
                 p.save()
                 self.stock_deducted = False
                 self.save(update_fields=['stock_deducted'])

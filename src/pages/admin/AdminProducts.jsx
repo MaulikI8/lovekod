@@ -432,13 +432,30 @@ export default function AdminProducts() {
       status: prod.status || 'Active',
     });
 
-    if (prod.enableVariants || (prod.combinationRows && prod.combinationRows.length > 0) || (prod.variantColors && prod.variantColors.length > 0)) {
+    const hasSizes = prod.sizes && typeof prod.sizes === 'object' && Object.keys(prod.sizes).length > 0;
+    const initialCombRows = (prod.combinationRows && prod.combinationRows.length > 0)
+      ? prod.combinationRows
+      : (hasSizes
+          ? Object.entries(prod.sizes).map(([sKey, sVal], sIdx) => ({
+              id: `${prod.id || Date.now()}_${sKey}`,
+              sku: `${prod.id || 'PROD'}-${sKey}`.toUpperCase(),
+              name: sKey,
+              size: sKey,
+              weight: 0,
+              quantity: typeof sVal === 'object' ? Number(sVal.quantity || sVal.stock || 0) : Number(sVal || 0),
+              costPrice: prod.costPrice || 1000,
+              crossedPrice: prod.originalPrice || 2000,
+              sellingPrice: prod.price || 1500,
+            }))
+          : []);
+
+    if (prod.enableVariants || initialCombRows.length > 0 || (prod.variantColors && prod.variantColors.length > 0)) {
       setEnableVariants(true);
       setVariantColors(prod.variantColors || []);
       setColorCodes(prod.colorCodes || {});
       setColorCodesSec(prod.colorCodesSec || {});
-      setVariantSizes(prod.variantSizes || []);
-      setCombinationRows(prod.combinationRows || []);
+      setVariantSizes(prod.variantSizes && prod.variantSizes.length > 0 ? prod.variantSizes : (hasSizes ? Object.keys(prod.sizes) : []));
+      setCombinationRows(initialCombRows);
     } else {
       setEnableVariants(false);
       setVariantColors([]);
@@ -804,14 +821,22 @@ export default function AdminProducts() {
             ) : (
               filteredProducts.map((p, idx) => {
                 // Calculate variant count and stock
-                const isVariants = p.enableVariants && Array.isArray(p.combinationRows) && p.combinationRows.length > 0;
-                const variantCount = isVariants ? p.combinationRows.length : (Array.isArray(p.variants) && p.variants.length > 0 ? p.variants.length : 0);
-                const totalStock = isVariants
-                  ? p.combinationRows.reduce((a, b) => a + Number(b.quantity || 0), 0)
-                  : (p.inventory !== undefined ? Number(p.inventory) : Object.values(p.sizes || {}).reduce((a, b) => a + Number(b || 0), 0));
+                const isCombRows = Array.isArray(p.combinationRows) && p.combinationRows.length > 0;
+                const hasSizes = p.sizes && typeof p.sizes === 'object' && Object.keys(p.sizes).length > 0;
+                const variantCount = isCombRows
+                  ? p.combinationRows.length
+                  : (hasSizes
+                      ? Object.keys(p.sizes).length
+                      : (Array.isArray(p.variants) && p.variants.length > 0 ? p.variants.length : 0));
 
-                // Canva Badge format: "13 FOR 4 VARIANTS" or "20 FOR 2 VARIANTS" or "20 IN STOCK"
-                const inventoryBadge = (isVariants || variantCount > 1)
+                const totalStock = isCombRows
+                  ? p.combinationRows.reduce((a, b) => a + Number(b.quantity !== undefined ? b.quantity : (b.stock || 0)), 0)
+                  : (hasSizes
+                      ? Object.values(p.sizes).reduce((a, b) => a + Number(typeof b === 'object' ? (b.quantity || b.stock || 0) : b || 0), 0)
+                      : (p.inventory !== undefined ? Number(p.inventory) : (p.totalStock !== undefined ? Number(p.totalStock) : 0)));
+
+                // Canva Badge format: "13 FOR 4 VARIANTS" or "5 FOR 5 VARIANTS" or "20 IN STOCK"
+                const inventoryBadge = (variantCount > 1)
                   ? `${totalStock} FOR ${variantCount} VARIANTS`
                   : `${totalStock} IN STOCK`;
 

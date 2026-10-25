@@ -669,45 +669,81 @@ export function StoreProvider({ children }) {
         let changed = false;
         const newSizes = { ...(p.sizes || {}) };
         const newCombRows = Array.isArray(p.combinationRows) ? p.combinationRows.map(r => ({ ...r })) : [];
-        let newQty = p.quantity !== undefined ? Number(p.quantity) : (p.inventory !== undefined ? Number(p.inventory) : 0);
 
         itemsToDeduct.forEach(it => {
           const itId = it.productId || it.product_id || it.id;
           const itName = it.name || it.title || '';
+          const itSku = String(it.sku || '').trim().toUpperCase();
           if ((itId && String(itId) === String(p.id)) || (itName && String(itName).trim().toLowerCase() === String(p.name).trim().toLowerCase())) {
             changed = true;
-            const sz = String(it.size || 'M').trim();
+            const sz = String(it.size || it.variant || 'M').trim();
             const szUpper = sz.toUpperCase();
             const qty = Math.max(1, Number(it.quantity || 1));
+
+            // Deduct combination row
+            newCombRows.forEach(row => {
+              const rName = String(row.name || '').trim().toUpperCase();
+              const rSize = String(row.size || '').trim().toUpperCase();
+              const rVar = String(row.variant || '').trim().toUpperCase();
+              const rSku = String(row.sku || '').trim().toUpperCase();
+              if (
+                (itSku && rSku === itSku) ||
+                rName === szUpper ||
+                rSize === szUpper ||
+                rVar === szUpper ||
+                (rName && szUpper && (szUpper.includes(rName) || rName.includes(szUpper))) ||
+                (rSku && szUpper && rSku.includes(szUpper))
+              ) {
+                const cur = Number(row.quantity !== undefined ? row.quantity : (row.stock || 0));
+                row.quantity = Math.max(0, cur - qty);
+                row.stock = Math.max(0, cur - qty);
+              }
+            });
 
             // Deduct size
             const sizeKey = Object.keys(newSizes).find(k => k.toUpperCase() === szUpper) || sz;
             if (newSizes[sizeKey] !== undefined) {
               newSizes[sizeKey] = Math.max(0, Number(newSizes[sizeKey]) - qty);
             }
-
-            // Deduct combination row
-            newCombRows.forEach(row => {
-              if (String(row.size).toUpperCase() === szUpper || String(row.variant).toUpperCase() === szUpper) {
-                row.stock = Math.max(0, Number(row.stock || row.quantity || 0) - qty);
-                row.quantity = Math.max(0, Number(row.quantity || row.stock || 0) - qty);
-              }
-            });
-
-            // Deduct overall quantity
-            newQty = Math.max(0, newQty - qty);
           }
         });
 
         if (changed) {
-          const totalStock = Object.values(newSizes).reduce((a, b) => a + Number(b || 0), 0);
-          return {
+          // If product has combinationRows, totalStock is the sum of combinationRows
+          const totalStock = newCombRows.length > 0
+            ? newCombRows.reduce((a, b) => a + Number(b.quantity !== undefined ? b.quantity : (b.stock || 0)), 0)
+            : Object.values(newSizes).reduce((a, b) => a + Number(b || 0), 0);
+
+          // Keep sizes and combinationRows in sync
+          if (newCombRows.length > 0) {
+            newCombRows.forEach(r => {
+              const k = r.name || r.size || r.variant;
+              if (k) newSizes[k] = Number(r.quantity !== undefined ? r.quantity : (r.stock || 0));
+            });
+          }
+
+          const updatedProd = {
             ...p,
             sizes: newSizes,
             combinationRows: newCombRows,
-            quantity: newQty > 0 ? newQty : totalStock,
+            quantity: totalStock,
             inventory: totalStock,
+            totalStock: totalStock,
           };
+
+          try {
+            fetch(`${API_BASE}/products/${p.id}/`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                combinationRows: newCombRows,
+                sizes: newSizes,
+                inventory: totalStock,
+              }),
+            }).catch(() => {});
+          } catch {}
+
+          return updatedProd;
         }
         return p;
       });
@@ -725,43 +761,79 @@ export function StoreProvider({ children }) {
         let changed = false;
         const newSizes = { ...(p.sizes || {}) };
         const newCombRows = Array.isArray(p.combinationRows) ? p.combinationRows.map(r => ({ ...r })) : [];
-        let newQty = p.quantity !== undefined ? Number(p.quantity) : (p.inventory !== undefined ? Number(p.inventory) : 0);
 
         itemsToRestore.forEach(it => {
           const itId = it.productId || it.product_id || it.id;
           const itName = it.name || it.title || '';
+          const itSku = String(it.sku || '').trim().toUpperCase();
           if ((itId && String(itId) === String(p.id)) || (itName && String(itName).trim().toLowerCase() === String(p.name).trim().toLowerCase())) {
             changed = true;
-            const sz = String(it.size || 'M').trim();
+            const sz = String(it.size || it.variant || 'M').trim();
             const szUpper = sz.toUpperCase();
             const qty = Math.max(1, Number(it.quantity || 1));
+
+            // Restore combination row
+            newCombRows.forEach(row => {
+              const rName = String(row.name || '').trim().toUpperCase();
+              const rSize = String(row.size || '').trim().toUpperCase();
+              const rVar = String(row.variant || '').trim().toUpperCase();
+              const rSku = String(row.sku || '').trim().toUpperCase();
+              if (
+                (itSku && rSku === itSku) ||
+                rName === szUpper ||
+                rSize === szUpper ||
+                rVar === szUpper ||
+                (rName && szUpper && (szUpper.includes(rName) || rName.includes(szUpper))) ||
+                (rSku && szUpper && rSku.includes(szUpper))
+              ) {
+                const cur = Number(row.quantity !== undefined ? row.quantity : (row.stock || 0));
+                row.quantity = cur + qty;
+                row.stock = cur + qty;
+              }
+            });
 
             // Restore size
             const sizeKey = Object.keys(newSizes).find(k => k.toUpperCase() === szUpper) || sz;
             newSizes[sizeKey] = (Number(newSizes[sizeKey]) || 0) + qty;
-
-            // Restore combination row
-            newCombRows.forEach(row => {
-              if (String(row.size).toUpperCase() === szUpper || String(row.variant).toUpperCase() === szUpper) {
-                row.stock = (Number(row.stock || row.quantity || 0)) + qty;
-                row.quantity = (Number(row.quantity || row.stock || 0)) + qty;
-              }
-            });
-
-            // Restore overall quantity
-            newQty = newQty + qty;
           }
         });
 
         if (changed) {
-          const totalStock = Object.values(newSizes).reduce((a, b) => a + Number(b || 0), 0);
-          return {
+          // If product has combinationRows, totalStock is the sum of combinationRows
+          const totalStock = newCombRows.length > 0
+            ? newCombRows.reduce((a, b) => a + Number(b.quantity !== undefined ? b.quantity : (b.stock || 0)), 0)
+            : Object.values(newSizes).reduce((a, b) => a + Number(b || 0), 0);
+
+          // Keep sizes and combinationRows in sync
+          if (newCombRows.length > 0) {
+            newCombRows.forEach(r => {
+              const k = r.name || r.size || r.variant;
+              if (k) newSizes[k] = Number(r.quantity !== undefined ? r.quantity : (r.stock || 0));
+            });
+          }
+
+          const updatedProd = {
             ...p,
             sizes: newSizes,
             combinationRows: newCombRows,
-            quantity: newQty > 0 ? newQty : totalStock,
+            quantity: totalStock,
             inventory: totalStock,
+            totalStock: totalStock,
           };
+
+          try {
+            fetch(`${API_BASE}/products/${p.id}/`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                combinationRows: newCombRows,
+                sizes: newSizes,
+                inventory: totalStock,
+              }),
+            }).catch(() => {});
+          } catch {}
+
+          return updatedProd;
         }
         return p;
       });

@@ -1106,16 +1106,32 @@ export default function AdminOrders() {
                       <td style={{ padding: '10px 12px' }}>
                         <div style={{ fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px' }}>
                           <span>{order.customer?.fullName || order.customer?.name || 'Walk-in Customer'}</span>
-                          <span style={{
-                            background: '#f3e8ff',
-                            color: '#7c3aed',
-                            fontSize: '0.62rem',
-                            fontWeight: 800,
-                            padding: '1px 5px',
-                            borderRadius: '3px'
-                          }}>
-                            NEW
-                          </span>
+                          {(() => {
+                            const statusUpper = String(order.status || '').trim().toUpperCase();
+                            const payUpper = String(order.paymentStatus || order.payment_status || '').trim().toUpperCase();
+                            const isDelivered = statusUpper === 'DELIVERED';
+                            const isPaid = payUpper === 'PAID' || payUpper === 'FULL PAID';
+                            const isCancelled = statusUpper === 'CANCELLED' || statusUpper === 'RETURNED';
+                            const isUnpaid = payUpper === 'UNPAID' || !payUpper || payUpper === 'PENDING';
+
+                            // Only show NEW tag for orders that haven't been delivered and haven't paid yet
+                            const showNewTag = !isDelivered && !isCancelled && !isPaid && isUnpaid;
+
+                            if (!showNewTag) return null;
+
+                            return (
+                              <span style={{
+                                background: '#f3e8ff',
+                                color: '#7c3aed',
+                                fontSize: '0.62rem',
+                                fontWeight: 800,
+                                padding: '1px 5px',
+                                borderRadius: '3px'
+                              }}>
+                                NEW
+                              </span>
+                            );
+                          })()}
                         </div>
                         <div style={{ fontSize: '0.74rem', color: '#64748b', marginTop: '1px' }}>
                           {order.customer?.phone || '-'}
@@ -1529,16 +1545,30 @@ export default function AdminOrders() {
                             <span style={{ fontWeight: 800, color: '#0f172a', fontSize: '0.94rem' }}>
                               {selectedCustomer.name || selectedCustomer.fullName}
                             </span>
-                            <span style={{
-                              background: '#f3e8ff',
-                              color: '#7c3aed',
-                              fontSize: '0.68rem',
-                              fontWeight: 800,
-                              padding: '2px 8px',
-                              borderRadius: '4px'
-                            }}>
-                              NEW
-                            </span>
+                            {(() => {
+                              const statusUpper = String(formData.status || '').trim().toUpperCase();
+                              const payUpper = String(formData.paymentStatus || '').trim().toUpperCase();
+                              const isDelivered = statusUpper === 'DELIVERED';
+                              const isPaid = payUpper === 'PAID' || payUpper === 'FULL PAID';
+                              const isCancelled = statusUpper === 'CANCELLED' || statusUpper === 'RETURNED';
+                              const isUnpaid = payUpper === 'UNPAID' || !payUpper || payUpper === 'PENDING';
+                              const showNewTag = !isDelivered && !isCancelled && !isPaid && isUnpaid;
+
+                              if (!showNewTag) return null;
+
+                              return (
+                                <span style={{
+                                  background: '#f3e8ff',
+                                  color: '#7c3aed',
+                                  fontSize: '0.68rem',
+                                  fontWeight: 800,
+                                  padding: '2px 8px',
+                                  borderRadius: '4px'
+                                }}>
+                                  NEW
+                                </span>
+                              );
+                            })()}
                           </div>
                           <div style={{ display: 'flex', gap: '12px', marginTop: '2px', fontSize: '0.8rem', color: '#64748b' }}>
                             <span>📞 {selectedCustomer.phone}</span>

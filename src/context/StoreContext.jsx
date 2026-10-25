@@ -293,15 +293,35 @@ export function StoreProvider({ children }) {
       }
     } catch { /* offline fallback */ }
 
-    // 6. Orders (Always sorted with newest on top)
+    // 6. Orders (Merged with local cache so edits are never wiped)
     try {
       const ordersRes = await fetchLive('/orders/');
       if (ordersRes.ok) {
         const orderData = await ordersRes.json();
         if (Array.isArray(orderData)) {
           const activeOnly = orderData.filter(o => !o.isDeleted && !o.is_deleted);
-          activeOnly.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-          setOrders(activeOnly);
+          setOrders(prev => {
+            const map = new Map();
+            activeOnly.forEach(o => map.set(String(o.id), o));
+            prev.forEach(localO => {
+              const remote = map.get(String(localO.id));
+              if (remote) {
+                map.set(String(localO.id), {
+                  ...remote,
+                  status: localO.status || remote.status,
+                  paymentStatus: localO.paymentStatus || remote.paymentStatus,
+                  payment_status: localO.payment_status || remote.payment_status,
+                  items: localO.items && localO.items.length > 0 ? localO.items : remote.items,
+                });
+              } else {
+                map.set(String(localO.id), localO);
+              }
+            });
+            const merged = Array.from(map.values());
+            merged.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+            saveState('lovekod_orders', merged);
+            return merged;
+          });
         }
       }
     } catch { /* offline fallback */ }
@@ -641,40 +661,196 @@ export function StoreProvider({ children }) {
     } catch { /* offline fallback */ }
   }
 
+  // ── Real-Time Inventory Sync: Deduct from products & variants ──
+  const deductItemsInventory = (itemsToDeduct) => {
+    if (!Array.isArray(itemsToDeduct) || itemsToDeduct.length === 0) return;
+    setProducts(prevProducts => {
+      const updated = prevProducts.map(p => {
+        let changed = false;
+        const newSizes = { ...(p.sizes || {}) };
+        const newCombRows = Array.isArray(p.combinationRows) ? p.combinationRows.map(r => ({ ...r })) : [];
+        let newQty = p.quantity !== undefined ? Number(p.quantity) : (p.inventory !== undefined ? Number(p.inventory) : 0);
+
+        itemsToDeduct.forEach(it => {
+          const itId = it.productId || it.product_id || it.id;
+          const itName = it.name || it.title || '';
+          if ((itId && String(itId) === String(p.id)) || (itName && String(itName).trim().toLowerCase() === String(p.name).trim().toLowerCase())) {
+            changed = true;
+            const sz = String(it.size || 'M').trim();
+            const szUpper = sz.toUpperCase();
+            const qty = Math.max(1, Number(it.quantity || 1));
+
+            // Deduct size
+            const sizeKey = Object.keys(newSizes).find(k => k.toUpperCase() === szUpper) || sz;
+            if (newSizes[sizeKey] !== undefined) {
+              newSizes[sizeKey] = Math.max(0, Number(newSizes[sizeKey]) - qty);
+            }
+
+            // Deduct combination row
+            newCombRows.forEach(row => {
+              if (String(row.size).toUpperCase() === szUpper || String(row.variant).toUpperCase() === szUpper) {
+                row.stock = Math.max(0, Number(row.stock || row.quantity || 0) - qty);
+                row.quantity = Math.max(0, Number(row.quantity || row.stock || 0) - qty);
+              }
+            });
+
+            // Deduct overall quantity
+            newQty = Math.max(0, newQty - qty);
+          }
+        });
+
+        if (changed) {
+          const totalStock = Object.values(newSizes).reduce((a, b) => a + Number(b || 0), 0);
+          return {
+            ...p,
+            sizes: newSizes,
+            combinationRows: newCombRows,
+            quantity: newQty > 0 ? newQty : totalStock,
+            inventory: totalStock,
+          };
+        }
+        return p;
+      });
+
+      saveState('lovekod_products', updated);
+      return updated;
+    });
+  };
+
+  // ── Real-Time Inventory Sync: Restore to products & variants ──
+  const restoreItemsInventory = (itemsToRestore) => {
+    if (!Array.isArray(itemsToRestore) || itemsToRestore.length === 0) return;
+    setProducts(prevProducts => {
+      const updated = prevProducts.map(p => {
+        let changed = false;
+        const newSizes = { ...(p.sizes || {}) };
+        const newCombRows = Array.isArray(p.combinationRows) ? p.combinationRows.map(r => ({ ...r })) : [];
+        let newQty = p.quantity !== undefined ? Number(p.quantity) : (p.inventory !== undefined ? Number(p.inventory) : 0);
+
+        itemsToRestore.forEach(it => {
+          const itId = it.productId || it.product_id || it.id;
+          const itName = it.name || it.title || '';
+          if ((itId && String(itId) === String(p.id)) || (itName && String(itName).trim().toLowerCase() === String(p.name).trim().toLowerCase())) {
+            changed = true;
+            const sz = String(it.size || 'M').trim();
+            const szUpper = sz.toUpperCase();
+            const qty = Math.max(1, Number(it.quantity || 1));
+
+            // Restore size
+            const sizeKey = Object.keys(newSizes).find(k => k.toUpperCase() === szUpper) || sz;
+            newSizes[sizeKey] = (Number(newSizes[sizeKey]) || 0) + qty;
+
+            // Restore combination row
+            newCombRows.forEach(row => {
+              if (String(row.size).toUpperCase() === szUpper || String(row.variant).toUpperCase() === szUpper) {
+                row.stock = (Number(row.stock || row.quantity || 0)) + qty;
+                row.quantity = (Number(row.quantity || row.stock || 0)) + qty;
+              }
+            });
+
+            // Restore overall quantity
+            newQty = newQty + qty;
+          }
+        });
+
+        if (changed) {
+          const totalStock = Object.values(newSizes).reduce((a, b) => a + Number(b || 0), 0);
+          return {
+            ...p,
+            sizes: newSizes,
+            combinationRows: newCombRows,
+            quantity: newQty > 0 ? newQty : totalStock,
+            inventory: totalStock,
+          };
+        }
+        return p;
+      });
+
+      saveState('lovekod_products', updated);
+      return updated;
+    });
+  };
+
   async function createManualOrder(orderData) {
+    const orderId = orderData.id || ('ORD-' + Date.now().toString(36).toUpperCase());
+    const finalOrder = {
+      ...orderData,
+      id: orderId,
+      status: orderData.status || 'Pending',
+      paymentStatus: orderData.paymentStatus || (orderData.paymentMethod === 'COD' ? 'Unpaid' : 'Full Paid'),
+      payment_status: orderData.paymentStatus || (orderData.paymentMethod === 'COD' ? 'Unpaid' : 'Full Paid'),
+      createdAt: orderData.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    // Deduct stock in real time
+    if (finalOrder.status !== 'Cancelled') {
+      deductItemsInventory(finalOrder.items || []);
+    }
+
+    setOrders(prev => {
+      const next = [finalOrder, ...prev.filter(o => String(o.id) !== String(orderId))];
+      saveState('lovekod_orders', next);
+      return next;
+    });
+    showToast(`Order #${String(orderId).replace(/^ORD-/, '')} created successfully!`);
+
     try {
       const res = await fetch(`${API_BASE}/orders/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderData),
+        body: JSON.stringify(finalOrder),
       });
       if (res.ok) {
         const saved = await res.json();
-        setOrders(prev => [saved, ...prev.filter(o => o.id !== saved.id)]);
-        await refreshFromBackend();
-        showToast(`Order ${saved.id} created successfully!`);
+        setOrders(prev => {
+          const next = [saved, ...prev.filter(o => String(o.id) !== String(orderId) && String(o.id) !== String(saved.id))];
+          saveState('lovekod_orders', next);
+          return next;
+        });
         return saved;
-      } else {
-        const errData = await res.json();
-        throw new Error(errData.error || 'Failed to create order');
       }
-    } catch (err) {
-      showToast(err.message || 'Error creating order', 'error');
-      throw err;
-    }
+    } catch { /* offline fallback */ }
+
+    return finalOrder;
   }
 
   async function updateOrderStatus(orderId, statusOrPatch) {
     const patch = typeof statusOrPatch === 'string' ? { status: statusOrPatch } : (statusOrPatch || {});
-    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, ...patch } : o));
-    showToast('Order updated');
+
+    // Real-time stock sync on cancellation / restoration
+    if (patch.status) {
+      const targetOrder = orders.find(o => String(o.id) === String(orderId));
+      if (targetOrder && targetOrder.status !== patch.status) {
+        if (patch.status === 'Cancelled' && targetOrder.status !== 'Cancelled') {
+          restoreItemsInventory(targetOrder.items || []);
+        } else if (targetOrder.status === 'Cancelled' && patch.status !== 'Cancelled') {
+          deductItemsInventory(targetOrder.items || []);
+        }
+      }
+    }
+
+    setOrders(prev => {
+      const next = prev.map(o => String(o.id) === String(orderId) ? { ...o, ...patch, updatedAt: new Date().toISOString() } : o);
+      saveState('lovekod_orders', next);
+      return next;
+    });
+    showToast('Order updated successfully');
 
     try {
-      await fetch(`${API_BASE}/orders/${orderId}/`, {
+      const res = await fetch(`${API_BASE}/orders/${orderId}/`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(patch),
       });
+      if (res.ok) {
+        const saved = await res.json();
+        setOrders(prev => {
+          const next = prev.map(o => String(o.id) === String(orderId) ? { ...o, ...saved } : o);
+          saveState('lovekod_orders', next);
+          return next;
+        });
+      }
     } catch { /* offline fallback */ }
   }
 
@@ -684,8 +860,16 @@ export function StoreProvider({ children }) {
 
   async function updateOrder(updatedOrder) {
     const id = updatedOrder.id;
+    const oldOrder = orders.find(o => String(o.id) === String(id));
+
+    // Real-time inventory sync on order item changes
+    if (oldOrder && updatedOrder.status !== 'Cancelled') {
+      restoreItemsInventory(oldOrder.items || []);
+      deductItemsInventory(updatedOrder.items || []);
+    }
+
     setOrders(prev => {
-      const next = prev.map(o => String(o.id) === String(id) ? { ...o, ...updatedOrder } : o);
+      const next = prev.map(o => String(o.id) === String(id) ? { ...o, ...updatedOrder, updatedAt: new Date().toISOString() } : o);
       saveState('lovekod_orders', next);
       return next;
     });
@@ -709,6 +893,10 @@ export function StoreProvider({ children }) {
   }
 
   async function deleteOrder(orderId) {
+    const targetOrder = orders.find(o => String(o.id) === String(orderId));
+    if (targetOrder && targetOrder.status !== 'Cancelled') {
+      restoreItemsInventory(targetOrder.items || []);
+    }
     setOrders(prev => {
       const next = prev.filter(o => String(o.id) !== String(orderId));
       saveState('lovekod_orders', next);

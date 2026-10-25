@@ -1163,30 +1163,60 @@ export default function AdminOrders() {
                         {order.customer?.paymentMethod || order.paymentMethod || 'COD'}
                       </td>
 
-                      {/* 9. Order Status & Payment Status Combined */}
-                      <td style={{ padding: '10px 12px', whiteSpace: 'nowrap' }}>
+                      {/* 9. Order Status & Payment Status Combined (Interactive Instant Sync) */}
+                      <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }} onClick={e => e.stopPropagation()}>
                         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-                          <span style={{
-                            background: orderStatusStyle.bg,
-                            color: orderStatusStyle.text,
-                            padding: '2px 7px',
-                            borderRadius: '4px',
-                            fontSize: '0.68rem',
-                            fontWeight: 700
-                          }}>
-                            {orderStatusStyle.label}
-                          </span>
+                          <select
+                            value={order.status || 'Pending'}
+                            onChange={e => updateOrderStatus(order.id, e.target.value)}
+                            style={{
+                              background: orderStatusStyle.bg,
+                              color: orderStatusStyle.text,
+                              border: '1px solid rgba(0,0,0,0.1)',
+                              padding: '3px 6px',
+                              borderRadius: '4px',
+                              fontSize: '0.70rem',
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                              outline: 'none',
+                              boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                            }}
+                            title="Click to update order status (syncs permanently)"
+                          >
+                            <option value="Pending">PENDING</option>
+                            <option value="Processing">PROCESSING</option>
+                            <option value="Dispatched">DISPATCHED</option>
+                            <option value="Shipped">SHIPPED</option>
+                            <option value="Delivered">DELIVERED</option>
+                            <option value="Cancelled">CANCELLED</option>
+                            <option value="Returned">RETURNED</option>
+                          </select>
+
                           <span style={{ color: '#94a3b8', fontSize: '0.74rem' }}>&</span>
-                          <span style={{
-                            background: paymentStatusStyle.bg,
-                            color: paymentStatusStyle.text,
-                            padding: '2px 7px',
-                            borderRadius: '4px',
-                            fontSize: '0.68rem',
-                            fontWeight: 700
-                          }}>
-                            {paymentStatusStyle.label}
-                          </span>
+
+                          <select
+                            value={order.paymentStatus || (order.paymentMethod === 'COD' ? 'Unpaid' : 'Paid')}
+                            onChange={e => updateOrderPaymentStatus(order.id, e.target.value)}
+                            style={{
+                              background: paymentStatusStyle.bg,
+                              color: paymentStatusStyle.text,
+                              border: '1px solid rgba(0,0,0,0.1)',
+                              padding: '3px 6px',
+                              borderRadius: '4px',
+                              fontSize: '0.70rem',
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                              outline: 'none',
+                              boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                            }}
+                            title="Click to update payment status (syncs permanently)"
+                          >
+                            <option value="Unpaid">UNPAID</option>
+                            <option value="Paid">PAID</option>
+                            <option value="Full Paid">FULL PAID</option>
+                            <option value="Partial">PARTIAL</option>
+                            <option value="Refunded">REFUNDED</option>
+                          </select>
                         </div>
                       </td>
 

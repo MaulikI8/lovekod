@@ -857,27 +857,46 @@ class OrderItem(models.Model):
         """Deduct size-specific inventory from the associated product."""
         if not self.stock_deducted and self.product_id:
             p = Product.objects.filter(product_id=self.product_id).first()
+            if not p:
+                p = Product.objects.filter(name__iexact=self.name).first()
             if p:
-                sz = (self.size or 'M').strip().upper()
+                sz = (self.size or 'M').strip()
+                sz_upper = sz.upper()
                 qty = max(1, int(self.quantity or 1))
-                if 'XXXL' in sz or '3XL' in sz:
+                if 'XXXL' in sz_upper or '3XL' in sz_upper:
                     p.stock_xxxl = max(0, (p.stock_xxxl or 0) - qty)
-                elif 'XXL' in sz or '2XL' in sz:
+                elif 'XXL' in sz_upper or '2XL' in sz_upper:
                     p.stock_xxl = max(0, (p.stock_xxl or 0) - qty)
-                elif 'XL' in sz:
+                elif sz_upper == 'XL' or 'XL' in sz_upper:
                     p.stock_xl = max(0, (p.stock_xl or 0) - qty)
-                elif 'L' in sz:
+                elif sz_upper == 'L' or 'L' in sz_upper:
                     p.stock_l = max(0, (p.stock_l or 0) - qty)
-                elif 'XS' in sz:
+                elif sz_upper == 'XS' or 'XS' in sz_upper:
                     p.stock_xs = max(0, (p.stock_xs or 0) - qty)
-                elif 'S' in sz:
+                elif sz_upper == 'S' or 'S' in sz_upper:
                     p.stock_s = max(0, (p.stock_s or 0) - qty)
-                elif 'FREE' in sz:
+                elif 'FREE' in sz_upper:
                     p.stock_free = max(0, (p.stock_free or 0) - qty)
                 elif isinstance(p.custom_sizes, dict) and sz in p.custom_sizes:
-                    p.custom_sizes[sz] = max(0, int(p.custom_sizes[sz]) - qty)
+                    try:
+                        p.custom_sizes[sz] = max(0, int(p.custom_sizes[sz]) - qty)
+                    except (ValueError, TypeError):
+                        pass
                 else:
                     p.stock_m = max(0, (p.stock_m or 0) - qty)
+
+                if isinstance(p.custom_sizes, dict) and 'combinationRows' in p.custom_sizes:
+                    for row in p.custom_sizes.get('combinationRows', []):
+                        if isinstance(row, dict) and (str(row.get('size')).upper() == sz_upper or str(row.get('variant')).upper() == sz_upper):
+                            row['quantity'] = max(0, int(row.get('quantity') or 0) - qty)
+                elif isinstance(p.custom_sizes, list):
+                    for row in p.custom_sizes:
+                        if isinstance(row, dict) and (str(row.get('size')).upper() == sz_upper or str(row.get('variant')).upper() == sz_upper):
+                            row['quantity'] = max(0, int(row.get('quantity') or 0) - qty)
+
+                if p.quantity is not None:
+                    p.quantity = max(0, p.quantity - qty)
+
                 p.save()
                 self.stock_deducted = True
                 self.save(update_fields=['stock_deducted'])
@@ -886,27 +905,46 @@ class OrderItem(models.Model):
         """Restore size-specific inventory to the associated product on cancel/trash."""
         if self.stock_deducted and self.product_id:
             p = Product.objects.filter(product_id=self.product_id).first()
+            if not p:
+                p = Product.objects.filter(name__iexact=self.name).first()
             if p:
-                sz = (self.size or 'M').strip().upper()
+                sz = (self.size or 'M').strip()
+                sz_upper = sz.upper()
                 qty = max(1, int(self.quantity or 1))
-                if 'XXXL' in sz or '3XL' in sz:
+                if 'XXXL' in sz_upper or '3XL' in sz_upper:
                     p.stock_xxxl = (p.stock_xxxl or 0) + qty
-                elif 'XXL' in sz or '2XL' in sz:
+                elif 'XXL' in sz_upper or '2XL' in sz_upper:
                     p.stock_xxl = (p.stock_xxl or 0) + qty
-                elif 'XL' in sz:
+                elif sz_upper == 'XL' or 'XL' in sz_upper:
                     p.stock_xl = (p.stock_xl or 0) + qty
-                elif 'L' in sz:
+                elif sz_upper == 'L' or 'L' in sz_upper:
                     p.stock_l = (p.stock_l or 0) + qty
-                elif 'XS' in sz:
+                elif sz_upper == 'XS' or 'XS' in sz_upper:
                     p.stock_xs = (p.stock_xs or 0) + qty
-                elif 'S' in sz:
+                elif sz_upper == 'S' or 'S' in sz_upper:
                     p.stock_s = (p.stock_s or 0) + qty
-                elif 'FREE' in sz:
+                elif 'FREE' in sz_upper:
                     p.stock_free = (p.stock_free or 0) + qty
                 elif isinstance(p.custom_sizes, dict) and sz in p.custom_sizes:
-                    p.custom_sizes[sz] = int(p.custom_sizes[sz]) + qty
+                    try:
+                        p.custom_sizes[sz] = int(p.custom_sizes[sz]) + qty
+                    except (ValueError, TypeError):
+                        pass
                 else:
                     p.stock_m = (p.stock_m or 0) + qty
+
+                if isinstance(p.custom_sizes, dict) and 'combinationRows' in p.custom_sizes:
+                    for row in p.custom_sizes.get('combinationRows', []):
+                        if isinstance(row, dict) and (str(row.get('size')).upper() == sz_upper or str(row.get('variant')).upper() == sz_upper):
+                            row['quantity'] = int(row.get('quantity') or 0) + qty
+                elif isinstance(p.custom_sizes, list):
+                    for row in p.custom_sizes:
+                        if isinstance(row, dict) and (str(row.get('size')).upper() == sz_upper or str(row.get('variant')).upper() == sz_upper):
+                            row['quantity'] = int(row.get('quantity') or 0) + qty
+
+                if p.quantity is not None:
+                    p.quantity = p.quantity + qty
+
                 p.save()
                 self.stock_deducted = False
                 self.save(update_fields=['stock_deducted'])

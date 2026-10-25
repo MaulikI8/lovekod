@@ -786,7 +786,14 @@ def order_list_create(request):
 
 @csrf_exempt
 def order_detail_update(request, order_id):
-    order = get_object_or_404(Order, order_id=order_id)
+    clean_id = str(order_id).strip()
+    order = Order.objects.filter(order_id=clean_id).first()
+    if not order and clean_id.isdigit():
+        order = Order.objects.filter(id=int(clean_id)).first()
+    if not order and clean_id.startswith('ORD-'):
+        order = Order.objects.filter(order_id__iexact=clean_id).first()
+    if not order:
+        order = get_object_or_404(Order, order_id=clean_id)
 
     if request.method == 'GET':
         return JsonResponse(order.to_dict())
@@ -837,17 +844,28 @@ def order_detail_update(request, order_id):
 
             # If items are updated
             if 'items' in data and isinstance(data['items'], list) and len(data['items']) > 0:
+                if order.status != 'Cancelled':
+                    for item in order.items.all():
+                        item.restore_inventory()
                 order.items.all().delete()
                 for item_data in data['items']:
-                    OrderItem.objects.create(
+                    pid = item_data.get('productId') or item_data.get('product_id') or item_data.get('id') or ''
+                    item_name = item_data.get('name') or item_data.get('title') or 'Item'
+                    price = int(item_data.get('price') or item_data.get('sellingPrice') or 0)
+                    qty = int(item_data.get('quantity') or 1)
+                    sz = item_data.get('size') or item_data.get('variant') or 'M'
+                    img = item_data.get('image') or '/images/kurtha-charcoal.jpg'
+                    new_item = OrderItem.objects.create(
                         order=order,
-                        title=item_data.get('title') or item_data.get('name') or 'Item',
-                        price=int(item_data.get('price') or item_data.get('sellingPrice') or 0),
-                        quantity=int(item_data.get('quantity') or 1),
-                        size=item_data.get('size') or item_data.get('variant') or 'M',
-                        color=item_data.get('color', ''),
-                        image=item_data.get('image', '/images/kurtha-charcoal.jpg'),
+                        product_id=pid,
+                        name=item_name,
+                        price=price,
+                        quantity=qty,
+                        size=sz,
+                        image=img,
                     )
+                    if order.status != 'Cancelled':
+                        new_item.deduct_inventory()
 
             order.save()
             return JsonResponse(order.to_dict())

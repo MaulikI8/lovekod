@@ -176,21 +176,14 @@ export default function Header() {
               </a>
             </nav>
 
-            {/* CENTER: Transparent Logo (Monogram + Wordmark + Devanagari) */}
+            {/* CENTER: Authentic Brand Logo (Transparent Monogram + Wordmark + Devanagari) */}
             <Link to="/" className="center-brand-logo" aria-label="LoveKod Home">
-              <div className="logo-monogram-symbol">
-                <img
-                  src="/images/logo.webp"
-                  alt="LoveKod"
-                  className="logo-monogram-img"
-                  onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/logo.jpg'; }}
-                />
-              </div>
-
-              <div className={`logo-text-details ${isScrolled ? 'collapsed' : ''}`}>
-                <span className="brand-wordmark">LoveKod</span>
-                <span className="brand-devanagari">लभकोण</span>
-              </div>
+              <img
+                src="/images/lovekod-logo-transparent.webp"
+                alt="LoveKod"
+                className={`brand-navbar-logo-img ${isScrolled ? 'is-scrolled' : ''}`}
+                onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/lovekod-logo-transparent.png'; }}
+              />
             </Link>
 
             {/* RIGHT GROUP: Reviews + Icon Buttons */}

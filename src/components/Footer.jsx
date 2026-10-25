@@ -117,11 +117,12 @@ export default function Footer() {
         <div className="footer-grid">
           <div className="footer-brand">
             <div className="logo" style={{ marginBottom: '14px' }}>
-              <img src="/images/logo.webp" alt="LoveKod" style={{ width: '42px', height: '42px', borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--line)' }} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/logo.jpg'; }} />
-              <div className="logo-text-group">
-                <span className="logo-text" style={{ fontSize: '1.35rem', letterSpacing: '0.04em' }}>LoveKod</span>
-                <span className="logo-sub" style={{ letterSpacing: '0.22em' }}>BOUTIQUE</span>
-              </div>
+              <img
+                src="/images/lovekod-logo-transparent.webp"
+                alt="LoveKod"
+                style={{ height: '54px', width: 'auto', objectFit: 'contain' }}
+                onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/lovekod-logo-transparent.png'; }}
+              />
             </div>
             <p className="footer-brand-desc" style={{ color: 'var(--ink-muted)', fontSize: '0.88rem', lineHeight: 1.7, maxWidth: '300px' }}>
               Festive kurtha sets curated for Tihar and Bhai Tika with artisanal zari embroidery, scalloped dupattas, and fluid silks.

@@ -4180,17 +4180,43 @@ img {
   width: 100%;
 }
 
-/* Center Brand Logo (NO box or tile) */
+/* Center Brand Logo (Authentic Logo) */
 .center-brand-logo {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
   text-decoration: none;
-  color: var(--ink);
   background: transparent;
   padding: 0;
   border: none;
+  transition: transform 0.2s ease;
+}
+
+.center-brand-logo:hover {
+  transform: scale(1.02);
+}
+
+.brand-navbar-logo-img {
+  height: 54px;
+  width: auto;
+  max-width: 160px;
+  object-fit: contain;
+  display: block;
+  transition: height 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.04));
+}
+
+.brand-navbar-logo-img.is-scrolled {
+  height: 42px;
+}
+
+@media (max-width: 768px) {
+  .brand-navbar-logo-img {
+    height: 44px;
+  }
+  .brand-navbar-logo-img.is-scrolled {
+    height: 38px;
+  }
 }
 
 .logo-monogram-symbol {

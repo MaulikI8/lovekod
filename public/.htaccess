@@ -10,10 +10,10 @@ DirectoryIndex index.html
 
   # Social media crawler detection for rich product preview unfurling (WhatsApp, Facebook, Twitter, Telegram, etc.)
   RewriteCond %{HTTP_USER_AGENT} (facebookexternalhit|WhatsApp|Twitterbot|TelegramBot|Slackbot|LinkedInBot|Pinterest|Googlebot) [NC]
-  RewriteRule ^product/([^/]+)/?$ /api/preview/product/$1/ [PT,L]
+  RewriteRule ^product/([^/]+)/?$ https://lovekod.com/api/preview/product/$1/ [R=302,L]
 
   # Direct preview shortlink routing to Django OG preview
-  RewriteRule ^p/([^/]+)/?$ /api/preview/product/$1/ [PT,L]
+  RewriteRule ^p/([^/]+)/?$ https://lovekod.com/api/preview/product/$1/ [R=302,L]
 
   # Exclude Backend API, Django Admin, Static, and Media from React SPA fallback
   RewriteCond %{REQUEST_URI} ^/api [NC,OR]

@@ -94,6 +94,56 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* ── Universal Smooth Scrolling & High-End Custom Scrollbars ── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(229, 169, 59, 0.4) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(229, 169, 59, 0.35);
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(229, 169, 59, 0.7);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: rgba(229, 169, 59, 0.95);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Ensure all scrollable containers scroll smoothly with inertia */
+.cart-body,
+.cart-drawer,
+.summary-items-list,
+.modal-content,
+[style*="overflow-y: auto"],
+[style*="overflow-x: auto"],
+[style*="overflowY: auto"],
+[style*="overflowX: auto"],
+[style*="overflow: auto"] {
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
 /* Elegant Flat Paper Background with Subtle Natural Linen Grain */
 .site-wrapper {
   min-height: 100vh;
@@ -2255,15 +2305,41 @@ img {
 }
 
 .cart-body {
-  flex-grow: 1;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
   padding: 20px 24px;
   display: flex;
   flex-direction: column;
   gap: 14px;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
-  scrollbar-color: var(--line) transparent;
+  scrollbar-color: rgba(229, 169, 59, 0.45) rgba(255, 255, 255, 0.03);
+}
+
+.cart-body::-webkit-scrollbar {
+  width: 7px;
+}
+
+.cart-body::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 9999px;
+}
+
+.cart-body::-webkit-scrollbar-thumb {
+  background: rgba(229, 169, 59, 0.4);
+  border-radius: 9999px;
+  transition: background 0.2s ease;
+}
+
+.cart-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(229, 169, 59, 0.8);
+}
+
+.cart-body::-webkit-scrollbar-thumb:active {
+  background: rgba(229, 169, 59, 1);
 }
 
 /* Hide scrollbar on mobile viewports for clean app-like drawer */
@@ -2488,6 +2564,13 @@ img {
   flex-direction: column;
   gap: 12px;
   margin-bottom: 16px;
+  max-height: 380px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(229, 169, 59, 0.45) transparent;
 }
 
 .summary-item-row {

@@ -267,7 +267,55 @@ export default function AdminLayout() {
           padding: 28px 36px;
           overflow-y: auto;
           overflow-x: auto;
+          overscroll-behavior: contain;
+          scroll-behavior: smooth;
           -webkit-overflow-scrolling: touch;
+        }
+
+        /* ── Universal Admin Smooth Scrolling & Sleek Sliders ── */
+        .admin-main-content,
+        .admin-desktop-sidebar,
+        div[style*="overflow-y: auto"],
+        div[style*="overflow-x: auto"],
+        div[style*="overflowY: auto"],
+        div[style*="overflowX: auto"],
+        div[style*="overflow: auto"],
+        form[style*="overflow-y: auto"],
+        form[style*="overflowY: auto"] {
+          scroll-behavior: smooth !important;
+          overscroll-behavior: contain;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: thin;
+          scrollbar-color: #cbd5e1 rgba(0, 0, 0, 0.03);
+        }
+
+        /* WebKit Custom Scrollbars for all Admin Sliders */
+        ::-webkit-scrollbar {
+          width: 7px;
+          height: 7px;
+        }
+
+        ::-webkit-scrollbar-track {
+          background: rgba(0, 0, 0, 0.02);
+          border-radius: 9999px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 9999px;
+          transition: background 0.2s ease, transform 0.2s ease;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+          background: #94a3b8;
+        }
+
+        ::-webkit-scrollbar-thumb:active {
+          background: #64748b;
+        }
+
+        ::-webkit-scrollbar-corner {
+          background: transparent;
         }
         @media (max-width: 900px) {
           .admin-desktop-sidebar {

@@ -1,5 +1,5 @@
 import { useStore } from "../context/StoreContext";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ShoppingBagIcon, CloseIcon, TruckIcon, ArrowRightIcon } from "./Icons";
 
@@ -9,6 +9,9 @@ export default function CartDrawer() {
 
   const getProduct = (id) => products.find(p => p.id === id);
   const deliveryFee = 150;
+
+  const cartBodyRef = useRef(null);
+  const drawerRef = useRef(null);
 
   // Lock background body scroll when cart drawer is open
   useEffect(() => {
@@ -21,13 +24,38 @@ export default function CartDrawer() {
     }
   }, [cartOpen]);
 
+  // Enable smooth wheel scrolling from anywhere inside the drawer (including footer, head, empty spaces)
+  useEffect(() => {
+    const drawerEl = drawerRef.current;
+    if (!drawerEl || !cartOpen) return;
+
+    const onWheel = (e) => {
+      const bodyEl = cartBodyRef.current;
+      if (!bodyEl) return;
+
+      // If cursor is not directly inside cart-body (e.g. over footer or header), forward scroll to cart-body
+      if (!e.target.closest('.cart-body')) {
+        if (bodyEl.scrollHeight > bodyEl.clientHeight) {
+          bodyEl.scrollBy({
+            top: e.deltaY,
+            behavior: 'smooth'
+          });
+          e.preventDefault();
+        }
+      }
+    };
+
+    drawerEl.addEventListener('wheel', onWheel, { passive: false });
+    return () => drawerEl.removeEventListener('wheel', onWheel);
+  }, [cartOpen]);
+
   return (
     <div
       className={`cart-backdrop ${cartOpen ? "open" : ""}`}
       onClick={(e) => { if (e.target === e.currentTarget) setCartOpen(false); }}
       aria-hidden={!cartOpen}
     >
-      <div className="cart-drawer" role="dialog" aria-label="Shopping Bag">
+      <div ref={drawerRef} className="cart-drawer" role="dialog" aria-label="Shopping Bag">
         <div className="cart-head">
           <div className="cart-head-title">
             <ShoppingBagIcon size={20} />
@@ -53,7 +81,7 @@ export default function CartDrawer() {
           </div>
         )}
 
-        <div className="cart-body">
+        <div ref={cartBodyRef} className="cart-body">
           {cart.length === 0 ? (
             <div className="cart-empty">
               <div className="cart-empty-icon">

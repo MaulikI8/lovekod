@@ -47,7 +47,7 @@ function TikTokIcon({ className = "w-5 h-5", ...props }) {
 
 export function SocialGlassDock({ className = "" }) {
   const { siteSettings } = useStore();
-  const phone = siteSettings?.whatsapp_number || siteConfig.whatsappRaw || '9779719567133';
+  const phone = siteSettings?.whatsapp_number || siteConfig.whatsappRaw || '9779717567133';
   const cleanPhone = String(phone).replace(/\D/g, '');
   const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent('Namaste LoveKod, I would like to inquire about festive kurtha sets.')}`;
 

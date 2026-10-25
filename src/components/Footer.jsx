@@ -65,7 +65,7 @@ export default function Footer() {
   const socialFacebook = siteSettings?.socialFacebook || 'https://facebook.com/lovekod.np';
   const websiteUrl = siteSettings?.websiteUrl || 'https://www.lovekod.com';
   const rawDomain = websiteUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
-  const waPhone = (siteSettings?.contactWhatsapp || '9779719567133').replace(/[^\d]/g, '');
+  const waPhone = (siteSettings?.contactWhatsapp || '9779717567133').replace(/[^\d]/g, '');
   const waLink = `https://wa.me/${waPhone}?text=Namaste%20LoveKod%2C%20I%20would%20like%20to%20inquire%20about%20festive%20kurtha%20sets.`;
 
   return (

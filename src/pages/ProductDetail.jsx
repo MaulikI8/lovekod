@@ -116,7 +116,7 @@ export default function ProductDetail() {
     const text = encodeURIComponent(
       `Namaste LoveKod! I would like to order "${product.name}" ${sizeText} (Rs. ${product.price.toLocaleString()}) for Tihar. Please share delivery details.`
     );
-    const waPhone = (siteSettings?.contactWhatsapp || '9779719567133').replace(/[^\d]/g, '');
+    const waPhone = (siteSettings?.contactWhatsapp || '9779717567133').replace(/[^\d]/g, '');
     return `https://wa.me/${waPhone}?text=${text}`;
   };
 

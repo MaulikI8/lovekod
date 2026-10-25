@@ -19,8 +19,8 @@ export const siteConfig = {
   nepaliName: "लभकोण",
   tagline: "Festive Kurtha Sets for Tihar 2083",
   description: "Handcrafted festive kurtha sets in pure georgette and rich silk blends. Delivering across all 77 districts of Nepal.",
-  whatsappNumber: "+977 9719567133",
-  whatsappRaw: "9779719567133",
+  whatsappNumber: "+977 9717567133",
+  whatsappRaw: "9779717567133",
   freeDeliveryThreshold: 3000,
   orderByDate: "Kartik 15",
   activeOffer: {

@@ -33,7 +33,7 @@ export default function NotFound() {
           </Link>
 
           <a
-            href="https://wa.me/9779719567133?text=Namaste%20LoveKod%2C%20I%20am%20looking%20for%20a%20specific%20kurtha%20style."
+            href="https://wa.me/9779717567133?text=Namaste%20LoveKod%2C%20I%20am%20looking%20for%20a%20specific%20kurtha%20style."
             target="_blank"
             rel="noopener noreferrer"
             className="btn-secondary-outline"

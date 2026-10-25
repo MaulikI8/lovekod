@@ -364,8 +364,8 @@ class SiteSettings(models.Model):
     free_shipping_threshold = models.IntegerField(default=3000)
 
     # Contact & Storefront Info
-    contact_phone = models.CharField(max_length=50, default='+977 9719567133')
-    contact_whatsapp = models.CharField(max_length=50, default='+977 9719567133')
+    contact_phone = models.CharField(max_length=50, default='+977 9717567133')
+    contact_whatsapp = models.CharField(max_length=50, default='+977 9717567133')
     contact_email = models.CharField(max_length=100, default='concierge@lovekod.com')
     contact_address = models.CharField(max_length=255, default='Kathmandu Valley, Nepal')
 

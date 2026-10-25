@@ -10,7 +10,7 @@ export default function OrderSuccess() {
   const order = orders.find(o => o.id === orderId);
 
   const getWaConfirmationLink = () => {
-    const waPhone = (siteSettings?.contactWhatsapp || '9779719567133').replace(/[^\d]/g, '');
+    const waPhone = (siteSettings?.contactWhatsapp || '9779717567133').replace(/[^\d]/g, '');
     if (!order) return `https://wa.me/${waPhone}`;
     const itemsText = order.items.map(i => `${i.name} (Size: ${i.size}, Qty: ${i.quantity})`).join(', ');
     const text = encodeURIComponent(

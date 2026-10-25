@@ -49,8 +49,8 @@ class Command(BaseCommand):
             s.hero_title_line1 = "LoveKod Boutique"
             s.hero_title_accent = "Bespoke Festive Elegance"
             s.hero_subtitle = "Exclusive handcrafted kurtha sets and artisanal collections for women across Nepal."
-            s.contact_phone = "+977 9719567133"
-            s.contact_whatsapp = "+977 9719567133"
+            s.contact_phone = "+977 9717567133"
+            s.contact_whatsapp = "+977 9717567133"
             s.contact_email = "concierge@lovekod.com"
             s.contact_address = "Kathmandu Valley, Nepal"
             s.free_shipping_threshold = 3000

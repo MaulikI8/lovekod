@@ -1100,12 +1100,14 @@ def product_preview(request, product_id):
     Seamlessly redirects human browser visitors to the SPA product page.
     """
     clean_id = str(product_id).strip()
-    try:
-        product = Product.objects.get(id=clean_id, is_deleted=False)
-    except Product.DoesNotExist:
+    product = Product.objects.filter(product_id=clean_id, is_deleted=False).first()
+    if not product and clean_id.isdigit():
+        product = Product.objects.filter(pk=int(clean_id), is_deleted=False).first()
+
+    if not product:
         return HttpResponseRedirect(f"https://lovekod.com/product/{clean_id}")
 
-    raw_img = product.image or '/images/og-share-lovekod.jpg'
+    raw_img = product.get_image_url() or '/images/og-share-lovekod.jpg'
     if raw_img.startswith('http://') or raw_img.startswith('https://'):
         image_url = raw_img
     elif raw_img.startswith('/'):
@@ -1117,7 +1119,7 @@ def product_preview(request, product_id):
     title = f"{product.name} ({price_formatted}) | LoveKod Festive Boutique"
     desc = product.description or f"Handcrafted festive kurtha set ({price_formatted}). Exclusive premium collection for Tihar & celebrations across Nepal. Fast delivery in Kathmandu & nationwide."
     clean_desc = desc.replace('"', '&quot;').replace('\n', ' ')[:250]
-    product_page_url = f"https://lovekod.com/product/{product.id}"
+    product_page_url = f"https://lovekod.com/product/{product.product_id}"
 
     mime = 'image/jpeg'
     if image_url.lower().endswith('.png'): mime = 'image/png'

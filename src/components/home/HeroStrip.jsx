@@ -19,9 +19,9 @@ export default function HeroStrip({ siteSettings, products = [] }) {
   const leftProduct = products[1] || null;
   const rightProduct = products[2] || null;
 
-  const centerImage = centerProduct?.image || '/images/kurtha-rani-pink.png';
-  const leftImage = leftProduct?.image || '/images/kurtha-red-gold.png';
-  const rightImage = rightProduct?.image || '/images/kurtha-olive-green.png';
+  const centerImage = siteSettings?.heroCenterImage || siteSettings?.heroImage || centerProduct?.image || '/images/kurtha-rani-pink.png';
+  const leftImage = siteSettings?.heroLeftImage || leftProduct?.image || '/images/kurtha-red-gold.png';
+  const rightImage = siteSettings?.heroRightImage || rightProduct?.image || '/images/kurtha-olive-green.png';
 
   const panelFlex = (idx) => {
     if (hoveredPanel === null) return idx === 1 ? 1.3 : 0.85;

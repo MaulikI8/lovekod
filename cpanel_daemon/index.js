@@ -195,7 +195,7 @@ async function startBot() {
                 await new Promise((resolve) => {
                     execFile(AGY_BIN, ['--dangerously-skip-permissions', '--print', taskPrompt], {
                         cwd: REPO_DIR,
-                        timeout: 600000,
+                        timeout: 1800000, // 30 minutes
                         maxBuffer: 1024 * 1024 * 25
                     }, async (err, stdout, stderr) => {
                         clearInterval(typingInterval);

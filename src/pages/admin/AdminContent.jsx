@@ -128,11 +128,33 @@ export default function AdminContent() {
                 />
               </div>
               <div className="form-group">
-                <label>Hero Main Image URL / Path</label>
+                <label>Hero Center Panel Image URL</label>
                 <input
                   type="text"
-                  value={form.heroImage || ''}
-                  onChange={e => setForm({ ...form, heroImage: e.target.value })}
+                  placeholder="/images/kurtha-rani-pink.png or product image URL"
+                  value={form.heroCenterImage || form.heroImage || ''}
+                  onChange={e => setForm({ ...form, heroCenterImage: e.target.value, heroImage: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label>Hero Left Panel Image URL</label>
+                <input
+                  type="text"
+                  placeholder="/images/kurtha-red-gold.png or product image URL"
+                  value={form.heroLeftImage || ''}
+                  onChange={e => setForm({ ...form, heroLeftImage: e.target.value })}
+                />
+              </div>
+              <div className="form-group">
+                <label>Hero Right Panel Image URL</label>
+                <input
+                  type="text"
+                  placeholder="/images/kurtha-olive-green.png or product image URL"
+                  value={form.heroRightImage || ''}
+                  onChange={e => setForm({ ...form, heroRightImage: e.target.value })}
                 />
               </div>
             </div>

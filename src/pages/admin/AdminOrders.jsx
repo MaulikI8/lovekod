@@ -1438,7 +1438,10 @@ export default function AdminOrders() {
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '20px',
-                maxHeight: 'calc(94vh - 140px)'
+                maxHeight: 'calc(94vh - 140px)',
+                scrollBehavior: 'smooth',
+                WebkitOverflowScrolling: 'touch',
+                overscrollBehavior: 'contain'
               }}>
 
                 {/* ── 1. CUSTOMER SECTION ── */}

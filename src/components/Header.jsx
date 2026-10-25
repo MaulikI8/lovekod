@@ -179,14 +179,12 @@ export default function Header() {
             {/* CENTER: Transparent Logo (Monogram + Wordmark + Devanagari) */}
             <Link to="/" className="center-brand-logo" aria-label="LoveKod Home">
               <div className="logo-monogram-symbol">
-                {/* Handcrafted Rose-Gold LK Monogram SVG */}
-                <svg viewBox="0 0 48 48" fill="none" className="lk-monogram-svg" xmlns="http://www.w3.org/2000/svg">
-                  {/* Stem of L */}
-                  <path d="M14 8 H20 V38 H34 V42 H14 Z" fill="currentColor" />
-                  {/* Swoosh of K in Rose-Gold Accent */}
-                  <path d="M26 26 L38 8 H44 L30 28 L44 42 H37 L24 29 Z" fill="currentColor" />
-                  <path d="M19 28 C26 23 32 16 38 12 C32 20 28 28 24 35 Z" fill="var(--rose-gold-logo)" opacity="0.9" />
-                </svg>
+                <img
+                  src="/images/logo.webp"
+                  alt="LoveKod"
+                  className="logo-monogram-img"
+                  onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/logo.jpg'; }}
+                />
               </div>
 
               <div className={`logo-text-details ${isScrolled ? 'collapsed' : ''}`}>

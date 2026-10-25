@@ -216,7 +216,22 @@ export default function ProductDetail() {
             <span className="fabric-pill">{product.pieces}</span>
           </div>
 
-          <h1 className="pd-title">{product.name}</h1>
+                    <h1 className="pd-title">{product.name}</h1>
+          
+          {product.modelHandle && (
+            <div className="pd-model-credit" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: '#b45309', marginBottom: '10px', fontWeight: 600 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+              <span>Draped by</span>
+              <a
+                href={"https://instagram.com/" + (product.modelHandle || "").replace("@", "")}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: '#d97706', textDecoration: 'underline', fontWeight: 700 }}
+              >
+                @{product.modelHandle.replace('@', '')}
+              </a>
+            </div>
+          )}
           
 
           {/* Clean Non-Wrapping Tabular Price Row */}
@@ -390,7 +405,7 @@ export default function ProductDetail() {
             <div className="guarantee-item">
               <SparklesIcon size={18} />
               <div>
-                <strong>Authentic Quality:</strong> 100% handcrafted fabrics and fine artisan embroidery.
+                <strong>Quality Assured:</strong> Hand-inspected quality and premium finishing.
               </div>
             </div>
           </div>

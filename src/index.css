@@ -4194,12 +4194,23 @@ img {
 }
 
 .logo-monogram-symbol {
-  width: 32px;
-  height: 32px;
-  color: var(--rose-gold);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 1.5px solid rgba(217, 119, 6, 0.4);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.logo-monogram-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
 }
 
 .lk-monogram-svg {

@@ -26,6 +26,7 @@ export default function AdminProducts() {
     longDescription: '',
     image: '',
     imagePreview: '',
+    modelHandle: '',
     // Step 2 fields
     price: 2999,
     originalPrice: 4499,
@@ -372,6 +373,7 @@ export default function AdminProducts() {
       longDescription: '',
       image: '',
       imagePreview: '',
+    modelHandle: '',
       price: 2000,
       originalPrice: 2500,
       sku: '',
@@ -418,6 +420,7 @@ export default function AdminProducts() {
       longDescription: prod.longDescription || 'Elevate your wardrobe with timeless style, impeccable stitching, and comfortable all-day wear.',
       image: prod.image || '/images/kurtha-charcoal.jpg',
       imagePreview: prod.image || '/images/kurtha-charcoal.jpg',
+      modelHandle: (prod.modelHandle || prod.model_handle || '').replace(/^@/, ''),
       price: prod.price || prod.regular_price || 2000,
       originalPrice: prod.originalPrice || prod.crossedPrice || 2500,
       sku: prod.sku || '',
@@ -531,6 +534,7 @@ export default function AdminProducts() {
       // Step 3 details
       tags: form.tags,
       badge: form.badge,
+      modelHandle: (form.modelHandle || '').trim().replace(/^@/, ''),
     };
 
     if (editingProduct && editingProduct.id) {
@@ -1104,7 +1108,7 @@ export default function AdminProducts() {
       {/* ══ 5. CANVA 3-STEP "ADD PRODUCT" MODAL (PIXEL PERFECT) ══ */}
       {showAddModal && (
         <div
-          onWheel={handleModalWheel}
+          
           style={{
             position: 'fixed',
             inset: 0,
@@ -1118,7 +1122,7 @@ export default function AdminProducts() {
           }}
         >
           <div
-            onWheel={handleModalWheel}
+            
             style={{
               background: '#ffffff',
               borderRadius: '16px',
@@ -1311,7 +1315,7 @@ export default function AdminProducts() {
             {/* Modal Body (Scrollable & Wheel Enabled Anywhere) */}
             <div
               ref={modalBodyRef}
-              onWheel={handleModalWheel}
+              
               style={{
                 padding: '24px',
                 overflowY: 'auto',
@@ -1632,6 +1636,34 @@ export default function AdminProducts() {
                         {errors.longDescription}
                       </span>
                     )}
+                  </div>
+
+                  {/* Model Instagram ID */}
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
+                      Model Instagram Handle (Optional)
+                    </label>
+                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                      <span style={{ position: 'absolute', left: '12px', color: '#94a3b8', fontSize: '13.5px', fontWeight: 700 }}>@</span>
+                      <input
+                        type="text"
+                        placeholder="model_username"
+                        value={form.modelHandle || ''}
+                        onChange={e => setForm({ ...form, modelHandle: e.target.value.replace(/^@/, '') })}
+                        style={{
+                          width: '100%',
+                          padding: '10px 14px 10px 30px',
+                          borderRadius: '8px',
+                          border: '1px solid #e2e8f0',
+                          fontSize: '13.5px',
+                          outline: 'none',
+                          boxSizing: 'border-box',
+                        }}
+                      />
+                    </div>
+                    <span style={{ fontSize: '11px', color: '#64748b', display: 'block', marginTop: '4px' }}>
+                      Displays as "Draped by @username" linking directly to their Instagram profile.
+                    </span>
                   </div>
 
                   {/* Field 5: Product Images (CANVA EXACT DROPZONE) */}

@@ -187,7 +187,7 @@ export function StoreProvider({ children }) {
   // Dynamic catalog state strictly in-memory (synced live with Django backend)
   const [products, setProducts] = useState(loadProducts);
   const [categories, setCategories] = useState(loadCategories);
-  const [siteSettings, setSiteSettings] = useState(DEFAULT_SETTINGS);
+  const [siteSettings, setSiteSettings] = useState(() => loadState(STORAGE_KEYS.SITE_SETTINGS, DEFAULT_SETTINGS));
   const [festivalMoments, setFestivalMoments] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
   const [orders, setOrders] = useState(loadOrders);
@@ -208,6 +208,7 @@ export function StoreProvider({ children }) {
   useEffect(() => saveState(STORAGE_KEYS.CART, cart), [cart]);
   useEffect(() => saveState(STORAGE_KEYS.ADMIN_AUTH, isAdmin), [isAdmin]);
   useEffect(() => saveState(STORAGE_KEYS.LIGHTS, lightsEnabled), [lightsEnabled]);
+  useEffect(() => saveState(STORAGE_KEYS.SITE_SETTINGS, siteSettings), [siteSettings]);
   useEffect(() => saveState('lovekod_orders', orders), [orders]);
   useEffect(() => saveState('lovekod_customers', customers), [customers]);
   useEffect(() => saveState('lovekod_coupons', coupons), [coupons]);
@@ -463,8 +464,12 @@ export function StoreProvider({ children }) {
 
   // ── Site Settings Management ──
   async function updateSiteSettings(newSettings) {
-    setSiteSettings(prev => ({ ...prev, ...newSettings }));
-    showToast('Site settings updated');
+    setSiteSettings(prev => {
+      const merged = { ...prev, ...newSettings };
+      saveState(STORAGE_KEYS.SITE_SETTINGS, merged);
+      return merged;
+    });
+    showToast('Site settings updated successfully');
     try {
       const res = await fetch(`${API_BASE}/site-settings/`, {
         method: 'PATCH',
@@ -473,7 +478,11 @@ export function StoreProvider({ children }) {
       });
       if (res.ok) {
         const updated = await res.json();
-        setSiteSettings(prev => ({ ...prev, ...updated }));
+        setSiteSettings(prev => {
+          const merged = { ...prev, ...updated };
+          saveState(STORAGE_KEYS.SITE_SETTINGS, merged);
+          return merged;
+        });
       }
     } catch { /* offline fallback */ }
   }

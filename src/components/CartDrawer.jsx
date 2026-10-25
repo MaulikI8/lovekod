@@ -33,15 +33,13 @@ export default function CartDrawer() {
       const bodyEl = cartBodyRef.current;
       if (!bodyEl) return;
 
-      // If cursor is not directly inside cart-body (e.g. over footer or header), forward scroll to cart-body
-      if (!e.target.closest('.cart-body')) {
-        if (bodyEl.scrollHeight > bodyEl.clientHeight) {
-          bodyEl.scrollBy({
-            top: e.deltaY,
-            behavior: 'smooth'
-          });
-          e.preventDefault();
-        }
+      // Unconditionally scroll cart-body smoothly anywhere mouse wheel is spun inside drawer
+      if (bodyEl.scrollHeight > bodyEl.clientHeight) {
+        bodyEl.scrollBy({
+          top: e.deltaY,
+          behavior: 'smooth'
+        });
+        e.preventDefault();
       }
     };
 

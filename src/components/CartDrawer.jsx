@@ -13,33 +13,40 @@ export default function CartDrawer() {
   const cartBodyRef = useRef(null);
   const drawerRef = useRef(null);
 
-  // Lock background body scroll when cart drawer is open
+  // Lock background body and document scroll when cart drawer is open
   useEffect(() => {
     if (cartOpen) {
-      const originalOverflow = document.body.style.overflow;
+      const originalBodyOverflow = document.body.style.overflow;
+      const originalHtmlOverflow = document.documentElement.style.overflow;
+
       document.body.style.overflow = "hidden";
+      document.documentElement.style.overflow = "hidden";
+
       return () => {
-        document.body.style.overflow = originalOverflow;
+        document.body.style.overflow = originalBodyOverflow;
+        document.documentElement.style.overflow = originalHtmlOverflow;
       };
     }
   }, [cartOpen]);
 
-  // Enable smooth wheel scrolling from anywhere inside the drawer (including footer, head, empty spaces)
+  // Trap all wheel scrolling inside drawer so website behind NEVER scrolls
   useEffect(() => {
     const drawerEl = drawerRef.current;
     if (!drawerEl || !cartOpen) return;
 
     const onWheel = (e) => {
+      // Unconditionally stop wheel events from reaching the background website
+      e.stopPropagation();
+      e.preventDefault();
+
       const bodyEl = cartBodyRef.current;
       if (!bodyEl) return;
 
-      // Unconditionally scroll cart-body smoothly anywhere mouse wheel is spun inside drawer
       if (bodyEl.scrollHeight > bodyEl.clientHeight) {
         bodyEl.scrollBy({
           top: e.deltaY,
           behavior: 'smooth'
         });
-        e.preventDefault();
       }
     };
 
